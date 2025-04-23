@@ -1,10 +1,3 @@
----
----
-
-@import "{{ site.theme }}";   /* pulls in the default theme styles */
-
-/* --- your overrides below --- */
-header .view { display: none !important; }   /* hide username pill */
 /* Tiny customisations on top of the theme */
 body { max-width: 840px; margin: 0 auto; font-size: 1.05rem; }
 .button-row .btn {
