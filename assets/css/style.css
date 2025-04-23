@@ -5,3 +5,5 @@ body { max-width: 840px; margin: 0 auto; font-size: 1.05rem; }
     border:1px solid #0366d6; border-radius:6px; text-decoration:none;
 }
 .button-row .btn:hover { background:#0366d6; color:#fff; }
+/* Hide the GitHub header pill that displays the repo / username */
+header .view { display: none; }
