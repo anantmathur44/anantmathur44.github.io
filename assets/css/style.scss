@@ -1,14 +1,7 @@
 ---
 ---
 
-@import "{{ site.theme }}";   /* pulls in the default theme styles */
+@import "{{ site.theme }}";          /* theme first */
 
-/* --- your overrides below --- */
-header .view { display: none !important; }   /* hide username pill */
-/* Tiny customisations on top of the theme */
-body { max-width: 840px; margin: 0 auto; font-size: 1.05rem; }
-.button-row .btn {
-    display:inline-block; margin:0.3em 0.6em; padding:0.4em 0.9em;
-    border:1px solid #0366d6; border-radius:6px; text-decoration:none;
-}
-.button-row .btn:hover { background:#0366d6; color:#fff; }
+/* Hide the GitHub pill everywhere */
+.view { display: none !important; }
