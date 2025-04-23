@@ -1,0 +1,28 @@
+# Site basics ----------------------------------------------------
+title Anant Mathur
+tagline PhD Candidate · Computational Statistics & Data Science
+email anant.mathur@example.com   # shown in footer
+description -
+  Personal academic website presenting my research, publications,
+  teaching, and software.
+url httpsyour‑username.github.io
+baseurl           # leave empty for personal-site repo
+github_username your‑username
+
+# Theme ----------------------------------------------------------
+theme jekyll-theme-minimal          # built‑in, no extra setup
+# To try a different built‑in theme just change the line above.
+# List of supported themes httpsgithub.compages-themes
+
+# Build options --------------------------------------------------
+plugins
+  - jekyll-feed                  # RSS feed (whitelisted)
+  - jekyll-seo-tag               # better SEO (whitelisted)
+
+# Optional navigation links shown at the top of every page
+# (theme-minimal shows them automatically if you define nav)
+nav
+  - title About Me
+    url  about
+  - title Publications
+    url  publications
