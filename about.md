@@ -9,7 +9,7 @@ nav_order: 2
 I am a PhD candidate in the School of Mathematics & Statistics, UNSW Sydney. I am 
 supervised by [Zdravko Botev](https://web.maths.unsw.edu.au/~zdravkobotev/) and [Sarat Moka](https://saratmoka.com/).  
 
-My research focuses on high-dimensional statistics, penalized regression, and optimization for sparse statistical learning. Some of my recent work developing fast and scalable algorithms for both convex (\(\ell_1\)) using majorization-minimziation (MM) algorithms and non-convex (\(\ell_0\)) penalized models, and I explore Monte Carlo methods for efficiently estimating the large-scale matrix quantities that arise in these settings.
+My research centres on sparse statistical learning in high-dimensional settings, with my PhD work focusing on the development and optimisation of penalised methods. I have recently designed fast, scalable algorithms for convex (\(\ell_{1}\)) models using majorisation--minimisation techniques and for non-convex (\(\ell_{0}\)) formulations via continuous optimisation. Beyond these topics, I am interested in numerical linear algebra, particularly randomized methods for estimating large matrix functions and computations.
 
 ### Education
 * **PhD (Statistics)** — UNSW Sydney, 2020‑2025 (expected)  
