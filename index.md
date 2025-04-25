@@ -13,7 +13,11 @@ I’m a final‑year PhD candidate in computational statistics at the
 [University of New South Wales](https://www.unsw.edu.au/science/our-schools/maths) in Sydney, Australia. I work on sparse
 methods for high‑dimensional data.
 
-📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au) [![Google Scholar icon]({{ '/assets/img/Google_Scholar_logo.svg.png' | relative_url }})](https://scholar.google.com/citations?user=vup-L7oAAAAJ&hl=en)
+📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au) <a href="https://scholar.google.com/citations?user=vup-L7oAAAAJ&hl=en" target="_blank" rel="noopener">
+  <img src="{{ '/assets/img/google-scholar.svg' | relative_url }}"
+       alt="Google Scholar"
+       style="width:22px;height:22px;vertical-align:middle;" />
+</a>
 
 
 - **Research interests:** Optimization for machine learning,  Penalized regression, High-dimensional statistics, Numerical analysis
