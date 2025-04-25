@@ -15,5 +15,5 @@ methods for high‑dimensional data.
 
 📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au)
 
-- **Research interests:** Optimization for machine learning,  penalized regression, high-dimensional statistics, numerical linear algebra.
+- **Research interests:** Optimization for machine learning,  Penalized regression, High-dimensional statistics, Numerical analysis
 - **Latest news:** Submitted my PhD thesis, *Efficient Algorithms for Sparse Statistical Learning*  (April 2025); on the post‑doc market!
