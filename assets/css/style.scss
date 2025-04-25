@@ -1,21 +1,32 @@
 ---
----
+---                                      /* YAML front-matter — must be present */
 
-@import "{{ site.theme }}";        /* keep theme styles */
+/* Pull in all CSS from the active theme (minima, etc.) */
+@import "{{ site.theme }}";
 
-/* -- Your custom tweaks ------------------------------ */
+/* ───────────────────────────────
+   Custom overrides start here
+   ─────────────────────────────── */
+
+/* 1. Portrait on the home page */
 .profile-pic {
-  width: 180px;          /* adjust to taste */
-  border-radius: 50%;    /* makes it circular */
+  width: 110px;               /* ← adjust this value to make the image bigger/smaller */
+  border-radius: 50%;         /* round image */
   display: block;
-  margin: 0 auto 1rem;   /* center & give some space below */
+  margin: 0 auto 1rem;        /* center horizontally, add space below */
 }
 
-/* Tiny customisations on top of the theme */
-body { max-width: 840px; margin: 0 auto; font-size: 1.05rem; }
+/* 2. Nice buttons for the home-page links (optional) */
 .button-row .btn {
-    display:inline-block; margin:0.3em 0.6em; padding:0.4em 0.9em;
-    border:1px solid #0366d6; border-radius:6px; text-decoration:none;
+  display: inline-block;
+  margin: 0.25em 0.45em;
+  padding: 0.35em 0.85em;
+  border: 1px solid #0366d6;
+  border-radius: 6px;
+  text-decoration: none;
 }
-.button-row .btn:hover { background:#0366d6; color:#fff; }
 
+.button-row .btn:hover {
+  background: #0366d6;
+  color: #fff;
+}
