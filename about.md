@@ -16,8 +16,3 @@ My research centres on sparse statistical learning in high-dimensional settings,
 * **BSc (Hons). (Statistics)** —  UNSW Sydney, 2015‑2019
 
 [Download full CV (PDF)](assets/cv/Anant_Mathur_CV.pdf)
-
-
-
-
-markdown<br><br><br><br><script async id="MathJax-script"<br> src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
