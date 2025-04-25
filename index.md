@@ -3,6 +3,11 @@ layout: default
 title: "Home"
 nav_order: 1
 ---
+
+<img src="{{ '/assets/img/profile.jpg' | relative_url }}"
+     alt="Anant Mathur"
+     class="profile-pic" />
+
 I’m a final‑year PhD candidate in computational statistics at the  
 [University of New South Wales](https://www.unsw.edu.au/science/our-schools/maths) in Sydney, Australia. I work on sparse
 optimisation methods for high‑dimensional data.
