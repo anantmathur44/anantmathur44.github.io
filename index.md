@@ -14,6 +14,10 @@ I’m a final‑year PhD candidate in computational statistics at the
 methods for high‑dimensional data.
 
 📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au)
+📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au)
+
+[![Google Scholar icon]({{ '/assets/img/Google_Scholar_logo.svg' | relative_url }})](https://scholar.google.com/citations?user=vup-L7oAAAAJ&hl=en)
+
 
 - **Research interests:** Optimization for machine learning,  Penalized regression, High-dimensional statistics, Numerical analysis
 - **Latest news:** Submitted my PhD thesis, *Efficient Algorithms for Sparse Statistical Learning*  (April 2025); on the post‑doc market!
