@@ -1,7 +1,32 @@
-/* Tiny customisations on top of the theme */
-body { max-width: 840px; margin: 0 auto; font-size: 1.05rem; }
-.button-row .btn {
-    display:inline-block; margin:0.3em 0.6em; padding:0.4em 0.9em;
-    border:1px solid #0366d6; border-radius:6px; text-decoration:none;
+---
+---
+
+@import "{{ site.theme }}";          /* make sure theme styles load first */
+
+/* ─────────── custom layout for Home “hero” block ─────────── */
+.hero {
+  display: flex;                    /* image left, text right */
+  flex-wrap: wrap;                  /* wrap on very narrow screens */
+  align-items: center;
+  gap: 1.25rem;                     /* space between image & text */
 }
-.button-row .btn:hover { background:#0366d6; color:#fff; }
+
+.hero-pic {
+  width: 150px;                     /* adjust to taste */
+  height: auto;                     /* keep original aspect ratio */
+  border-radius: 8px;               /* small rounding → rectangular look */
+}
+
+.hero-text h1   { margin: 0 0 0.3rem; }
+.hero-text .tagline { margin: 0 0 0.8rem; font-style: italic; }
+
+/* same button styling as before */
+.button-row .btn {
+  display: inline-block;
+  margin: 0.25em 0.45em;
+  padding: 0.35em 0.85em;
+  border: 1px solid #0366d6;
+  border-radius: 6px;
+  text-decoration: none;
+}
+.button-row .btn:hover { background: #0366d6; color: #fff; }
