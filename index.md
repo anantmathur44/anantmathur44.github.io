@@ -14,7 +14,7 @@ I’m a final‑year PhD candidate in computational statistics at the
 methods for high‑dimensional data.
 
 📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au) <a href="https://scholar.google.com/citations?user=vup-L7oAAAAJ&hl=en" target="_blank" rel="noopener">
-  <img src="{{ '/assets/img/google-scholar.svg.png' | relative_url }}"
+  <img src="{{ '/assets/img/Google-Scholar.svg.png' | relative_url }}"
        alt="Google Scholar"
        style="width:22px;height:22px;vertical-align:middle;" />
 </a>
