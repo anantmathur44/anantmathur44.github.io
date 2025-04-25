@@ -11,10 +11,9 @@ nav_order: 1
 
 I’m a final‑year PhD candidate in computational statistics at the  
 [University of New South Wales](https://www.unsw.edu.au/science/our-schools/maths) in Sydney, Australia. I work on sparse
-optimisation methods for high‑dimensional data.
+methods for high‑dimensional data.
 
-📧 anant.mathur@unsw.edu.au  <!-- put your real email here -->
+📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au)
 
-- **Research interests:** optimisation for machine learning, group lasso,
-  trustworthy AI, and statistical theory for deep learning  
-- **Latest news:** Thesis submitted (April 2025); on the post‑doc market!
+- **Research interests:** Optimization for machine learning,  penalized regression, high-dimensional statistics, numerical linear algebra.
+- **Latest news:** Submitted my PhD thesis, *Efficient Algorithms for Sparse Statistical Learning*  (April 2025); on the post‑doc market!
