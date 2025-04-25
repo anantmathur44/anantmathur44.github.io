@@ -5,7 +5,7 @@ nav_order: 1
 ---
 <img src="{{ '/assets/img/profile.jpg' | relative_url }}"
      alt="Anant Mathur"
-     style="width:2000px !important; max-width:none; border-radius:50%; display:block; margin:0 auto 1rem;" />
+     style="width:200px !important; max-width:none; border-radius:50%; display:block; margin:0 auto 1rem;" />
 
 
 
