@@ -5,3 +5,10 @@ body { max-width: 840px; margin: 0 auto; font-size: 1.05rem; }
     border:1px solid #0366d6; border-radius:6px; text-decoration:none;
 }
 .button-row .btn:hover { background:#0366d6; color:#fff; }
+
+.profile-pic {
+    width: 80px;       /* ≤ half the old size—adjust to taste */
+    border-radius: 50%;
+    display: block;
+    margin: 0 auto 1rem;
+  }
