@@ -1,25 +1,7 @@
----
----                                      /* YAML front-matter — must be present */
-
-/* Pull in all CSS from the active theme (minima, etc.) */
-@import "{{ site.theme }}";
-
-/* ───────────────────────────────
-   Custom overrides start here
-   ─────────────────────────────── */
-
-
-/* 2. Nice buttons for the home-page links (optional) */
+/* Tiny customisations on top of the theme */
+body { max-width: 840px; margin: 0 auto; font-size: 1.05rem; }
 .button-row .btn {
-  display: inline-block;
-  margin: 0.25em 0.45em;
-  padding: 0.35em 0.85em;
-  border: 1px solid #0366d6;
-  border-radius: 6px;
-  text-decoration: none;
+    display:inline-block; margin:0.3em 0.6em; padding:0.4em 0.9em;
+    border:1px solid #0366d6; border-radius:6px; text-decoration:none;
 }
-
-.button-row .btn:hover {
-  background: #0366d6;
-  color: #fff;
-}
+.button-row .btn:hover { background:#0366d6; color:#fff; }
