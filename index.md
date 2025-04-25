@@ -3,11 +3,10 @@ layout: default
 title: "Home"
 nav_order: 1
 ---
-
 <img src="{{ '/assets/img/profile.jpg' | relative_url }}"
      alt="Anant Mathur"
-     width="10"                    <!-- ← controls size -->
-     style="border-radius:50%;display:block;margin:0 auto 1rem;" />
+     style="width:50px !important; max-width:none; border-radius:50%; display:block; margin:0 auto 1rem;" />
+
 
 
 I’m a final‑year PhD candidate in computational statistics at the  
