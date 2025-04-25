@@ -6,7 +6,7 @@ nav_order: 1
 
 <img src="{{ '/assets/img/profile.jpg' | relative_url }}"
      alt="Anant Mathur"
-     width="60px"                    <!-- ← controls size -->
+     width="60"                    <!-- ← controls size -->
      style="border-radius:50%;display:block;margin:0 auto 1rem;" />
 
 
