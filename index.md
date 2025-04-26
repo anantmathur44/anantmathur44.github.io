@@ -16,7 +16,7 @@ methods for high‑dimensional data.
 📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au) <a href="https://scholar.google.com/citations?user=vup-L7oAAAAJ&hl=en" target="_blank" rel="noopener">
 <img src="{{ '/assets/img/Google_Scholar_logo.svg.png' | relative_url }}"
      alt="Anant Mathur"
-     style="width:100px !important; max-width:none; border-radius:50%; display:block; margin:0 auto 1rem;" />
+     style="width:20px !important; max-width:none; border-radius:50%; display:block; margin:0 auto 1rem;" />
 </a>
 
 - **Research interests:** Optimization for machine learning,  Penalized regression, High-dimensional statistics, Numerical analysis
