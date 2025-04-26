@@ -4,18 +4,23 @@ title: "Publications"
 nav_order: 3
 ---
 
+
 ## Pre-prints
 1. **Mathur A.; Moka S.; Botev Z.** (2024). *MM Algorithms for Group Lasso*.  
    [`PDF`](assets/papers/MM_Algorithms_Group_Lasso.pdf)
 
+
 ---
+
 
 ## Journal Articles
 1. **Mathur A.; Moka S.; Botev Z.** (2022). *Coordinate Descent for Variance-Component Models*.  
    *Algorithms*, **15** (10): 354.  
    <https://doi.org/10.3390/a15100354>
 
+
 ---
+
 
 ## Conference Publications
 1. **Mathur A.; Moka S.; Liquet B.; Botev Z.** (2024). *Group COMBSS: Group Selection via Continuous Optimisation*.  
