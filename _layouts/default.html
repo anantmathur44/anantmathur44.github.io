@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="{{ page.lang | default: site.lang | default: "en" }}">
-</head>
-    <!-- ── MathJax v3 for LaTeX rendering ─────────────────────────── -->
-    <script defer
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-  </script>
-  <!-- ───────────────────────────────────────────────────────────── -->
-</head>
+<html lang="{{ page.lang | default: site.lang | default: 'en' }}">
 
+  <head>
+    {%- include head.html -%}      <!-- loads Minima’s own CSS/meta -->
+
+    <!-- ── MathJax v3 for LaTeX rendering ─────────────────────────── -->
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- ───────────────────────────────────────────────────────────── -->
+  </head>
 
   <body>
 
@@ -22,5 +22,4 @@
     {%- include footer.html -%}
 
   </body>
-
 </html>
