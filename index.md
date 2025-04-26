@@ -14,16 +14,9 @@ I’m a final‑year PhD candidate in computational statistics at the
 methods for high‑dimensional data.
 
 📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au) <a href="https://scholar.google.com/citations?user=vup-L7oAAAAJ&hl=en" target="_blank" rel="noopener">
-  <img src="{{ '/assets/img/Google-Scholar_logo.svg.png' | relative_url }}"
-       alt="Google Scholar"
-       style="width:50px;height:50px;vertical-align:middle;" />
-</a>
-
-
-<a href="https://scholar.google.com/citations?user=vup-L7oAAAAJ&hl=en" target="_blank" rel="noopener">
-<img src="{{ '/assets/img/profile.jpg' | relative_url }}"
+<img src="{{ '/assets/img/Google_Scholar_logo.svg.png' | relative_url }}"
      alt="Anant Mathur"
-     style="width:200px !important; max-width:none; border-radius:50%; display:block; margin:0 auto 1rem;" />
+     style="width:100px !important; max-width:none; border-radius:50%; display:block; margin:0 auto 1rem;" />
 </a>
 
 - **Research interests:** Optimization for machine learning,  Penalized regression, High-dimensional statistics, Numerical analysis
