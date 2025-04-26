@@ -13,10 +13,3 @@ header_pages:
 # optional: minima lets you pick a light/dark variant
 # minima:
 #   skin: auto      # light in daytime, dark after 6 pm
-markdown: kramdown
-
-kramdown:
-  input: GFM          # GitHub-flavoured markdown
-  math_engine: mathjax
-  math_engine_opts:
-    preview: false    # skip the gray “loading” preview
