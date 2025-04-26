@@ -10,6 +10,13 @@ nav_order: 3
 
 ---
 
+## Journal Articles
+1. **Mathur A.; Moka S.; Botev Z.** (2022). *Coordinate Descent for Variance-Component Models*.  
+   *Algorithms*, **15** (10): 354.  
+   <https://doi.org/10.3390/a15100354>
+
+---
+
 ## Conference Publications
 1. **Mathur A.; Moka S.; Liquet B.; Botev Z.** (2024). *Group COMBSS: Group Selection via Continuous Optimisation*.  
    *Proceedings of the Winter Simulation Conference 2024*, pp. 3217-3228.  
@@ -26,10 +33,3 @@ nav_order: 3
 4. **Mathur A.; Moka S.; Botev Z.** (2021). *Variance Reduction for Matrix Computations with Applications to Gaussian Processes*.  
    *VALUETOOLS 2021*, LNCS 13116, pp. 275-290.  
    <https://link.springer.com/content/pdf/10.1007/978-3-030-92511-6_16.pdf>
-
----
-
-## Journal Articles
-1. **Mathur A.; Moka S.; Botev Z.** (2022). *Coordinate Descent for Variance-Component Models*.  
-   *Algorithms*, **15** (10): 354.  
-   <https://doi.org/10.3390/a15100354>
