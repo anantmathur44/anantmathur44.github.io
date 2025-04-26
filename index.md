@@ -18,7 +18,7 @@ methods for high‑dimensional data.
     <img src="{{ '/assets/img/Google_Scholar_logo.svg.png' | relative_url }}"
          alt="Google Scholar profile"
          style="width:30px; height:20px;"/>
-  </a>
+  </a>&nbsp;&nbsp;
  📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au)
 
 
