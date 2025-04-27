@@ -32,7 +32,7 @@ nav_order: 3
    <https://opt-ml.org/papers/2023/paper103.pdf>
 
 3. **Mathur A.; Moka S.; Botev Z.** (2023). *Column Subset Selection and Nyström Approximation via Continuous Optimisation*.  
-   *Winter Simulation Conference 2023*, pp. 3601-3612.  
+   *Proceedings of the Winter Simulation Conference 2023*, pp. 3601-3612.  
    <https://informs-sim.org/wsc23papers/303.pdf>
 
 4. **Mathur A.; Moka S.; Botev Z.** (2021). *Variance Reduction for Matrix Computations with Applications to Gaussian Processes*.  
