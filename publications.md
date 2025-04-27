@@ -6,7 +6,7 @@ nav_order: 3
 
 
 ## Pre-prints
-1. **Mathur A.; Moka S.; Botev Z.** (2024). *MM Algorithms for Group Lasso*.  
+1. **Mathur A.; Moka S.; Botev Z.** (2024). *A Fast MM Algorithm for Group Lasso*.  
    [`PDF`](assets/papers/MM_Algorithms_Group_Lasso.pdf)
 
 
