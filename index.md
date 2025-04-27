@@ -24,3 +24,6 @@ methods for high‑dimensional data.
 
 - **Research interests:** Optimization for machine learning,  Penalized regression, High-dimensional statistics, Numerical analysis
 - **Latest news:** Submitted my PhD thesis, *Efficient Algorithms for Sparse Statistical Learning*  (April 2025); on the post‑doc market!
+
+
+[Download full CV (PDF)](assets/cv/Anant_Mathur_CV.pdf)
