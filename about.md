@@ -12,7 +12,7 @@ supervised by [Zdravko Botev](https://web.maths.unsw.edu.au/~zdravkobotev/) and 
  My research focuses on sparse statistical learning in high-dimensional settings. My PhD has centred on developing optimisation methods for sparse statistical models, including scalable algorithms for convex ℓ₁-constrained problems using majorisation–minimisation techniques and for non-convex ℓ₀-constrained problems via binary relaxation methods. More broadly, I am interested in challenges arising in high-dimensional statistics and model compression.
 
 ### Education
-* **PhD (Statistics)** — UNSW Sydney, 2020‑2025 (expected)  
+* **PhD (Statistics)** — UNSW Sydney, Sep 2020 ‑ (Expected) May 2025  
 * **BSc (Hons). (Statistics)** —  UNSW Sydney, 2015‑2019
 
 [Download full CV (PDF)](assets/cv/Anant_Mathur_CV.pdf)
