@@ -6,7 +6,7 @@ nav_order: 3
 
 
 ## Pre-prints
-1. **Mathur A.; Moka S.; Botev Z.** (2024). *MM Algorithms for Group Lasso*.  
+1. **Mathur A.; Moka S.; Botev Z.** (2024). *A Fast MM Algorithm for Group Lasso*.  
    [`PDF`](assets/papers/MM_Algorithms_Group_Lasso.pdf)
 
 
@@ -32,7 +32,7 @@ nav_order: 3
    <https://opt-ml.org/papers/2023/paper103.pdf>
 
 3. **Mathur A.; Moka S.; Botev Z.** (2023). *Column Subset Selection and Nyström Approximation via Continuous Optimisation*.  
-   *Winter Simulation Conference 2023*, pp. 3601-3612.  
+   *Proceedings of the Winter Simulation Conference 2023*, pp. 3601-3612.  
    <https://informs-sim.org/wsc23papers/303.pdf>
 
 4. **Mathur A.; Moka S.; Botev Z.** (2021). *Variance Reduction for Matrix Computations with Applications to Gaussian Processes*.  
