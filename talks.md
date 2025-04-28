@@ -16,7 +16,7 @@ nav_order: 4     # after About (2) and Publications (3)
   *Majorisation–Minimisation Algorithms for Group Lasso*
 
 - **Sep 2024** — Macquarie University Statistics Seminar  
-  *Majorisation–Minimisation Algorithm for Group Lasso*
+  *Majorisation–Minimisation Algorithms for Group Lasso*
 
 - **Dec 2023** — Winter Simulation Conference 2023  
   *Column Subset Selection and Nyström Approximation via Continuous Optimisation*
