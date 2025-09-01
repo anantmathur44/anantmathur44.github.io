@@ -12,6 +12,10 @@ nav_order: 4     # after About (2) and Publications (3)
 ---
 
 ## Contributed & Departmental Talks
+
+- **Jul 2025** — INFORMS International Meeting 2025, Singapore  
+  *Majorisation–Minimisation Algorithms for Group Lasso*
+
 - **Sep 2024** — UNSW Statistics Seminar  
   *Majorisation–Minimisation Algorithms for Group Lasso*
 

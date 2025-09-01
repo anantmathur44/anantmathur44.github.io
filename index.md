@@ -9,7 +9,7 @@ nav_order: 1
 
 
 
-I’m a final‑year PhD candidate in computational statistics at the  
+I’m a recent PhD graduate in computational statistics and operations research from  
 [University of New South Wales](https://www.unsw.edu.au/science/our-schools/maths) in Sydney, Australia. I work on sparse
 methods for high‑dimensional data.
 
@@ -22,8 +22,8 @@ methods for high‑dimensional data.
  📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au)
 
 
-- **Research interests:** Optimization for machine learning,  Penalized regression, High-dimensional statistics, Numerical analysis
-- **Latest news:** Submitted my PhD thesis, *Efficient Algorithms for Sparse Statistical Learning*  (April 2025); on the post‑doc market!
+- **Research interests:** Optimization for machine learning,  Dimensionalty reduction, High-dimensional statistics, Numerical analysis
+- **Latest news:**  Completed PhD in *Efficient Algorithms for Sparse Statistical Learning*  (June 2025); open to new opportunities in research and industry.
 
 
 [Download full CV (PDF)](assets/cv/Anant_Mathur_CV.pdf)
