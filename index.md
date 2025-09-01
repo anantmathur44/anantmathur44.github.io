@@ -22,7 +22,7 @@ methods for high‑dimensional data.
  📧 [anant.mathur@unsw.edu.au](mailto:anant.mathur@unsw.edu.au)
 
 
-- **Research interests:** Optimization for machine learning,  Dimensionalty reduction, High-dimensional statistics, Numerical analysis
+- **Research interests:** Optimization for machine learning,  Dimensionalty reduction, High-dimensional statistics, Numerical analysis, Simulation
 - **Latest news:**  Completed PhD in *Efficient Algorithms for Sparse Statistical Learning*  (June 2025); open to new opportunities in research and industry.
 
 
