@@ -23,7 +23,7 @@ methods for high‑dimensional data.
 
 
 - **Research interests:** Optimization for machine learning,  Dimensionalty reduction, High-dimensional statistics, Numerical analysis, Simulation
-- **Latest news:**  Completed PhD in *Efficient Algorithms for Sparse Statistical Learning*  (June 2025); open to new opportunities in research and industry.
+- **Latest news:**  Completed PhD in [*Efficient Algorithms for Sparse Statistical Learning*](https://unsworks.unsw.edu.au/entities/publication/3e8be963-72ca-44a1-a507-3ba67cbe8698)  (June 2025); open to new opportunities in research and industry.
 
 
 [Download full CV (PDF)](assets/cv/Anant_Mathur_CV.pdf)
