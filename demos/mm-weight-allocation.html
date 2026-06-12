@@ -8,8 +8,11 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <style>
   :root { --fg:#1c2330; --muted:#697386; --line:#d9dee8; --accent:#2563eb; }
+  html { scroll-behavior: smooth; }
   body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
          color: var(--fg); margin: 0; background: #f6f8fb; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 22px 26px 60px; }
   h1 { font-size: 20px; margin: 8px 0 6px; }
   .sub { color: var(--muted); font-size: 13.5px; line-height: 1.55; max-width: 980px; }
@@ -133,7 +136,8 @@
     <b>groups</b> at one iteration (supplementary, Appendix “Derivation of Optimal
     Weights”). The animation pours the budget into whichever group currently lowers the
     bound fastest. Every example is verified: the animated final weights equal the
-    <code>getWeights</code> (Algorithm&nbsp;1) output and the scipy SLSQP optimum.
+    <code>getWeights</code> (<a href="#algo">Algorithm&nbsp;1</a>, pseudocode at the
+    bottom) output and the scipy SLSQP optimum.
   </div>
 
   <div class="defs">
@@ -175,7 +179,7 @@
     \(\gamma_j \to 0\); smaller weights leave it active. Note that when
     \(\xi_j &lt; 0\) the threshold \(c_j &lt; 0\) is vacuous — <b>no weight can
     deactivate group \(j\)</b>, and \(p_j\) stays linear over the whole budget; more
-    on this in the winner-takes-all remark below.
+    on this in the <a href="#wta-remark">winner-takes-all remark</a> below.
 
     <h3>Contribution of group \(j\) to the bound, and its negative gradient</h3>
     <div class="branchrow">
@@ -220,7 +224,7 @@
         continuously differentiable, and beyond \(c_j\) the weight is large enough to
         deactivate group \(j\).</div>
     </div>
-    <div class="remark">
+    <div class="remark" id="wta-remark">
       <b>When no weight can deactivate a group.</b> Deactivating group \(j\) requires
       \( w_j\,\xi_j \ge \tilde\gamma_j\tau_j \). So whenever
       \( \xi_j &lt; \tilde\gamma_j\,\tau_j \) — equivalently \( c_j \notin (0,1] \),
@@ -232,20 +236,19 @@
       holds for <i>every</i> group \(j\), the objective \( \sum_j p_j(w_j) \) is linear
       over the simplex and the optimum sits at a vertex — <b>winner takes all</b>: the
       entire budget goes to the group with the largest \( \xi_j^2 \). This is the common
-      situation mid-run; the “winner takes all” example below shows it with
-      \( 0 &lt; \xi_j &lt; \tilde\gamma_j\tau_j \) for every group.
+      situation mid-run; the <a href="#scenarios">“winner takes all” example
+      below</a> shows it with \( 0 &lt; \xi_j &lt; \tilde\gamma_j\tau_j \) for every
+      group.
     </div>
 
-    <h3>\(\nu^*\) — the final water level</h3>
-    While the budget pours, the <b>water level</b>
-    \( \nu := \max_j\, -p_j'(w_j) \) is the steepest slope still available; funded
-    groups always sit exactly at it, \( -p_j'(w_j) = \nu \), and it can only descend.
-    When the budget is exhausted the level rests at the <b>final water level</b>
-    \( \nu^* \): every funded group has \( -p_j'(\widehat w_j) = \nu^* \) and every
-    unfunded group has \( \xi_j^2 \le \nu^* \) (not worth funding). Where \( \nu^* \)
-    lands decides the case:
+    <h3 id="nustar">\(\nu^*\) — the final water level</h3>
+    The <b>water level</b> \( \nu := \max_j\, -p_j'(w_j) \) is the steepest slope
+    still available; funded groups sit exactly on it, and it only descends. When the
+    budget runs out the level rests at \( \nu^* \): funded groups have
+    \( -p_j'(\widehat w_j) = \nu^* \), unfunded ones have \( \xi_j^2 \le \nu^* \).
+    Where \( \nu^* \) lands decides the case:
 
-    <h3>The two termination cases of Algorithm 1
+    <h3 id="cases">The two termination cases of <a href="#algo">Algorithm 1</a>
       &nbsp;(groups sorted so \(\xi_{(1)}^2 \ge \xi_{(2)}^2 \ge \cdots\))</h3>
     <div class="branchrow">
       <div class="b case1">
@@ -278,7 +281,7 @@
     </div>
   </div>
 
-  <div class="casebar" id="scenarioBtns"></div>
+  <div class="casebar" id="scenarioBtns"><span id="scenarios"></span></div>
 
   <div class="controls">
     <button id="btnPlay" class="primary">&#10074;&#10074; Pause</button>
@@ -353,7 +356,7 @@
     <div class="card wform" id="wform"></div>
   </div>
 
-  <div class="card algo">
+  <div class="card algo" id="algo">
     <h2>Algorithm 1 — <code>getWeights</code> pseudocode</h2>
     <div class="algobox">
       <div><span class="ln"></span><b>input:</b>
