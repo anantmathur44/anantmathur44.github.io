@@ -172,7 +172,10 @@
       \;\;\text{(smallest weight that switches group } j \text{ off)}.
     \]
     Giving group \(j\) weight \(w_j \ge c_j\) makes the next MM update set
-    \(\gamma_j \to 0\); smaller weights leave it active.
+    \(\gamma_j \to 0\); smaller weights leave it active. Note that when
+    \(\xi_j &lt; 0\) the threshold \(c_j &lt; 0\) is vacuous — <b>no weight can
+    deactivate group \(j\)</b>, and \(p_j\) stays linear over the whole budget; more
+    on this in the winner-takes-all remark below.
 
     <h3>Contribution of group \(j\) to the bound, and its negative gradient</h3>
     <div class="branchrow">
