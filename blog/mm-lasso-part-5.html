@@ -51,6 +51,20 @@
     .demo-controls button:hover { background: var(--accent); color: #2a160d; }
     .wf-label { color: var(--text-dim); font-size: 0.88rem; display: flex; align-items: center; gap: 0.6rem; }
     .wf-label input[type=range] { accent-color: var(--accent); width: 180px; }
+    .part-banner {
+      margin: 3.2rem 0 0.4rem;
+      padding: 0.9rem 1.2rem;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: var(--card);
+    }
+    .part-banner .kicker {
+      font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent);
+    }
+    .part-banner .name { font-size: 1.3rem; font-weight: 700; color: var(--heading); }
+    .part-banner .sub-line { color: var(--text-dim); font-size: 0.9rem; margin-top: 0.15rem; }
     .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.6rem; }
     #famdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
                width: 100%; display: block; margin-top: 1rem; }
@@ -217,6 +231,13 @@
     <a class="here" href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
   </div>
 
+  <div class="part-banner">
+    <div class="kicker">Part A</div>
+    <div class="name">The optimal surrogate</div>
+    <div class="sub-line">Derive the weight problem, read it through the KKT gap, and see the
+    surrogate family it selects from.</div>
+  </div>
+
   <h2>Deriving the weight problem</h2>
 
   <p>
@@ -355,6 +376,13 @@
     the plateau: once $w$ passes the knot $c_j$ the group is already at zero and extra weight
     buys nothing.
   </p>
+
+  <div class="part-banner">
+    <div class="kicker">Part B</div>
+    <div class="name">Water-filling</div>
+    <div class="sub-line">The exact solution of the weight problem, and two interactive views
+    of it.</div>
+  </div>
 
   <h2>The solution is water-filling</h2>
 
