@@ -35,10 +35,18 @@
     .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
     .series-nav a.here { color: var(--accent); border-color: var(--accent); }
     .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
-    .demo-frame {
-      width: 100%; height: 900px; border: 1px solid var(--border); border-radius: 12px;
-      background: #f6f8fb; margin-top: 1rem;
+    #wfdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+              width: 100%; display: block; margin-top: 1rem; }
+    .demo-controls { display: flex; gap: 1.2rem; margin-top: 0.7rem; flex-wrap: wrap; align-items: center; }
+    .demo-controls button {
+      font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      padding: 0.4rem 1rem; border-radius: 8px;
+      border: 1px solid var(--accent); background: transparent; color: var(--accent);
     }
+    .demo-controls button:hover { background: var(--accent); color: #2a160d; }
+    .wf-label { color: var(--text-dim); font-size: 0.88rem; display: flex; align-items: center; gap: 0.6rem; }
+    .wf-label input[type=range] { accent-color: var(--accent); width: 180px; }
+    .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.6rem; }
   </style>
 </head>
 <body>
@@ -107,20 +115,40 @@
     decide which groups get the privileged shrinkage treatment.
   </p>
 
+  <h2>How the water level works</h2>
+
+  <p>
+    The KKT conditions for the weight problem reveal a classic water-filling structure. Each
+    group contributes a convex cost $p_j(w_j)$ whose <em>negative slope</em> $-p_j'(w_j)$ starts
+    at height $\xi_j = (\alpha_j - \tau_j)^2$ and is non-increasing in $w_j$. Optimality requires
+    a common level $\nu^*$ (the Lagrange multiplier of $\v 1^\top \v w = 1$) such that every
+    group with positive weight has $-p_j'(\widehat w_j) = \nu^*$, while every group with
+    $\xi_j &lt; \nu^*$ receives $\widehat w_j = 0$. Sorting the $\xi_j$ in decreasing order and
+    lowering the level until the unit mass is exhausted gives the exact solution — the
+    <code>getWeights</code> algorithm — in $\c{O}(J \ln J)$ time. Groups whose KKT-violation
+    columns rise above the water line get weight; the rest stay dry.
+  </p>
+
   <h2>Interactive demo</h2>
 
   <p>
-    The demo below visualises the weight-allocation problem: the two cases of the surrogate
-    bound, and how the optimal $\v w$ emerges as a water level rising over the KKT-violation
-    profile $\{\xi_j\}$. Play with the group configurations and watch which groups receive
-    positive weight.
-    <a href="../demos/mm-weight-allocation.html" target="_blank" rel="noopener">Open the demo in
-    a full tab →</a>
+    Below, each column is a group $j$ with height $\xi_j = (\alpha_j - \tau_j)^2$ (its KKT
+    violation). The dashed line is the optimal level $\nu^*$ computed by
+    <code>getWeights</code>, and the filled portion of each column shows its optimal weight
+    $\widehat w_j$ (the weights sum to 1). Drag the $\lambda$ slider or randomize the scenario
+    and watch weight flow to the groups furthest from optimality.
+    <a href="../demos/mm-weight-allocation.html" target="_blank" rel="noopener">A more detailed
+    standalone demo lives here →</a>
   </p>
 
-  <iframe class="demo-frame" src="../demos/mm-weight-allocation.html"
-          title="MM Group Lasso — Optimal Weight Allocation as Water-Filling"
-          loading="lazy"></iframe>
+  <canvas id="wfdemo" width="720" height="400"></canvas>
+  <div class="demo-controls">
+    <button id="wf-random">Randomize scenario</button>
+    <label class="wf-label">λ scale
+      <input type="range" id="wf-lambda" min="0.4" max="2.2" step="0.02" value="1">
+    </label>
+  </div>
+  <div id="wf-legend" class="demo-caption"></div>
 
   <h2>Closing the loop</h2>
 
@@ -145,6 +173,147 @@
 </div>
 
 <footer>© 2026 Anant Mathur</footer>
+
+<script>
+(function () {
+  const cv = document.getElementById('wfdemo');
+  const ctx = cv.getContext('2d');
+  const css = getComputedStyle(document.documentElement);
+  const C = {
+    accent: css.getPropertyValue('--accent').trim() || '#e8825e',
+    accent2: css.getPropertyValue('--accent-2').trim() || '#f0a380',
+    dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
+    text: css.getPropertyValue('--text').trim() || '#e3ddd3',
+    grid: css.getPropertyValue('--border').trim() || '#3a332a'
+  };
+  const J = 9;
+  let alpha0 = [], tau = [], gtil = [];
+
+  function randomize() {
+    alpha0 = []; tau = []; gtil = [];
+    for (let j = 0; j < J; j++) {
+      tau.push(0.4 + 2.6 * Math.random());
+      alpha0.push(0.5 + 2.2 * Math.random());
+      // ~ half the groups currently activated
+      gtil.push(Math.random() < 0.55 ? 0.15 + 1.2 * Math.random() : 0);
+    }
+  }
+
+  // Faithful implementation of Algorithm getWeights (supplementary of the paper)
+  function getWeights(alpha, tau, gtil) {
+    const n = alpha.length;
+    const xi = alpha.map((a, j) => (a - tau[j]) ** 2);
+    let idx = [...Array(n).keys()].sort((a, b) => xi[b] - xi[a]);
+    // remove groups that remain unactivated regardless of w_j
+    idx = idx.filter(j => !(alpha[j] - tau[j] >= 0 && gtil[j] === 0));
+    const w = new Array(n).fill(0);
+    const d = idx.length;
+    if (d === 0) return { w, nu: 0, xi };
+    for (let k = 0; k < d; k++) {
+      const uk = idx[k];
+      let nu = xi[uk];
+      let s = 0;
+      for (let j = 0; j < k; j++) {
+        w[idx[j]] = gtil[idx[j]] * tau[idx[j]] / Math.sqrt(nu);
+        s += w[idx[j]];
+      }
+      w[uk] = 1 - s;
+      const denom = alpha[uk] - tau[uk];
+      const ck = denom !== 0 ? gtil[uk] * tau[uk] / denom : Infinity;
+      const ckIn01 = ck > 0 && ck <= 1;
+      if (w[uk] >= 0 && (w[uk] < ck || !ckIn01)) {          // Case 1
+        for (let j = k + 1; j < d; j++) w[idx[j]] = 0;
+        return { w, nu, xi };
+      }
+      let sum = 0;                                          // Case 2
+      for (let j = 0; j <= k; j++) sum += gtil[idx[j]] * tau[idx[j]];
+      const nu2 = sum * sum;
+      const nextXi = k + 1 < d ? xi[idx[k + 1]] : -Infinity;
+      if (xi[uk] > nu2 && nu2 > nextXi) {
+        for (let j = 0; j <= k; j++) w[idx[j]] = gtil[idx[j]] * tau[idx[j]] / Math.sqrt(nu2);
+        for (let j = k + 1; j < d; j++) w[idx[j]] = 0;
+        return { w, nu: nu2, xi };
+      }
+    }
+    return { w, nu: xi[idx[d - 1]], xi };
+  }
+
+  function draw() {
+    const scale = parseFloat(document.getElementById('wf-lambda').value);
+    const alpha = alpha0.map(a => a * scale);
+    const { w, nu, xi } = getWeights(alpha, tau, gtil);
+
+    const order = [...Array(J).keys()].sort((a, b) => xi[b] - xi[a]);
+    const maxXi = Math.max(...xi, nu, 0.01) * 1.18;
+    const L = 50, R = 15, T = 20, Bm = 48;
+    const plotW = cv.width - L - R, plotH = cv.height - T - Bm;
+    const bw = plotW / J;
+
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const yOf = v => T + plotH - (v / maxXi) * plotH;
+
+    // water (region below the level nu*)
+    if (nu > 0) {
+      ctx.fillStyle = 'rgba(125, 170, 220, 0.10)';
+      ctx.fillRect(L, yOf(nu), plotW, T + plotH - yOf(nu));
+    }
+
+    // bars
+    order.forEach((j, pos) => {
+      const x = L + pos * bw + bw * 0.14, wid = bw * 0.72;
+      const excluded = (alpha[j] - tau[j] >= 0 && gtil[j] === 0);
+      const y = yOf(xi[j]);
+      ctx.fillStyle = excluded ? 'rgba(164,154,140,0.22)'
+                    : w[j] > 1e-9 ? C.accent : 'rgba(240,163,128,0.38)';
+      ctx.fillRect(x, y, wid, T + plotH - y);
+
+      // weight label
+      if (w[j] > 1e-9) {
+        ctx.fillStyle = C.text; ctx.font = '12px Inter, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('w=' + w[j].toFixed(2), x + wid / 2, y - 6);
+      }
+      // group label + status
+      ctx.fillStyle = C.dim; ctx.font = '11.5px Inter, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('j=' + (j + 1), x + wid / 2, T + plotH + 16);
+      ctx.fillText(excluded ? 'stays out' : gtil[j] === 0 ? 'switch on' : 'active',
+                   x + wid / 2, T + plotH + 32);
+    });
+
+    // water level line
+    if (nu > 0) {
+      ctx.strokeStyle = 'rgba(125, 170, 220, 0.85)';
+      ctx.setLineDash([7, 5]); ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(L, yOf(nu)); ctx.lineTo(L + plotW, yOf(nu)); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(150, 190, 235, 0.95)';
+      ctx.font = '12.5px Inter, sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText('ν* = ' + nu.toFixed(3), L + 6, yOf(nu) - 7);
+    }
+
+    // axis
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(L, T); ctx.lineTo(L, T + plotH); ctx.lineTo(L + plotW, T + plotH);
+    ctx.stroke();
+    ctx.save();
+    ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif';
+    ctx.translate(16, T + plotH / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center';
+    ctx.fillText('ξⱼ = (αⱼ − τⱼ)²', 0, 0);
+    ctx.restore();
+    ctx.textAlign = 'left';
+
+    const total = w.reduce((a, b) => a + b, 0);
+    const nPos = w.filter(x => x > 1e-9).length;
+    document.getElementById('wf-legend').textContent =
+      nPos + ' of ' + J + ' groups receive positive weight · Σⱼ wⱼ = ' + total.toFixed(3) +
+      ' · groups sorted by KKT violation ξⱼ (bars above the water line ν* get weight; "stays out" groups are excluded because γ̃ⱼ = 0 and αⱼ ≥ τⱼ).';
+  }
+
+  document.getElementById('wf-random').onclick = () => { randomize(); draw(); };
+  document.getElementById('wf-lambda').oninput = draw;
+  randomize(); draw();
+})();
+</script>
 
 </body>
 </html>

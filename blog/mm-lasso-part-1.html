@@ -128,10 +128,22 @@
   <h2>Watch it work</h2>
 
   <p>
-    Below, the orange curve is a non-convex objective $g$. At each step the current surrogate — a
-    quadratic majorizer $h(\cdot, \widetilde\gamma)$ (peach) — touches $g$ at the current iterate
-    and lies above it everywhere. Minimizing the parabola gives the next iterate, and the process
-    repeats, sliding downhill.
+    A concrete example — and a preview of Part 2. Take the one-dimensional lasso objective
+  </p>
+
+  $$
+  g(\gamma) = \tfrac{1}{2}(\gamma - b)^2 + \lambda|\gamma|,
+  \qquad b = 2.2,\; \lambda = 1.8,
+  $$
+
+  <p>
+    whose minimizer is the soft-thresholded value $\widehat\gamma = b - \lambda = 0.4$. The
+    absolute value is non-smooth, but it admits the classical quadratic majorizer of Hunter &amp;
+    Lange,
+    $|\gamma| \le \frac{\gamma^2}{2|\widetilde\gamma|} + \frac{|\widetilde\gamma|}{2}$,
+    with equality at $\gamma = \widetilde\gamma$. Each surrogate (peach parabola) is minimized in
+    closed form, giving the update
+    $\gamma^{(t+1)} = b\,|\widetilde\gamma| \,/\, (|\widetilde\gamma| + \lambda)$.
   </p>
 
   <canvas id="mmdemo" width="720" height="420"></canvas>
@@ -141,10 +153,12 @@
     <button id="btn-reset">Reset</button>
   </div>
   <p class="demo-caption">
-    Quadratic majorization $h(\gamma,\widetilde\gamma) = g(\widetilde\gamma) +
-    g'(\widetilde\gamma)(\gamma - \widetilde\gamma) + \tfrac{L}{2}(\gamma-\widetilde\gamma)^2$
-    with $L \ge \sup g''$. Each minimization gives
-    $\gamma^{(t+1)} = \widetilde\gamma - g'(\widetilde\gamma)/L$.
+    The dots on the curve mark past iterates. Convergence is <em>linear with rate</em>
+    $\lambda/b \approx 0.82$: each step only closes about 18% of the remaining gap, so the
+    iterates crawl toward $\widehat\gamma = 0.4$ — dozens of iterations to converge. This is MM's
+    trade-off in miniature: guaranteed monotone descent with closed-form steps, but speed that
+    depends entirely on how tightly the surrogate hugs the objective. That trade-off is what the
+    adaptive weights of Parts 4–5 attack.
   </p>
 
   <h2>Classical examples</h2>
@@ -194,13 +208,16 @@
     grid: css.getPropertyValue('--border').trim() || '#3a332a'
   };
 
-  // objective and its derivatives
-  const g  = x => 0.05 * x**4 - 0.5 * x**2 + 0.35 * x + 4;
-  const dg = x => 0.2 * x**3 - x + 0.35;
-  const L  = 9;  // >= sup g'' on [-4, 4]
+  // 1-D lasso: g(x) = 0.5 (x - b)^2 + lam |x|,  minimizer xhat = b - lam
+  const B = 2.2, LAM = 1.8, XHAT = B - LAM; // 0.4
+  const g = x => 0.5 * (x - B) ** 2 + LAM * Math.abs(x);
+  // quadratic majorizer of |x| at xt:  |x| <= x^2/(2|xt|) + |xt|/2
+  const surrogate = xt => x => 0.5 * (x - B) ** 2 + LAM * (x * x / (2 * Math.abs(xt)) + Math.abs(xt) / 2);
+  // closed-form minimizer of the surrogate
+  const mmStep = xt => B * Math.abs(xt) / (Math.abs(xt) + LAM);
 
-  const X0 = -3.55, XMIN = -4, XMAX = 4, YMIN = 0, YMAX = 9;
-  let xt = X0, iter = 0, timer = null;
+  const X0 = 4.6, XMIN = -0.8, XMAX = 5, YMIN = 0, YMAX = 12;
+  let xt = X0, iter = 0, timer = null, trail = [X0];
 
   function sx(x) { return (x - XMIN) / (XMAX - XMIN) * (cv.width - 60) + 45; }
   function sy(y) { return cv.height - 35 - (y - YMIN) / (YMAX - YMIN) * (cv.height - 60); }
@@ -210,7 +227,7 @@
     ctx.setLineDash(dash || []);
     ctx.lineWidth = width; ctx.strokeStyle = color;
     let started = false;
-    for (let px = XMIN; px <= XMAX; px += 0.02) {
+    for (let px = XMIN; px <= XMAX; px += 0.01) {
       const y = f(px);
       if (y < YMIN - 1 || y > YMAX + 1) { started = false; continue; }
       if (!started) { ctx.moveTo(sx(px), sy(y)); started = true; }
@@ -229,44 +246,61 @@
     ctx.moveTo(45, sy(YMIN)); ctx.lineTo(45, 15);
     ctx.stroke();
 
+    // minimizer reference line
+    ctx.strokeStyle = C.grid; ctx.setLineDash([3, 5]);
+    ctx.beginPath(); ctx.moveTo(sx(XHAT), sy(YMIN)); ctx.lineTo(sx(XHAT), 20); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif';
+    ctx.fillText('γ̂ = ' + XHAT.toFixed(1), sx(XHAT) - 22, sy(YMIN) + 16);
+
     // surrogate at current iterate
-    const gx = g(xt), dgx = dg(xt);
-    const h = x => gx + dgx * (x - xt) + L / 2 * (x - xt) ** 2;
+    const h = surrogate(xt);
     drawCurve(h, C.h, 1.6, [6, 5]);
     // objective
     drawCurve(g, C.g, 2.4);
 
+    // trail of past iterates on g
+    for (let i = 0; i < trail.length - 1; i++) {
+      const a = 0.15 + 0.55 * (i / Math.max(trail.length - 1, 1));
+      ctx.globalAlpha = a;
+      ctx.fillStyle = C.text;
+      ctx.beginPath(); ctx.arc(sx(trail[i]), sy(g(trail[i])), 3, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
     // next iterate marker (minimum of surrogate)
-    const xNext = xt - dgx / L;
+    const xNext = mmStep(xt);
     ctx.fillStyle = C.dim;
     ctx.beginPath(); ctx.arc(sx(xNext), sy(h(xNext)), 4, 0, 7); ctx.fill();
 
     // current iterate on g
     ctx.fillStyle = C.text;
-    ctx.beginPath(); ctx.arc(sx(xt), sy(gx), 5.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx(xt), sy(g(xt)), 5.5, 0, 7); ctx.fill();
 
     // labels
     ctx.font = '13px Inter, sans-serif';
-    ctx.fillStyle = C.g;  ctx.fillText('g(γ)', cv.width - 65, 32);
-    ctx.fillStyle = C.h;  ctx.fillText('h(γ, γᵗ)  (surrogate)', cv.width - 175, 52);
+    ctx.fillStyle = C.g;  ctx.fillText('g(γ) = ½(γ−b)² + λ|γ|', cv.width - 190, 32);
+    ctx.fillStyle = C.h;  ctx.fillText('h(γ, γᵗ)  (surrogate)', cv.width - 190, 52);
     ctx.fillStyle = C.dim;
-    ctx.fillText('iteration ' + iter + '    γᵗ = ' + xt.toFixed(3) +
-                 '    g(γᵗ) = ' + gx.toFixed(3), 55, 30);
+    ctx.fillText('iteration ' + iter + '    γᵗ = ' + xt.toFixed(4) +
+                 '    gap to γ̂: ' + Math.abs(xt - XHAT).toFixed(4), 55, 30);
   }
 
   function step() {
-    xt = xt - dg(xt) / L;
+    xt = mmStep(xt);
     iter += 1;
+    trail.push(xt);
+    if (trail.length > 60) trail.shift();
     draw();
-    if (Math.abs(dg(xt)) < 1e-4 && timer) stop();
+    if (Math.abs(xt - XHAT) < 5e-4 && timer) stop();
   }
   function stop() { clearInterval(timer); timer = null; document.getElementById('btn-play').textContent = 'Play'; }
 
   document.getElementById('btn-step').onclick = () => { if (timer) stop(); step(); };
   document.getElementById('btn-play').onclick = function () {
-    if (timer) { stop(); } else { timer = setInterval(step, 700); this.textContent = 'Pause'; }
+    if (timer) { stop(); } else { timer = setInterval(step, 450); this.textContent = 'Pause'; }
   };
-  document.getElementById('btn-reset').onclick = () => { stop(); xt = X0; iter = 0; draw(); };
+  document.getElementById('btn-reset').onclick = () => { stop(); xt = X0; iter = 0; trail = [X0]; draw(); };
 
   draw();
 })();
