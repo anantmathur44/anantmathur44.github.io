@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part 3: Auxiliary KKT Conditions — Anant Mathur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/dark.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        macros: {
+          m: ["\\mathbf{#1}", 1],
+          v: ["\\boldsymbol{#1}", 1],
+          bb: ["\\mathbb{#1}", 1],
+          c: ["\\mathcal{#1}", 1],
+          argmin: "\\mathop{\\mathrm{argmin}}"
+        }
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    .post-meta { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.4rem; }
+    mjx-container { color: var(--text); }
+    mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 0.3rem 0; }
+    .series-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.6rem; }
+    .series-nav a {
+      font-family: var(--mono); font-size: 0.78rem; padding: 0.25rem 0.7rem;
+      border: 1px solid var(--border); border-radius: 999px; color: var(--text-dim);
+    }
+    .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
+    .series-nav a.here { color: var(--accent); border-color: var(--accent); }
+    .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-name" href="../index.html">Anant <span>Mathur</span></a>
+    <a class="nav-link" href="../index.html">Home</a>
+    <a class="nav-link" href="../research.html">Research</a>
+    <a class="nav-link active" href="../blog.html">Blog</a>
+    <a class="nav-link" href="../talks.html">Talks</a>
+    <a class="nav-link" href="../cv.html">CV</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <h1>Part 3: Auxiliary KKT Conditions</h1>
+  <p class="post-meta">MM Algorithms and the Lasso · Anant Mathur · July 2026</p>
+
+  <div class="series-nav">
+    <a href="mm-lasso-part-1.html">1 · MM Algorithms</a>
+    <a href="mm-lasso-part-2.html">2 · The Lasso</a>
+    <a class="here" href="mm-lasso-part-3.html">3 · Auxiliary KKT</a>
+    <a href="mm-lasso-part-4.html">4 · An Interesting Bound</a>
+    <a href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
+  </div>
+
+  <h2>One scalar per group</h2>
+
+  <p>
+    Part 2 left us with the group-lasso KKT conditions in $\bb{R}^p$. The central move of the
+    paper is a change of variables: introduce <em>auxiliary variables</em>
+    $\v\gamma = [\gamma_1, \ldots, \gamma_J]^\top \in \bb{R}_+^J$ — one non-negative scalar per
+    group — and define
+  </p>
+
+  $$
+  \m G(\v\gamma) := \Big(\m I + \sum_{j=1}^{J} \gamma_j \m Z_j \m Z_j^\top\Big)^{-1}.
+  $$
+
+  <p>
+    Readers familiar with ridge regression or Gaussian processes will recognise
+    $\m G(\v\gamma)$ as the inverse of a regularised Gram matrix: each $\gamma_j$ acts like a
+    per-group precision. The optimization moves from a space of dimension $p$ to one of
+    dimension $J$.
+  </p>
+
+  <h2>The equivalence theorem</h2>
+
+  <p>
+    <strong>Theorem (Auxiliary Variable KKT Conditions).</strong> <em>Let
+    $\v\theta_j = \gamma_j \m Z_j^\top \m G(\v\gamma)\, \v y$ for $j = 1, \ldots, J$. Then
+    $\v\theta$ satisfies the group-lasso KKT conditions of Part 2 if and only if $\v\gamma$
+    satisfies</em>
+  </p>
+
+  $$
+  \begin{aligned}
+    \big\|\m Z_j^\top \m G(\v\gamma)\, \v y\big\|_2 &= \alpha_j, && \forall\, j \in \c{A}, \\[0.2em]
+    \big\|\m Z_j^\top \m G(\v\gamma)\, \v y\big\|_2 &\le \alpha_j, && \forall\, j \notin \c{A}.
+  \end{aligned}
+  $$
+
+  <p>
+    <em>Moreover $\gamma_j = \|\v\theta_j\|_2 / \alpha_j$ for $j \in \c{A}$.</em>
+  </p>
+
+  <p>
+    Compare with the original KKT conditions: the residual correlations
+    $\m Z_j^\top(\v y - \m Z\widehat{\v\theta})$ have become $\m Z_j^\top \m G(\v\gamma)\v y$ —
+    a single matrix–vector object shared by <em>all</em> groups. This is what will later let the
+    MM algorithm update every group at once from one linear solve.
+  </p>
+
+  <h2>A new objective</h2>
+
+  <p>
+    Even better, these auxiliary conditions are themselves the KKT conditions of a clean convex
+    problem. With $\v\alpha := [\alpha_1, \ldots, \alpha_J]^\top$ and $\odot$ the element-wise
+    product, define
+  </p>
+
+  $$
+  g(\v\gamma) := \v y^\top \m G(\v\gamma)\, \v y + (\v\alpha \odot \v\alpha)^\top \v\gamma .
+  $$
+
+  <p>
+    <strong>Lemma (Auxiliary Problem).</strong> <em>The global minimizer
+    $\widehat{\v\gamma} \in \argmin_{\v\gamma \in \bb{R}_+^J} g(\v\gamma)$ satisfies</em>
+  </p>
+
+  $$
+  \begin{aligned}
+    \big\|\m Z_j^\top \m G(\widehat{\v\gamma})\,\v y\big\|_2 &= \alpha_j, && \forall\, \widehat\gamma_j > 0, \\[0.2em]
+    \big\|\m Z_j^\top \m G(\widehat{\v\gamma})\,\v y\big\|_2 &\le \alpha_j, && \forall\, \widehat\gamma_j = 0 .
+  \end{aligned}
+  $$
+
+  <p>
+    <strong>Corollary.</strong> <em>The vector
+    $\widehat{\v\theta} = \widehat{\m\Gamma}^2 \m Z^\top \m G(\widehat{\v\gamma})\,\v y$ (with
+    $\widehat{\m\Gamma}$ the block-diagonal matrix carrying $\sqrt{\widehat\gamma_j}$) minimizes
+    the original group lasso objective $f(\v\theta)$, and the activated set is exactly
+    $\c{A} = \{j : \widehat\gamma_j > 0\}$.</em>
+  </p>
+
+  <p>
+    So group selection is now encoded in the <em>sign pattern</em> of a non-negative vector in
+    $\bb{R}^J$: $\gamma_j = 0$ means group $j$ is out, $\gamma_j > 0$ means it is in, and the
+    coefficients are recovered by
+    $\widehat{\v\theta}_j = \widehat\gamma_j \m Z_j^\top \m G(\widehat{\v\gamma})\,\v y$.
+  </p>
+
+  <p>
+    The catch: $g(\v\gamma)$ contains a matrix inverse, and naive coordinate descent on
+    $\v\gamma$ would require an inner Newton iteration with a linear solve at every step — not
+    competitive with BCD. What rescues the reparameterisation is a majorizing bound that
+    separates the variables and updates them all simultaneously. That bound is the subject of
+    Part 4.
+  </p>
+
+  <div class="pager">
+    <a class="btn ghost" href="mm-lasso-part-2.html">← Part 2: The Lasso</a>
+    <a class="btn" href="mm-lasso-part-4.html">Part 4: An Interesting Bound →</a>
+  </div>
+
+</div>
+
+<footer>© 2026 Anant Mathur</footer>
+
+</body>
+</html>

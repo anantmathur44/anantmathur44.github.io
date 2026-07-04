@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part 1: MM Algorithms — Anant Mathur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/dark.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        macros: {
+          m: ["\\mathbf{#1}", 1],
+          v: ["\\boldsymbol{#1}", 1],
+          bb: ["\\mathbb{#1}", 1],
+          c: ["\\mathcal{#1}", 1],
+          argmin: "\\mathop{\\mathrm{argmin}}"
+        }
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    .post-meta { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.4rem; }
+    mjx-container { color: var(--text); }
+    mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 0.3rem 0; }
+    .series-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.6rem; }
+    .series-nav a {
+      font-family: var(--mono); font-size: 0.78rem; padding: 0.25rem 0.7rem;
+      border: 1px solid var(--border); border-radius: 999px; color: var(--text-dim);
+    }
+    .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
+    .series-nav a.here { color: var(--accent); border-color: var(--accent); }
+    .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
+    #mmdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+              width: 100%; display: block; }
+    .demo-controls { display: flex; gap: 0.6rem; margin-top: 0.7rem; flex-wrap: wrap; }
+    .demo-controls button {
+      font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      padding: 0.4rem 1rem; border-radius: 8px;
+      border: 1px solid var(--accent); background: transparent; color: var(--accent);
+    }
+    .demo-controls button:hover { background: var(--accent); color: #2a160d; }
+    .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.6rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-name" href="../index.html">Anant <span>Mathur</span></a>
+    <a class="nav-link" href="../index.html">Home</a>
+    <a class="nav-link" href="../research.html">Research</a>
+    <a class="nav-link active" href="../blog.html">Blog</a>
+    <a class="nav-link" href="../talks.html">Talks</a>
+    <a class="nav-link" href="../cv.html">CV</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <h1>Part 1: MM Algorithms</h1>
+  <p class="post-meta">MM Algorithms and the Lasso · Anant Mathur · July 2026</p>
+
+  <div class="series-nav">
+    <a class="here" href="mm-lasso-part-1.html">1 · MM Algorithms</a>
+    <a href="mm-lasso-part-2.html">2 · The Lasso</a>
+    <a href="mm-lasso-part-3.html">3 · Auxiliary KKT</a>
+    <a href="mm-lasso-part-4.html">4 · An Interesting Bound</a>
+    <a href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
+  </div>
+
+  <div class="card">
+    This series is based on the paper <em>A Fast MM Algorithm for Group Lasso</em> by
+    <strong>Anant Mathur, Sarat Moka and Zdravko Botev</strong> (School of Mathematics and
+    Statistics, UNSW Sydney).
+    <a href="../assets/papers/MM_Algorithms_Group_Lasso.pdf" target="_blank" rel="noopener">[PDF]</a>
+  </div>
+
+  <h2>The idea</h2>
+
+  <p>
+    A <em>majorize–minimize</em> (MM) algorithm turns a hard minimization problem into a sequence
+    of easy ones. The principle traces back to the optimization-transfer ideas surveyed and
+    popularised in the seminal work of Kenneth Lange and collaborators — see
+    Lange, Hunter &amp; Yang (2000), the widely read tutorial by
+    <a href="https://doi.org/10.1198/0003130042836" target="_blank" rel="noopener">Hunter &amp; Lange (2004)</a>,
+    Lange's monograph <em>MM Optimization Algorithms</em> (SIAM, 2016), and
+    <a href="https://deleeuwworkshop.stat.ucla.edu/KennethLange.pdf" target="_blank" rel="noopener">Lange's
+    lecture slides</a> from the Jan de Leeuw workshop at UCLA — de Leeuw being one of the earliest
+    practitioners of majorization methods.
+  </p>
+
+  <p>
+    Suppose we want to minimize an objective $g(\v\gamma)$. Instead of attacking $g$ directly, at
+    each iteration we build a <em>surrogate</em> function $h(\v\gamma, \widetilde{\v\gamma})$
+    around the current iterate $\widetilde{\v\gamma}$ satisfying the two majorization conditions
+  </p>
+
+  $$
+  g(\widetilde{\v\gamma}) = h(\widetilde{\v\gamma}, \widetilde{\v\gamma}),
+  \qquad
+  g(\v\gamma) \le h(\v\gamma, \widetilde{\v\gamma}) \quad \text{for all } \v\gamma .
+  $$
+
+  <p>
+    That is, $h(\cdot, \widetilde{\v\gamma})$ lies above $g$ everywhere and touches it at
+    $\v\gamma = \widetilde{\v\gamma}$. Defining the MM map
+    $M(\cdot) := \argmin_{\v\gamma} h(\v\gamma, \cdot)$, the update
+    $\v\gamma^{(t+1)} \leftarrow M(\v\gamma^{(t)})$ enjoys the <em>descent property</em>:
+  </p>
+
+  $$
+  g(\v\gamma^{(t+1)}) \;\le\; h(\v\gamma^{(t+1)}, \v\gamma^{(t)})
+  \;\le\; h(\v\gamma^{(t)}, \v\gamma^{(t)}) \;=\; g(\v\gamma^{(t)}).
+  $$
+
+  <p>
+    The first inequality is majorization, the second holds because $\v\gamma^{(t+1)}$ minimizes
+    the surrogate, and the equality is tangency. Every iteration drives the objective downhill —
+    no step sizes, no line searches. The art lies in choosing a surrogate tight enough to make
+    fast progress yet simple enough to minimize in closed form.
+  </p>
+
+  <h2>Watch it work</h2>
+
+  <p>
+    Below, the orange curve is a non-convex objective $g$. At each step the current surrogate — a
+    quadratic majorizer $h(\cdot, \widetilde\gamma)$ (peach) — touches $g$ at the current iterate
+    and lies above it everywhere. Minimizing the parabola gives the next iterate, and the process
+    repeats, sliding downhill.
+  </p>
+
+  <canvas id="mmdemo" width="720" height="420"></canvas>
+  <div class="demo-controls">
+    <button id="btn-step">Step</button>
+    <button id="btn-play">Play</button>
+    <button id="btn-reset">Reset</button>
+  </div>
+  <p class="demo-caption">
+    Quadratic majorization $h(\gamma,\widetilde\gamma) = g(\widetilde\gamma) +
+    g'(\widetilde\gamma)(\gamma - \widetilde\gamma) + \tfrac{L}{2}(\gamma-\widetilde\gamma)^2$
+    with $L \ge \sup g''$. Each minimization gives
+    $\gamma^{(t+1)} = \widetilde\gamma - g'(\widetilde\gamma)/L$.
+  </p>
+
+  <h2>Classical examples</h2>
+
+  <p>
+    Many workhorse algorithms in statistics are MM algorithms in disguise. The
+    <strong>EM algorithm</strong> of
+    <a href="https://doi.org/10.1111/j.2517-6161.1977.tb01600.x" target="_blank" rel="noopener">Dempster,
+    Laird &amp; Rubin (1977)</a> is the canonical special case: the E-step constructs a minorizer
+    of the log-likelihood via Jensen's inequality, and the M-step maximizes it.
+    In <strong>multidimensional scaling</strong>,
+    <a href="https://doi.org/10.1007/978-3-642-51565-1_15" target="_blank" rel="noopener">de Leeuw's
+    (1977)</a> SMACOF algorithm majorizes the stress function — one of the earliest systematic
+    uses of majorization. For <strong>logistic regression</strong>,
+    <a href="https://doi.org/10.1007/BF00049423" target="_blank" rel="noopener">Böhning &amp;
+    Lindsay (1988)</a> bound the Hessian by a fixed matrix to obtain a monotonic quadratic-bound
+    algorithm. And <strong>quantile regression</strong> admits an elegant MM treatment via
+    perturbed absolute-value majorizers
+    (<a href="https://doi.org/10.1198/106186000000000105" target="_blank" rel="noopener">Hunter &amp;
+    Lange, 2000</a>).
+  </p>
+
+  <p>
+    In the rest of this series we build an MM algorithm for a modern problem: the (group) lasso.
+    Part 2 sets up the lasso and its optimality conditions.
+  </p>
+
+  <div class="pager">
+    <a class="btn ghost" href="../blog.html">← Back to blog</a>
+    <a class="btn" href="mm-lasso-part-2.html">Part 2: The Lasso →</a>
+  </div>
+
+</div>
+
+<footer>© 2026 Anant Mathur</footer>
+
+<script>
+(function () {
+  const cv = document.getElementById('mmdemo');
+  const ctx = cv.getContext('2d');
+  const css = getComputedStyle(document.documentElement);
+  const C = {
+    g: css.getPropertyValue('--accent').trim() || '#e8825e',
+    h: css.getPropertyValue('--accent-2').trim() || '#f0a380',
+    dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
+    text: css.getPropertyValue('--text').trim() || '#e3ddd3',
+    grid: css.getPropertyValue('--border').trim() || '#3a332a'
+  };
+
+  // objective and its derivatives
+  const g  = x => 0.05 * x**4 - 0.5 * x**2 + 0.35 * x + 4;
+  const dg = x => 0.2 * x**3 - x + 0.35;
+  const L  = 9;  // >= sup g'' on [-4, 4]
+
+  const X0 = -3.55, XMIN = -4, XMAX = 4, YMIN = 0, YMAX = 9;
+  let xt = X0, iter = 0, timer = null;
+
+  function sx(x) { return (x - XMIN) / (XMAX - XMIN) * (cv.width - 60) + 45; }
+  function sy(y) { return cv.height - 35 - (y - YMIN) / (YMAX - YMIN) * (cv.height - 60); }
+
+  function drawCurve(f, color, width, dash) {
+    ctx.beginPath();
+    ctx.setLineDash(dash || []);
+    ctx.lineWidth = width; ctx.strokeStyle = color;
+    let started = false;
+    for (let px = XMIN; px <= XMAX; px += 0.02) {
+      const y = f(px);
+      if (y < YMIN - 1 || y > YMAX + 1) { started = false; continue; }
+      if (!started) { ctx.moveTo(sx(px), sy(y)); started = true; }
+      else ctx.lineTo(sx(px), sy(y));
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    // axes
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(45, sy(YMIN)); ctx.lineTo(cv.width - 15, sy(YMIN));
+    ctx.moveTo(45, sy(YMIN)); ctx.lineTo(45, 15);
+    ctx.stroke();
+
+    // surrogate at current iterate
+    const gx = g(xt), dgx = dg(xt);
+    const h = x => gx + dgx * (x - xt) + L / 2 * (x - xt) ** 2;
+    drawCurve(h, C.h, 1.6, [6, 5]);
+    // objective
+    drawCurve(g, C.g, 2.4);
+
+    // next iterate marker (minimum of surrogate)
+    const xNext = xt - dgx / L;
+    ctx.fillStyle = C.dim;
+    ctx.beginPath(); ctx.arc(sx(xNext), sy(h(xNext)), 4, 0, 7); ctx.fill();
+
+    // current iterate on g
+    ctx.fillStyle = C.text;
+    ctx.beginPath(); ctx.arc(sx(xt), sy(gx), 5.5, 0, 7); ctx.fill();
+
+    // labels
+    ctx.font = '13px Inter, sans-serif';
+    ctx.fillStyle = C.g;  ctx.fillText('g(γ)', cv.width - 65, 32);
+    ctx.fillStyle = C.h;  ctx.fillText('h(γ, γᵗ)  (surrogate)', cv.width - 175, 52);
+    ctx.fillStyle = C.dim;
+    ctx.fillText('iteration ' + iter + '    γᵗ = ' + xt.toFixed(3) +
+                 '    g(γᵗ) = ' + gx.toFixed(3), 55, 30);
+  }
+
+  function step() {
+    xt = xt - dg(xt) / L;
+    iter += 1;
+    draw();
+    if (Math.abs(dg(xt)) < 1e-4 && timer) stop();
+  }
+  function stop() { clearInterval(timer); timer = null; document.getElementById('btn-play').textContent = 'Play'; }
+
+  document.getElementById('btn-step').onclick = () => { if (timer) stop(); step(); };
+  document.getElementById('btn-play').onclick = function () {
+    if (timer) { stop(); } else { timer = setInterval(step, 700); this.textContent = 'Pause'; }
+  };
+  document.getElementById('btn-reset').onclick = () => { stop(); xt = X0; iter = 0; draw(); };
+
+  draw();
+})();
+</script>
+
+</body>
+</html>

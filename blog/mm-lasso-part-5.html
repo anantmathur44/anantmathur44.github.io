@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part 5: Water-Filling Demo — Anant Mathur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/dark.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        macros: {
+          m: ["\\mathbf{#1}", 1],
+          v: ["\\boldsymbol{#1}", 1],
+          bb: ["\\mathbb{#1}", 1],
+          c: ["\\mathcal{#1}", 1],
+          argmin: "\\mathop{\\mathrm{argmin}}"
+        }
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    .post-meta { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.4rem; }
+    mjx-container { color: var(--text); }
+    mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 0.3rem 0; }
+    .series-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.6rem; }
+    .series-nav a {
+      font-family: var(--mono); font-size: 0.78rem; padding: 0.25rem 0.7rem;
+      border: 1px solid var(--border); border-radius: 999px; color: var(--text-dim);
+    }
+    .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
+    .series-nav a.here { color: var(--accent); border-color: var(--accent); }
+    .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
+    .demo-frame {
+      width: 100%; height: 900px; border: 1px solid var(--border); border-radius: 12px;
+      background: #f6f8fb; margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-name" href="../index.html">Anant <span>Mathur</span></a>
+    <a class="nav-link" href="../index.html">Home</a>
+    <a class="nav-link" href="../research.html">Research</a>
+    <a class="nav-link active" href="../blog.html">Blog</a>
+    <a class="nav-link" href="../talks.html">Talks</a>
+    <a class="nav-link" href="../cv.html">CV</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <h1>Part 5: Water-Filling Demo</h1>
+  <p class="post-meta">MM Algorithms and the Lasso · Anant Mathur · July 2026</p>
+
+  <div class="series-nav">
+    <a href="mm-lasso-part-1.html">1 · MM Algorithms</a>
+    <a href="mm-lasso-part-2.html">2 · The Lasso</a>
+    <a href="mm-lasso-part-3.html">3 · Auxiliary KKT</a>
+    <a href="mm-lasso-part-4.html">4 · An Interesting Bound</a>
+    <a class="here" href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
+  </div>
+
+  <h2>Optimal weights</h2>
+
+  <p>
+    Part 4 ended with a question: with only a total mass of $1$ to distribute across the weights
+    $w_1, \ldots, w_J$ at each MM iteration, where should it go? The principled answer is to
+    pick the weights giving the <em>least upper bound</em> — the surrogate whose minimum drives
+    $g$ down the most:
+  </p>
+
+  $$
+  \v w^{(t+1)} = \argmin_{\v w \,\in\, \bb{R}_+^J,\; \v 1^\top \v w = 1}\;
+  \min_{\v\gamma \,\in\, \bb{R}_+^J}\; h_{\v w}(\v\gamma, \v\gamma^{(t)}).
+  $$
+
+  <p>
+    This inner–outer problem looks daunting, but it is a constrained convex program with an
+    exact solution computable in $\c{O}(J \ln J)$ time — the cost of sorting the array
+    $[\xi_1, \ldots, \xi_J]$, where
+  </p>
+
+  $$
+  \xi_j := \big(\alpha_j - \tau_j^{(t)}\big)^2
+  = \Big(\alpha_j - \big\|\m Z_j^\top \m G(\v\gamma^{(t)})\,\v y\big\|_2\Big)^2 .
+  $$
+
+  <p>
+    The quantity $\xi_j$ measures how far group $j$ is from satisfying the auxiliary KKT
+    conditions of Part 3. The optimal allocation pours weight onto the groups with the largest
+    $\xi_j$ — like pouring a fixed volume of water into a terrain whose depth profile is given
+    by the KKT violations, filling the deepest basins first. Concretely: if $\xi_j$ is large and
+    group $j$ is activated, weight is assigned to push it toward the KKT boundary; if
+    $\gamma_j^{(t)} = 0$ but $\tau_j^{(t)} > \alpha_j$, the group <em>should</em> be active, and
+    a positive $w_j$ lets the shrinkage operator switch it on; if $\gamma_j^{(t)} = 0$ and the
+    KKT condition already holds, $w_j = 0$ and the group stays out. This mirrors greedy
+    coordinate descent for the lasso
+    (<a href="https://doi.org/10.1214/07-AOAS147" target="_blank" rel="noopener">Wu &amp; Lange,
+    2008</a>) — but here every group still updates in the same iteration; the weights only
+    decide which groups get the privileged shrinkage treatment.
+  </p>
+
+  <h2>Interactive demo</h2>
+
+  <p>
+    The demo below visualises the weight-allocation problem: the two cases of the surrogate
+    bound, and how the optimal $\v w$ emerges as a water level rising over the KKT-violation
+    profile $\{\xi_j\}$. Play with the group configurations and watch which groups receive
+    positive weight.
+    <a href="../demos/mm-weight-allocation.html" target="_blank" rel="noopener">Open the demo in
+    a full tab →</a>
+  </p>
+
+  <iframe class="demo-frame" src="../demos/mm-weight-allocation.html"
+          title="MM Group Lasso — Optimal Weight Allocation as Water-Filling"
+          loading="lazy"></iframe>
+
+  <h2>Closing the loop</h2>
+
+  <p>
+    Assembling the pieces: the auxiliary reparameterisation (Part 3) turns group lasso into a
+    convex problem over $\bb{R}_+^J$; the matrix bound (Part 4) gives a separable surrogate with
+    a closed-form concurrent update; and the water-filling weight allocation (this part) aims
+    each iteration at the groups furthest from optimality, at a negligible $\c{O}(J\ln J)$
+    overhead. The resulting MM algorithm converges globally to the group-lasso KKT point and,
+    across simulations and real data, computes regularization paths up to an order of magnitude
+    faster than block coordinate descent — with the largest gains where BCD struggles most:
+    poorly conditioned features and many activated groups. Full theory, algorithms and
+    experiments are in the
+    <a href="../assets/papers/MM_Algorithms_Group_Lasso.pdf" target="_blank" rel="noopener">paper</a>.
+  </p>
+
+  <div class="pager">
+    <a class="btn ghost" href="mm-lasso-part-4.html">← Part 4: An Interesting Bound</a>
+    <a class="btn" href="../blog.html">Back to blog →</a>
+  </div>
+
+</div>
+
+<footer>© 2026 Anant Mathur</footer>
+
+</body>
+</html>

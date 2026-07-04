@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part 2: The Lasso — Anant Mathur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/dark.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        macros: {
+          m: ["\\mathbf{#1}", 1],
+          v: ["\\boldsymbol{#1}", 1],
+          bb: ["\\mathbb{#1}", 1],
+          c: ["\\mathcal{#1}", 1],
+          argmin: "\\mathop{\\mathrm{argmin}}"
+        }
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    .post-meta { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.4rem; }
+    mjx-container { color: var(--text); }
+    mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 0.3rem 0; }
+    .series-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.6rem; }
+    .series-nav a {
+      font-family: var(--mono); font-size: 0.78rem; padding: 0.25rem 0.7rem;
+      border: 1px solid var(--border); border-radius: 999px; color: var(--text-dim);
+    }
+    .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
+    .series-nav a.here { color: var(--accent); border-color: var(--accent); }
+    .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-name" href="../index.html">Anant <span>Mathur</span></a>
+    <a class="nav-link" href="../index.html">Home</a>
+    <a class="nav-link" href="../research.html">Research</a>
+    <a class="nav-link active" href="../blog.html">Blog</a>
+    <a class="nav-link" href="../talks.html">Talks</a>
+    <a class="nav-link" href="../cv.html">CV</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <h1>Part 2: The Lasso</h1>
+  <p class="post-meta">MM Algorithms and the Lasso · Anant Mathur · July 2026</p>
+
+  <div class="series-nav">
+    <a href="mm-lasso-part-1.html">1 · MM Algorithms</a>
+    <a class="here" href="mm-lasso-part-2.html">2 · The Lasso</a>
+    <a href="mm-lasso-part-3.html">3 · Auxiliary KKT</a>
+    <a href="mm-lasso-part-4.html">4 · An Interesting Bound</a>
+    <a href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
+  </div>
+
+  <h2>From lasso to group lasso</h2>
+
+  <p>
+    The lasso of
+    <a href="https://doi.org/10.1111/j.2517-6161.1996.tb02080.x" target="_blank" rel="noopener">Tibshirani
+    (1996)</a> performs estimation and variable selection simultaneously by penalising the
+    $\ell_1$-norm of the regression coefficients: the non-smoothness of $|\cdot|$ at zero sets
+    some coefficients exactly to zero. Often, however, predictors carry a natural group
+    structure. In genomics, genes within the same pathway exhibit similar functions, and
+    incorporating group structure has proven effective for biomarker identification — the use
+    case that motivated the <em>group lasso</em> of
+    <a href="https://doi.org/10.1111/j.1467-9868.2005.00532.x" target="_blank" rel="noopener">Yuan &amp;
+    Lin (2006)</a>: select or discard entire groups of predictors at once.
+  </p>
+
+  <p>
+    Suppose we are given a dataset $(\v y, \m X)$ with response $\v y \in \bb{R}^n$ and feature
+    matrix $\m X \in \bb{R}^{n \times p}$, decomposed into $J$ groups
+    $\m X = [\m X_1, \ldots, \m X_J]$, $\m X_j \in \bb{R}^{n \times p_j}$,
+    $p_1 + \cdots + p_J = p$. The linear model is
+  </p>
+
+  $$
+  \m Y = \beta_0 \m 1 + \m X_1 \v\beta_1 + \cdots + \m X_J \v\beta_J + \v\epsilon,
+  \qquad \v\epsilon \sim \c{N}(\v 0, \sigma^2 \m I_n),
+  $$
+
+  <p>
+    with predictors and response centred so the intercept can be dropped. Following the
+    <em>standardized group lasso</em> of
+    <a href="https://doi.org/10.1080/10618600.2012.681250" target="_blank" rel="noopener">Simon &amp;
+    Tibshirani (2012)</a>, each block is <em>sphered</em> via its QR decomposition
+    $\m X_j = \m Z_j \m R_j$, so that $\m Z_j^\top \m Z_j = \m I_{p_j}$. Writing
+    $\v\theta_j := \m R_j \v\beta_j$, we minimize
+  </p>
+
+  $$
+  f(\v\theta) \;:=\; \frac{1}{2n}\Big\|\v y - \sum_{j=1}^{J} \m Z_j \v\theta_j\Big\|_2^2
+  \;+\; \lambda \sum_{j=1}^{J} \sqrt{p_j}\,\|\v\theta_j\|_2 .
+  $$
+
+  <p>
+    The penalty $\sum_j \sqrt{p_j}\|\v\theta_j\|_2$ is non-smooth exactly where a whole group
+    vanishes, so for each $j$ either $\widehat{\v\theta}_j = \v 0$ or every element of
+    $\widehat{\v\theta}_j$ is non-zero. Larger $\lambda$ shrinks more groups to zero. With
+    singleton groups ($p_j = 1$) this is precisely Tibshirani's lasso.
+  </p>
+
+  <h2>The KKT conditions</h2>
+
+  <p>
+    Set $\alpha_j := n\lambda\sqrt{p_j}$. The first-order (Karush–Kuhn–Tucker) condition for
+    minimizing $f$ block-wise is
+  </p>
+
+  $$
+  \m Z_j^\top (\v r_{\neg j} - \m Z_j \v\theta_j) = \alpha_j\, \v g(\v\theta_j),
+  \qquad
+  \v r_{\neg j} := \v y - \sum_{i \ne j} \m Z_i \v\theta_i,
+  $$
+
+  <p>where $\v g$ is the subgradient of $\|\cdot\|_2$:</p>
+
+  $$
+  \v g(\v\eta) =
+  \begin{cases}
+    \dfrac{\v\eta}{\|\v\eta\|_2}, & \v\eta \ne \v 0, \\[0.6em]
+    \{\v s : \|\v s\|_2 \le 1\}, & \v\eta = \v 0 .
+  \end{cases}
+  $$
+
+  <p>
+    Writing $\c{A} := \{j : \widehat{\v\theta}_j \ne \v 0\}$ for the set of <em>activated</em>
+    groups and $\m Z = [\m Z_1, \ldots, \m Z_J]$, the KKT conditions take the form we will use
+    for the rest of the series:
+  </p>
+
+  $$
+  \begin{aligned}
+    \m Z_j^\top (\v y - \m Z\widehat{\v\theta})
+      &= \frac{\widehat{\v\theta}_j}{\|\widehat{\v\theta}_j\|_2}\,\alpha_j,
+      && \forall\, j \in \c{A}, \\[0.3em]
+    \big\|\m Z_j^\top (\v y - \m Z\widehat{\v\theta})\big\|_2
+      &\le \alpha_j,
+      && \forall\, j \notin \c{A}.
+  \end{aligned}
+  $$
+
+  <p>
+    An activated group's correlation with the residual sits exactly on the boundary $\alpha_j$;
+    an unactivated group's sits inside it.
+  </p>
+
+  <h2>Block coordinate descent — and its limits</h2>
+
+  <p>
+    Because $\m Z_j^\top \m Z_j = \m I_{p_j}$, solving the KKT condition one block at a time has
+    a closed form built from the <em>lasso shrinkage operator</em>
+  </p>
+
+  $$
+  S_{\alpha_j}(\v x) := \v x\,\big[1 - \alpha_j/\|\v x\|_2\big]_+,
+  \qquad
+  \v\theta_j \leftarrow S_{\alpha_j}\!\big(\m Z_j^\top \v r + \v\theta_j\big),
+  $$
+
+  <p>
+    cycling $j = 1, \ldots, J$ — the block coordinate descent (BCD) algorithm of
+    <a href="https://doi.org/10.1007/s11222-013-9424-2" target="_blank" rel="noopener">Breheny &amp;
+    Huang (2015)</a>, implemented in the R package <code>grpreg</code>. One cycle costs
+    $\c{O}(np)$, which is cheap; the problem is the <em>number</em> of cycles. When $\lambda$ is
+    small (many activated groups) or the feature matrix is poorly conditioned, BCD's iteration
+    count can grow prohibitively.
+  </p>
+
+  <p>
+    In Part 3 we take a different route: a reparameterisation of the problem whose first-order
+    conditions match the KKT conditions above, but which lives in $\bb{R}_+^J$ instead of
+    $\bb{R}^p$ — the foundation of the MM algorithm.
+  </p>
+
+  <div class="pager">
+    <a class="btn ghost" href="mm-lasso-part-1.html">← Part 1: MM Algorithms</a>
+    <a class="btn" href="mm-lasso-part-3.html">Part 3: Auxiliary KKT →</a>
+  </div>
+
+</div>
+
+<footer>© 2026 Anant Mathur</footer>
+
+</body>
+</html>

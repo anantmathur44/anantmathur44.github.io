@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part 4: An Interesting Bound — Anant Mathur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/dark.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        macros: {
+          m: ["\\mathbf{#1}", 1],
+          v: ["\\boldsymbol{#1}", 1],
+          bb: ["\\mathbb{#1}", 1],
+          c: ["\\mathcal{#1}", 1],
+          argmin: "\\mathop{\\mathrm{argmin}}"
+        }
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    .post-meta { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.4rem; }
+    mjx-container { color: var(--text); }
+    mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 0.3rem 0; }
+    .series-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.6rem; }
+    .series-nav a {
+      font-family: var(--mono); font-size: 0.78rem; padding: 0.25rem 0.7rem;
+      border: 1px solid var(--border); border-radius: 999px; color: var(--text-dim);
+    }
+    .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
+    .series-nav a.here { color: var(--accent); border-color: var(--accent); }
+    .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-name" href="../index.html">Anant <span>Mathur</span></a>
+    <a class="nav-link" href="../index.html">Home</a>
+    <a class="nav-link" href="../research.html">Research</a>
+    <a class="nav-link active" href="../blog.html">Blog</a>
+    <a class="nav-link" href="../talks.html">Talks</a>
+    <a class="nav-link" href="../cv.html">CV</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <h1>Part 4: An Interesting Bound</h1>
+  <p class="post-meta">MM Algorithms and the Lasso · Anant Mathur · July 2026</p>
+
+  <div class="series-nav">
+    <a href="mm-lasso-part-1.html">1 · MM Algorithms</a>
+    <a href="mm-lasso-part-2.html">2 · The Lasso</a>
+    <a href="mm-lasso-part-3.html">3 · Auxiliary KKT</a>
+    <a class="here" href="mm-lasso-part-4.html">4 · An Interesting Bound</a>
+    <a href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
+  </div>
+
+  <h2>From Sedrakyan to matrices</h2>
+
+  <p>
+    To run MM on the auxiliary objective
+    $g(\v\gamma) = \v y^\top \m G(\v\gamma)\,\v y + (\v\alpha \odot \v\alpha)^\top \v\gamma$
+    from Part 3, we need a surrogate that majorizes the awkward term
+    $\v y^\top \m G(\v\gamma)\,\v y$. The tool is a matrix inequality used by
+    <a href="https://doi.org/10.1080/10618600.2018.1529601" target="_blank" rel="noopener">Zhou,
+    Hu, Zhou &amp; Lange (2019)</a> for variance-component models. Its scalar ancestor is
+    Sedrakyan's inequality (a special case of Cauchy–Schwarz): for reals $\widetilde\sigma_j$
+    and positive reals $\sigma_j$,
+  </p>
+
+  $$
+  \frac{\big(\sum_{j} \widetilde\sigma_j\big)^2}{\sum_{j} \sigma_j}
+  \;\le\; \sum_{j} \frac{\widetilde\sigma_j^2}{\sigma_j}.
+  $$
+
+  <p>The matrix version: for symmetric positive semi-definite $\m V_j$,</p>
+
+  $$
+  \Big(\sum_{j} \sigma_j \m V_j\Big)^{-1}
+  \;\preceq\;
+  \Big(\sum_{j} \widetilde\sigma_j \m V_j\Big)^{-1}
+  \Big(\sum_{j} \frac{\widetilde\sigma_j^2}{\sigma_j} \m V_j\Big)
+  \Big(\sum_{j} \widetilde\sigma_j \m V_j\Big)^{-1},
+  $$
+
+  <p>
+    with equality when $\widetilde\sigma_j = \sigma_j$ — precisely the tangency an MM surrogate
+    needs.
+  </p>
+
+  <h2>Applying it to $\m G(\v\gamma)$</h2>
+
+  <p>
+    Let $\v w = [w_1, \ldots, w_J]^\top$ be a probability vector ($w_j \ge 0$,
+    $\sum_j w_j = 1$). Split the identity so every term is positive semi-definite — here
+    orthogonality earns its keep, since $\m Z_j^\top \m Z_j = \m I_{p_j}$ makes
+    $\m I - \m Z_j \m Z_j^\top$ a projection:
+  </p>
+
+  $$
+  \m G^{-1}(\v\gamma)
+  = \sum_{j=1}^{J} (\gamma_j + w_j)\, \m Z_j \m Z_j^\top
+  + \sum_{j=1}^{J} w_j \big(\m I - \m Z_j \m Z_j^\top\big).
+  $$
+
+  <p>
+    Applying the matrix inequality with $\sigma_j = \gamma_j + w_j$,
+    $\widetilde\sigma_j = \widetilde\gamma_j + w_j$ (and the projection terms held fixed),
+    then sandwiching with $\v y^\top(\cdot)\v y$ and adding the linear penalty, yields the
+    surrogate
+  </p>
+
+  $$
+  h_{\v w}(\v\gamma, \widetilde{\v\gamma}) =
+  \sum_{j=1}^{J} \left[
+    \frac{(\widetilde\gamma_j + w_j)^2\, \|\m Z_j^\top \m G(\widetilde{\v\gamma})\,\v y\|_2^2}{\gamma_j + w_j}
+    + w_j\Big(\|\m G(\widetilde{\v\gamma})\,\v y\|_2^2 - \|\m Z_j^\top \m G(\widetilde{\v\gamma})\,\v y\|_2^2\Big)
+    + \alpha_j^2 \gamma_j
+  \right].
+  $$
+
+  <p>
+    This is the "interesting bound". Two properties make it powerful. It is <em>tangent</em>:
+    $h_{\v w}(\widetilde{\v\gamma}, \widetilde{\v\gamma}) = g(\widetilde{\v\gamma})$ and
+    $g \le h_{\v w}$, so the MM descent property of Part 1 applies for <em>any</em> valid
+    weights. And it is <em>separable</em>: the variables $\gamma_1, \ldots, \gamma_J$ decouple
+    into $J$ one-dimensional problems, each solvable in closed form.
+  </p>
+
+  <h2>The closed-form update</h2>
+
+  <p>
+    Writing $\tau_j^{(t)} := \|\m Z_j^\top \m G(\v\gamma^{(t)})\,\v y\|_2$ and minimizing
+    $h_{\v w}(\cdot, \v\gamma^{(t)})$ over $\gamma_j \ge 0$ gives, via the same lasso shrinkage
+    operator $S$ from Part 2,
+  </p>
+
+  $$
+  \gamma_j^{(t+1)} \;\leftarrow\;
+  S_{\alpha_j w_j}\!\Big( (w_j + \gamma_j^{(t)})\, \tau_j^{(t)} \Big) \Big/ \alpha_j,
+  \qquad j = 1, \ldots, J .
+  $$
+
+  <p>
+    All $J$ groups update <em>concurrently</em> from a single linear solve
+    $\m G(\v\gamma^{(t)})\,\v y$, computed with a handful of conjugate-gradient steps that only
+    touch activated groups. Note the role of the weights: when $w_j = 0$ the update degenerates
+    to the multiplicative rule
+    $\gamma_j^{(t+1)} = \gamma_j^{(t)} \tau_j^{(t)} / \alpha_j$, which can never move a group in
+    or out of the activated set; only groups with $w_j &gt; 0$ pass through the shrinkage
+    operator and can switch status.
+  </p>
+
+  <p>
+    So which groups deserve positive weight? Only a total mass of 1 is available per iteration,
+    and how it is allocated determines how fast the algorithm converges. The optimal allocation
+    turns out to be a water-filling problem, solvable exactly in $\c{O}(J \ln J)$ — the subject
+    of Part 5.
+  </p>
+
+  <div class="pager">
+    <a class="btn ghost" href="mm-lasso-part-3.html">← Part 3: Auxiliary KKT</a>
+    <a class="btn" href="mm-lasso-part-5.html">Part 5: Water-Filling Demo →</a>
+  </div>
+
+</div>
+
+<footer>© 2026 Anant Mathur</footer>
+
+</body>
+</html>
