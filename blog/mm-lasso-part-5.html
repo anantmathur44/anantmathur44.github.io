@@ -52,6 +52,9 @@
     .wf-label { color: var(--text-dim); font-size: 0.88rem; display: flex; align-items: center; gap: 0.6rem; }
     .wf-label input[type=range] { accent-color: var(--accent); width: 180px; }
     .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.6rem; }
+    #famdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+               width: 100%; display: block; margin-top: 1rem; }
+    .demo-controls button.fam-active { background: var(--accent); color: #2a160d; }
     .demo-frame {
       width: 100%; height: 1050px; border: 1px solid var(--border); border-radius: 12px;
       background: #f6f8fb; margin-top: 0.5rem;
@@ -304,6 +307,53 @@
     treatment, much as greedy coordinate descent for the lasso picks the steepest coordinate
     (<a href="https://doi.org/10.1214/07-AOAS147" target="_blank" rel="noopener">Wu &amp; Lange,
     2008</a>).
+  </p>
+
+  <h2>A family of surrogates</h2>
+
+  <p>
+    The weight $w_j$ has a second life: it parameterizes a whole <em>family of majorizers</em>.
+    To see it, restrict the auxiliary objective to a single group's coordinate $\gamma$ (groups
+    mutually orthogonal, other coordinates held fixed). Along this slice, with
+    $s := \|\m Z_j^\top \v y\|_2^2$,
+  </p>
+
+  $$
+  g(\gamma) = \frac{s}{1+\gamma} + \alpha^2 \gamma,
+  \qquad
+  h_w(\gamma, \widetilde\gamma) = \frac{s}{(1+\widetilde\gamma)^2}
+  \left( \frac{(\widetilde\gamma + w)^2}{\gamma + w} + 1 - w \right) + \alpha^2 \gamma ,
+  $$
+
+  <p>
+    and every $w \in (0, 1]$ gives a valid surrogate: $h_w \ge g$ with tangency at
+    $\gamma = \widetilde\gamma$. Minimizing $h_w$ recovers exactly the MM update of Part 4,
+    $\gamma^+ = \big[(\widetilde\gamma + w)\,\widetilde\tau/\alpha - w\big]_+$ with
+    $\widetilde\tau = \sqrt{s}/(1+\widetilde\gamma)$. Small $w$ gives a loose surrogate and
+    a timid step; as $w \to 1$ the bound tightens onto $g$ — at $w = 1$ it is <em>exact</em>,
+    and one MM step jumps straight to the slice minimizer. That is the whole tension: every
+    group wants $w_j = 1$, but the weights share a unit budget. The weight problem resolves the
+    competition, and $\xi_j^2$ is the exchange rate.
+  </p>
+
+  <canvas id="famdemo" width="720" height="470"></canvas>
+  <div class="demo-controls">
+    <button id="fam-step">Take MM step</button>
+    <button id="fam-reset">Reset</button>
+    <label class="wf-label">w
+      <input type="range" id="fam-w" min="0.02" max="1" step="0.01" value="0.3">
+    </label>
+    <button id="fam-scA" class="fam-active">active group</button>
+    <button id="fam-scB">group that should switch off</button>
+  </div>
+  <p class="demo-caption" id="fam-caption">
+    Top: the objective $g$ (orange), the surrogate family $h_w$ (thin peach curves, all tangent
+    at the white dot $\widetilde\gamma$), and the highlighted surrogate for the slider's $w$
+    (bright dashed) with its minimizer marked. Bottom: the descent
+    $g(\widetilde\gamma) - g(\gamma^+(w))$ one MM step buys, as a function of $w$ — the
+    tightest useful surrogate makes the fastest progress. In the switch-off scenario, notice
+    the plateau: once $w$ passes the knot $c_j$ the group is already at zero and extra weight
+    buys nothing.
   </p>
 
   <h2>The solution is water-filling</h2>
@@ -1246,5 +1296,144 @@ window.addEventListener("DOMContentLoaded", () => {
 })();
 </script>
 
-</body>
+
+<script>
+(function () {
+  const cv = document.getElementById('famdemo');
+  const ctx = cv.getContext('2d');
+  const css = getComputedStyle(document.documentElement);
+  const C = {
+    g: css.getPropertyValue('--accent').trim() || '#e8825e',
+    h: css.getPropertyValue('--accent-2').trim() || '#f0a380',
+    dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
+    text: css.getPropertyValue('--text').trim() || '#e3ddd3',
+    grid: css.getPropertyValue('--border').trim() || '#3a332a',
+    blue: '#7dabf8'
+  };
+
+  // scenarios: slice objective g(x) = s/(1+x) + a^2 x
+  const SCEN = {
+    A: { s: 9, a: 1.2, x0: 4.0, XMAX: 6,   YMIN: 5,   YMAX: 10.8 },
+    B: { s: 4, a: 2.2, x0: 1.0, XMAX: 2.2, YMIN: 3.5, YMAX: 11.5 }
+  };
+  let sc = SCEN.A, xt = sc.x0, iter = 0;
+
+  const g    = x => sc.s / (1 + x) + sc.a * sc.a * x;
+  const tau  = x => Math.sqrt(sc.s) / (1 + x);
+  const hw   = (w, x) => sc.s / ((1 + xt) ** 2) * ((xt + w) ** 2 / (x + w) + 1 - w) + sc.a * sc.a * x;
+  const step = w => Math.max((xt + w) * tau(xt) / sc.a - w, 0);
+
+  // layout: main plot + progress strip
+  const M = { L: 48, R: 14, T: 18, B: 292 };          // main plot bottom y
+  const P = { T: 330, B: 440 };                        // progress strip
+  const sx = x => M.L + x / sc.XMAX * (cv.width - M.L - M.R);
+  const sy = y => M.B - (y - sc.YMIN) / (sc.YMAX - sc.YMIN) * (M.B - M.T);
+
+  function drawCurve(f, color, width, dash, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
+    ctx.setLineDash(dash || []);
+    ctx.lineWidth = width; ctx.strokeStyle = color;
+    ctx.beginPath();
+    let started = false;
+    for (let x = 0; x <= sc.XMAX + 1e-9; x += sc.XMAX / 400) {
+      const y = f(x);
+      if (y < sc.YMIN - 0.4 || y > sc.YMAX + 0.6) { started = false; continue; }
+      if (!started) { ctx.moveTo(sx(x), sy(y)); started = true; }
+      else ctx.lineTo(sx(x), sy(y));
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw() {
+    const w = parseFloat(document.getElementById('fam-w').value);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+
+    // ---- main plot ----
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(M.L, M.T); ctx.lineTo(M.L, M.B); ctx.lineTo(cv.width - M.R, M.B);
+    ctx.stroke();
+
+    // family bundle
+    for (const wf of [0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0]) {
+      drawCurve(x => hw(wf, x), C.h, 1, [], 0.28);
+    }
+    // highlighted surrogate
+    drawCurve(x => hw(w, x), C.h, 2.2, [7, 5]);
+    // objective
+    drawCurve(g, C.g, 2.6);
+
+    // minimizer of highlighted surrogate + descent arrow
+    const xn = step(w);
+    ctx.fillStyle = C.blue;
+    ctx.beginPath(); ctx.arc(sx(xn), sy(hw(w, xn)), 4.5, 0, 7); ctx.fill();
+    ctx.strokeStyle = C.blue; ctx.setLineDash([3, 4]); ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(sx(xn), sy(hw(w, xn))); ctx.lineTo(sx(xn), sy(g(xn))); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(sx(xn), sy(g(xn)), 4.5, 0, 7);
+    ctx.fillStyle = 'rgba(125,171,248,0.35)'; ctx.fill(); ctx.stroke();
+
+    // current iterate
+    ctx.fillStyle = C.text;
+    ctx.beginPath(); ctx.arc(sx(xt), sy(g(xt)), 5.5, 0, 7); ctx.fill();
+
+    // labels
+    ctx.font = '13px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillStyle = C.g; ctx.fillText('g(γ)', cv.width - 150, M.T + 14);
+    ctx.fillStyle = C.h; ctx.fillText('h_w family (w↑ = tighter)', cv.width - 190, M.T + 33);
+    ctx.fillStyle = C.dim;
+    const dg = g(xt) - g(step(w));
+    ctx.fillText('iter ' + iter + '   γ̃ = ' + xt.toFixed(3) + '   w = ' + w.toFixed(2) +
+                 '   γ⁺ = ' + xn.toFixed(3) + (xn === 0 ? ' (switched off)' : '') +
+                 '   Δg = ' + Math.max(dg, 0).toFixed(3), M.L + 8, M.T + 14);
+
+    // ---- progress strip: descent vs w ----
+    const n = 49, ds = [];
+    let dmax = 1e-9, best = 0;
+    for (let i = 0; i < n; i++) {
+      const wi = 0.02 + i * 0.02;
+      const d = Math.max(g(xt) - g(step(wi)), 0);
+      ds.push([wi, d]);
+      if (d > dmax) { dmax = d; best = i; }
+    }
+    const px = wv => M.L + wv * (cv.width - M.L - M.R);
+    const py = d => P.B - d / (dmax * 1.12) * (P.B - P.T);
+    ctx.strokeStyle = C.grid;
+    ctx.beginPath(); ctx.moveTo(M.L, P.T - 6); ctx.lineTo(M.L, P.B); ctx.lineTo(cv.width - M.R, P.B); ctx.stroke();
+    ds.forEach(([wi, d], i) => {
+      ctx.fillStyle = i === best ? C.g : 'rgba(240,163,128,0.35)';
+      const bx = px(wi), bw = (cv.width - M.L - M.R) / n * 0.7;
+      ctx.fillRect(bx - bw / 2, py(d), bw, P.B - py(d));
+    });
+    // slider marker
+    ctx.strokeStyle = C.text; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(px(w), P.T - 4); ctx.lineTo(px(w), P.B); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif';
+    ctx.fillText('descent per MM step vs w   (orange bar = best w this step)', M.L + 8, P.T - 10);
+    ctx.textAlign = 'center';
+    for (const t of [0, 0.25, 0.5, 0.75, 1]) ctx.fillText(t.toFixed(2), px(t), P.B + 16);
+    ctx.textAlign = 'left';
+  }
+
+  document.getElementById('fam-w').oninput = draw;
+  document.getElementById('fam-step').onclick = () => {
+    const w = parseFloat(document.getElementById('fam-w').value);
+    xt = step(w); iter += 1; draw();
+  };
+  document.getElementById('fam-reset').onclick = () => { xt = sc.x0; iter = 0; draw(); };
+  function setScen(key, btnOn, btnOff) {
+    sc = SCEN[key]; xt = sc.x0; iter = 0;
+    document.getElementById(btnOn).classList.add('fam-active');
+    document.getElementById(btnOff).classList.remove('fam-active');
+    draw();
+  }
+  document.getElementById('fam-scA').onclick = () => setScen('A', 'fam-scA', 'fam-scB');
+  document.getElementById('fam-scB').onclick = () => setScen('B', 'fam-scB', 'fam-scA');
+  draw();
+})();
+</script>
+\n</body>
 </html>
