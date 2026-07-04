@@ -19,10 +19,15 @@
           c: ["\\mathcal{#1}", 1],
           argmin: "\\mathop{\\mathrm{argmin}}"
         }
-      }
+      },
+      options: { ignoreHtmlClass: 'tex2jax_ignore' }
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
   <style>
     .post-meta { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.4rem; }
     mjx-container { color: var(--text); }
@@ -51,6 +56,136 @@
       width: 100%; height: 1050px; border: 1px solid var(--border); border-radius: 12px;
       background: #f6f8fb; margin-top: 0.5rem;
     }
+  </style>
+  <style>
+
+#wf-full {
+  width: min(1100px, 96vw);
+  position: relative; left: 50%; transform: translateX(-50%);
+  overflow-x: auto;
+  color: #e3ddd3;
+  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+#wf-full .wrap { padding: 6px 4px 20px; }
+#wf-full { --fg:#e3ddd3; --muted:#a49a8c; --line:#3a332a; --accent:#7dabf8; }
+#wf-full { scroll-behavior: smooth; }
+#wf-full { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+         color: var(--fg); margin: 0; background: transparent; }
+#wf-full a { color: var(--accent); text-decoration: none; }
+#wf-full a:hover { text-decoration: underline; }
+#wf-full .wrap { max-width: 1080px; margin: 0 auto; padding: 22px 26px 60px; }
+#wf-full h1 { font-size: 20px; margin: 8px 0 6px; }
+#wf-full .sub { color: var(--muted); font-size: 13.5px; line-height: 1.55; max-width: 980px; }
+#wf-full .defs { background:#262119; border:1px solid var(--line); border-radius:10px;
+          padding: 14px 22px 16px; margin-top: 14px; font-size: 14px;
+          line-height: 1.75; }
+#wf-full .defs h3 { font-size: 13.5px; font-weight: 700; letter-spacing: .02em;
+             color: #c9c1b2; margin: 18px 0 4px; }
+#wf-full .defs h3:first-child { margin-top: 2px; }
+#wf-full .defs .katex-display { margin: 10px 0; }
+#wf-full .branchrow { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px;
+               align-items: stretch; }
+#wf-full .branchrow .b { flex: 1 1 300px; border: 1px solid var(--line); border-radius: 8px;
+               padding: 6px 14px 10px; }
+#wf-full .branchrow .b .tag { font-size: 12px; font-weight: 600; padding: 2px 8px;
+                    border-radius: 99px; display: inline-block; margin-bottom: 2px; }
+#wf-full .b.linear  .tag { background: rgba(217,119,6,0.16); color: #e8a04d; }
+#wf-full .b.curved  .tag { background: rgba(37,99,235,0.20); color: #8fb8ff; }
+#wf-full .b.case1   .tag { background: rgba(4,120,87,0.20); color: #4fc596; }
+#wf-full .b.case2   .tag { background: rgba(124,58,237,0.20); color: #b795f5; }
+#wf-full .exfig { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px 2px;
+           margin-top: 12px; display: inline-block; background:#211d18; }
+#wf-full .exfig .cap { font-size: 12.3px; color: var(--muted); margin: 4px 0 6px;
+                max-width: 660px; }
+#wf-full .exwrap { position: relative; }
+#wf-full .exlab { position: absolute; font-size: 13.5px; white-space: nowrap; }
+#wf-full .exlab.x { left: 50%; bottom: -2px; transform: translateX(-50%); color:#a49a8c; }
+#wf-full .exlab.y { left: -14px; top: 46%; transform: rotate(-90deg); color:#a49a8c; }
+#wf-full .remark { background: #211d18; border-left: 3px solid var(--accent);
+            padding: 8px 14px; border-radius: 0 8px 8px 0; margin-top: 12px;
+            font-size: 13.5px; }
+#wf-full .casebar { display:flex; gap:18px; flex-wrap:wrap; margin-top:18px;
+             align-items: stretch; }
+#wf-full .casegroup { border: 1px solid var(--line); border-radius: 10px;
+               padding: 10px 14px 12px; background: #262119; }
+#wf-full .casegroup h4 { margin: 0 0 8px; font-size: 12.5px; font-weight: 700;
+                  letter-spacing: .02em; }
+#wf-full .casegroup.cg1 h4 { color: #4fc596; }
+#wf-full .casegroup.cg2 h4 { color: #b795f5; }
+#wf-full .casegroup.cg1 { border-top: 3px solid #4fc596; }
+#wf-full .casegroup.cg2 { border-top: 3px solid #b795f5; }
+#wf-full .casegroup .btns { display:flex; gap:8px; flex-wrap:wrap; }
+#wf-full .casegroup button { font: inherit; font-size: 12.8px; padding: 7px 12px;
+      border-radius: 8px; border: 1px solid var(--line); background:#262119;
+      cursor:pointer; }
+#wf-full .casegroup button.active { background: var(--accent); color:#fff;
+      border-color: var(--accent); }
+#wf-full .card { background: #262119; border: 1px solid var(--line); border-radius: 10px;
+          padding: 12px 16px; box-shadow: 0 1px 2px rgba(20,30,60,.05); }
+#wf-full .card h2 { font-size: 13.5px; margin: 0 0 6px; font-weight: 600; }
+#wf-full canvas { display: block; }
+#wf-full .bigfig { margin-top: 16px; }
+#wf-full .figrow { display: flex; gap: 18px; }
+#wf-full .figstack { display: flex; flex-direction: column; gap: 18px; }
+#wf-full .cwrap { position: relative; display: inline-block; }
+#wf-full .axlab { position: absolute; font-size: 13px; color: #a49a8c;
+           white-space: nowrap; pointer-events: none; }
+#wf-full .axlab.y { left: -56px; top: 140px; width: 140px; text-align: center;
+             transform: rotate(-90deg); }
+#wf-full .axlab.x { right: 0px; bottom: 4px; }
+#wf-full .nulab { position: absolute; font-size: 13px; color: #8fb8ff;
+           white-space: nowrap; pointer-events: none; font-weight: 600;
+           font-variant-numeric: tabular-nums; }
+#wf-full .vglab { position: absolute; font-size: 12px; color: #a49a8c; width: 130px;
+           text-align: center; pointer-events: none; }
+#wf-full .glab { font-size: 13px; color: #a49a8c; margin-top: 14px; }
+#wf-full .algo { margin-top: 16px; }
+#wf-full .algobox { font-size: 14px; line-height: 2.05; border: 1px solid var(--line);
+             border-radius: 8px; padding: 10px 18px; background: #211d18;
+             margin-top: 6px; }
+#wf-full .algobox .ln { color: #8a8175; display: inline-block; width: 26px;
+                 font-size: 12px; font-variant-numeric: tabular-nums; }
+#wf-full .algobox .cmt { color: #a49a8c; font-size: 12.5px; }
+#wf-full .subcap { font-size: 12.4px; color: var(--muted); margin-top: 3px;
+            max-width: 700px; line-height: 1.45; }
+#wf-full .sidecol { width: 230px; flex: 0 0 auto; position: sticky; top: 10px;
+             align-self: flex-start; border-left: 1px dashed var(--line);
+             padding-left: 16px; }
+#wf-full .sidecol .nuread { font-size: 19px; font-weight: 600; color: #8fb8ff;
+                     margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+#wf-full .sidecol .nusub { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; }
+#wf-full .wrow { display: flex; align-items: baseline; gap: 7px; font-size: 13.5px;
+          margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+#wf-full .wrow .chip { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto;
+                position: relative; top: 1px; }
+#wf-full .wrow b { margin-left: auto; }
+#wf-full .wrow .st { font-size: 11px; color: var(--muted); }
+#wf-full .controls { display:flex; align-items:center; gap:12px; margin-top:14px;
+              flex-wrap:wrap; position: sticky; top: 0; z-index: 20;
+              background: rgba(26,23,19,0.92); padding: 10px 4px;
+              border-bottom: 1px solid var(--line); backdrop-filter: blur(3px); }
+#wf-full .controls button { font: inherit; font-size: 13.5px; padding: 6px 14px;
+      border-radius: 7px; border: 1px solid var(--line); background:#262119;
+      cursor:pointer; min-width: 96px; }
+#wf-full .controls button.primary { background: var(--accent); border-color: var(--accent);
+      color:#fff; }
+#wf-full select { font: inherit; font-size: 13px; padding: 4px 6px; border-radius: 6px;
+           border: 1px solid var(--line); }
+#wf-full .status { font-size: 13.5px; }
+#wf-full .below { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap;
+           align-items: stretch; }
+#wf-full .desc { flex: 1 1 460px; font-size: 13.8px; line-height: 1.7; }
+#wf-full .desc .result { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+#wf-full .wform { flex: 1 1 420px; font-size: 13.8px; line-height: 1.8; }
+#wf-full .nucard { font-size: 13.8px; line-height: 1.7; margin-top: 16px; }
+#wf-full .nucard ul { margin: 6px 0 0; padding-left: 20px; }
+#wf-full .nucard li { margin-bottom: 7px; }
+#wf-full table { border-collapse: collapse; font-size: 13px; margin-top: 16px; background:#262119; }
+#wf-full th, #wf-full td { border: 1px solid var(--line); padding: 5px 11px; text-align: right;
+           font-variant-numeric: tabular-nums; }
+#wf-full th:first-child, #wf-full td:first-child { text-align: left; }
+#wf-full th { background: #2b2620; font-weight: 600; }
+#wf-full td.swatch { width: 14px; padding: 0; }
   </style>
 </head>
 <body>
@@ -159,14 +294,777 @@
   <p>
     For the complete picture — the two branches of the per-group cost $p_j(w_j)$, the knot at
     $c_j = \widetilde\gamma_j \tau_j / (\alpha_j - \tau_j)$, and Case 1 vs. Case 2 of the
-    <code>getWeights</code> solution — the full standalone demo is embedded below.
-    <a href="../demos/mm-weight-allocation.html" target="_blank" rel="noopener">Open it in a
-    full tab →</a>
+    <code>getWeights</code> solution — the complete demo — vessels, gradients, objective curves and the exact weight formulas — is integrated below.
   </p>
 
-  <iframe class="demo-frame" src="../demos/mm-weight-allocation.html"
-          title="MM Group Lasso — Optimal Weight Allocation as Water-Filling"
-          loading="lazy"></iframe>
+</div>
+
+<div id="wf-full" class="tex2jax_ignore">
+<div class="wrap">
+  <div class="sub">
+    How the group-lasso MM algorithm distributes its unit weight budget across the
+    <b>groups</b> at one iteration (supplementary, Appendix “Derivation of Optimal
+    Weights”). The animation pours the budget into whichever group currently lowers the
+    bound fastest. Every example is verified: the animated final weights equal the
+    <code>getWeights</code> (<a href="#algo">Algorithm&nbsp;1</a>, pseudocode at the
+    bottom) output and the scipy SLSQP optimum.
+  </div>
+
+  <div class="defs">
+    <h3>Setup &amp; notation &nbsp;—&nbsp; \(j = 1, \dots, J\) indexes the groups</h3>
+    Group \(j\) holds \(p_j\) predictors \(\mathbf Z_j\); \(\tilde{\gamma}_j \ge 0\) is
+    its coefficient scale at the current MM iterate \(\tilde{\boldsymbol\gamma}\).
+    Two numbers summarise group \(j\) this iteration:
+    \[
+      \alpha_j := n\lambda\sqrt{p_j}
+      \;\;\text{(penalty threshold of group } j\text{)},
+      \qquad\quad
+      \tau_j := \bigl\lVert \mathbf Z_j^{\top}\,
+        \mathbf G(\tilde{\boldsymbol\gamma})\,\mathbf y \bigr\rVert
+      \;\;\text{(signal carried by group } j\text{)}.
+    \]
+
+    <h3>KKT conditions of the auxiliary problem</h3>
+    At the global minimiser \(\widehat{\boldsymbol\gamma}\),
+    \[
+      \tau_j = \alpha_j \;\;\text{ for every active group } (\widehat\gamma_j > 0),
+      \qquad\quad
+      \tau_j \le \alpha_j \;\;\text{ for every inactive group } (\widehat\gamma_j = 0).
+    \]
+    The <b>KKT gap</b> \( \;\xi_j := \alpha_j - \tau_j\; \) measures how far group
+    \(j\) is from optimality: \(\xi_j &lt; 0\) means its signal exceeds the penalty
+    threshold (the group “wants” weight); \(\xi_j \ge 0\) with
+    \(\tilde\gamma_j = 0\) means group \(j\) already satisfies the conditions and is
+    ignored by the allocation.
+
+    <h3>The weight problem &nbsp;and&nbsp; the deactivation threshold \(c_j\)</h3>
+    \[
+      \widehat{\boldsymbol w} \;=\; \mathop{\mathrm{argmin}}\limits_{\;\boldsymbol w
+        \,\ge\, 0,\; w_1 + \cdots + w_J \,=\, 1}\;\; \sum_{j=1}^{J} p_j(w_j),
+      \qquad\quad
+      c_j := \frac{\tilde\gamma_j\,\tau_j}{\xi_j}
+      \;\;\text{(smallest weight that switches group } j \text{ off)}.
+    \]
+    Giving group \(j\) weight \(w_j \ge c_j\) makes the next MM update set
+    \(\gamma_j \to 0\); smaller weights leave it active. Note that when
+    \(\xi_j &lt; 0\) the threshold \(c_j &lt; 0\) is vacuous — <b>no weight can
+    deactivate group \(j\)</b>, and \(p_j\) stays linear over the whole budget; more
+    on this in the <a href="#wta-remark">winner-takes-all remark</a> below.
+
+    <h3>Contribution of group \(j\) to the bound, and its negative gradient</h3>
+    <div class="branchrow">
+      <div class="b linear">
+        <span class="tag">linear part — group j stays active</span>
+        <div>for \(w_j &lt; c_j\) (and whenever \(c_j \notin (0,1]\)):</div>
+        \[
+          p_j(w_j) = 2\,\tilde\gamma_j\alpha_j\tau_j - w_j\,\xi_j^{2},
+          \qquad
+          -\,p_j'(w_j) = \xi_j^{2}
+          \;\;\text{(constant slope)}
+        \]
+      </div>
+      <div class="b curved">
+        <span class="tag">nonlinear part — group j gets deactivated</span>
+        <div>for \( w_j \ge c_j \) when \( c_j \in (0,1] \):</div>
+        \[
+          p_j(w_j) = \frac{(\tilde\gamma_j\tau_j)^2}{w_j} + 2\,\tilde\gamma_j\tau_j^2,
+          \qquad
+          -\,p_j'(w_j) = \frac{(\tilde\gamma_j\tau_j)^2}{w_j^{2}}
+          \;\;\text{(decays as } w_j \text{ grows)}
+        \]
+      </div>
+    </div>
+    <div class="exfig">
+      <div class="exwrap">
+        <canvas id="cvEx" width="680" height="300"></canvas>
+        <div class="exlab" style="left:130px; top:46px; color:#e8a04d">
+          \(\text{linear part: slope } -\xi_j^2\)</div>
+        <div class="exlab" style="left:350px; top:150px; color:#8fb8ff">
+          \(\text{nonlinear part: } \dfrac{(\tilde\gamma_j\tau_j)^2}{w_j}
+            + 2\tilde\gamma_j\tau_j^2\)</div>
+        <div class="exlab" style="left:248px; top:212px; color:#e3ddd3">
+          \(\text{knot } c_j = 0.3\)</div>
+        <div class="exlab x">\(w_j\)</div>
+        <div class="exlab y">\(p_j(w_j)\)</div>
+      </div>
+      <div class="cap">An example \(p_j\) with \(\tilde\gamma_j = 0.4,\ \tau_j = 3,\
+        \alpha_j = 7\): KKT gap \(\xi_j = 4\), knot at
+        \(c_j = \tilde\gamma_j\tau_j/\xi_j = 0.3\). The linear part (constant slope
+        \(-\xi_j^2\)) meets the nonlinear part smoothly at the knot — \(p_j\) is
+        continuously differentiable, and beyond \(c_j\) the weight is large enough to
+        deactivate group \(j\).</div>
+    </div>
+    <div class="remark" id="wta-remark">
+      <b>When no weight can deactivate a group.</b> Deactivating group \(j\) requires
+      \( w_j\,\xi_j \ge \tilde\gamma_j\tau_j \). So whenever
+      \( \xi_j &lt; \tilde\gamma_j\,\tau_j \) — equivalently \( c_j \notin (0,1] \),
+      i.e. either \( c_j > 1 \) (the gap is positive but too small, the required weight
+      exceeds the whole budget) or \( c_j &lt; 0 \) (the gap is <i>negative</i>: group
+      \(j\) violates the KKT conditions and no weight whatsoever can switch it off) —
+      no admissible \( w_j \in [0,1] \) reaches the threshold, and \( p_j \) is
+      <i>linear on all of</i> \([0,1]\) with constant slope \( -\xi_j^2 \). If this
+      holds for <i>every</i> group \(j\), the objective \( \sum_j p_j(w_j) \) is linear
+      over the simplex and the optimum sits at a vertex — <b>winner takes all</b>: the
+      entire budget goes to the group with the largest \( \xi_j^2 \). This is the common
+      situation mid-run; the <a href="#scenarios">“winner takes all” example
+      below</a> shows it with \( 0 &lt; \xi_j &lt; \tilde\gamma_j\tau_j \) for every
+      group.
+    </div>
+
+    <h3 id="nustar">\(\nu^*\) — the final water level</h3>
+    The <b>water level</b> \( \nu := \max_j\, -p_j'(w_j) \) is the steepest slope
+    still available; funded groups sit exactly on it, and it only descends. When the
+    budget runs out the level rests at \( \nu^* \): funded groups have
+    \( -p_j'(\widehat w_j) = \nu^* \), unfunded ones have \( \xi_j^2 \le \nu^* \).
+    Where \( \nu^* \) lands decides the case:
+
+    <h3 id="cases">The two termination cases of <a href="#algo">Algorithm 1</a>
+      &nbsp;(groups sorted so \(\xi_{(1)}^2 \ge \xi_{(2)}^2 \ge \cdots\))</h3>
+    <div class="branchrow">
+      <div class="b case1">
+        <span class="tag">Case 1 — ν* equals a vessel’s base width ξ²</span>
+        \[ \nu^* = \xi_{(k)}^2 \quad\text{for some } k \]
+        \[
+          \widehat w_{(j)} = \begin{cases}
+            \tilde\gamma_{(j)}\tau_{(j)} / \sqrt{\nu^*}, & j &lt; k
+              \;\;\text{(nonlinear part)}\\[0.6ex]
+            1 - \sum_{i&lt;k} \widehat w_{(i)}, & j = k
+              \;\;\text{(pivot: leftover, in its base section)}\\[0.6ex]
+            0, & j &gt; k
+          \end{cases}
+        \]
+      </div>
+      <div class="b case2">
+        <span class="tag">Case 2 — ν* strictly between two base widths</span>
+        \[ \xi_{(k)}^2 \;&gt;\; \nu^* = \Bigl(\sum_{j \le k}
+           \tilde\gamma_{(j)}\tau_{(j)}\Bigr)^{2} \;&gt;\; \xi_{(k+1)}^2 \]
+        \[
+          \widehat w_{(j)} = \begin{cases}
+            \tilde\gamma_{(j)}\tau_{(j)} / \sqrt{\nu^*}, & j \le k
+              \;\;\text{(all funded, nonlinear part)}\\[0.6ex]
+            0, & j &gt; k
+          \end{cases}
+        \]
+        <div style="font-size:12.8px; color:var(--muted)">A split proportional to
+          \(\tilde\gamma_j\tau_j\) among the funded groups.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="casebar" id="scenarioBtns"><span id="scenarios"></span></div>
+
+  <div class="controls">
+    <button id="btnPlay" class="primary">&#10074;&#10074; Pause</button>
+    <button id="btnReplay">&#8635; Replay</button>
+    <label>speed <select id="speed">
+      <option value="0.5">0.5&times;</option>
+      <option value="1" selected>1&times;</option>
+      <option value="2">2&times;</option>
+    </select></label>
+    <span class="status" id="status"></span>
+  </div>
+
+  <div class="card bigfig">
+    <h2>Water-filling animation</h2>
+    <div class="figrow">
+      <div class="figstack">
+        <div class="cwrap">
+          <canvas id="cvV" width="700" height="300"></canvas>
+          <div class="axlab y">\(w_j\) (fill height)</div>
+          <div class="nulab" id="nulabV" style="left:200px; top:4px">
+            surface width <span class="ksym">\(\nu\)</span> =
+            <span id="nuValV">—</span></div>
+          <div id="vGroupLabs"></div>
+          <div class="subcap"><b>(a) Vessels — width is the negative gradient,
+            height is the weight.</b> Vessel \(j\) keeps constant width \(\xi_j^2\)
+            until the knot bar at height \(c_j\), then narrows as
+            \((\tilde\gamma_j\tau_j)^2/w_j^2\). The budget always pours into the
+            currently <b>widest</b> vessel, so the surfaces of all funded vessels
+            share one width — the water level \(\nu\). Pouring stops when the total
+            fill height reaches \(1\); the shared surface width at that instant is
+            the final water level \(\nu^*\). The <b>volume</b> of water in vessel
+            \(j\) is exactly what its weight takes off the bound:
+            \(\int_0^{w_j} -p_j'(h)\,\mathrm{d}h = p_j(0) - p_j(w_j)\) — so greedy
+            pouring into the widest vessel maximises the total bound decrease for
+            every drop of budget.</div>
+        </div>
+        <div class="cwrap">
+          <canvas id="cvM" width="700" height="300"></canvas>
+          <div class="axlab y">\(-p_j'(w_j)\) (√ scale)</div>
+          <div class="axlab x">\(w_j\)</div>
+          <div class="nulab" id="nulabM" style="left:570px; top:0px">
+            <span class="ksym">\(\nu\)</span> = <span id="nuValM">—</span></div>
+          <div class="subcap"><b>(b) Negative gradients against weight.</b> The same
+            process as curves: group \(j\)’s negative gradient \(-p_j'(w_j)\) — flat
+            at \(\xi_j^2\), then decaying past the knot. The dashed line is the water
+            level \(\nu\): dots of funded groups ride along it, while dots of unfunded
+            groups wait at \((0,\ \xi_j^2)\) beneath it.</div>
+        </div>
+        <div class="cwrap">
+          <canvas id="cvP" width="700" height="300"></canvas>
+          <div class="axlab y">\(p_j(w_j)\)</div>
+          <div class="axlab x">\(w_j\)</div>
+          <div class="subcap"><b>(c) The objective being minimised.</b> Group
+            \(j\)’s contribution \(p_j(w_j)\) to the bound. All funded groups descend
+            with the <b>same slope</b> \(-\nu\) (parallel black tangent strokes);
+            &#9675; marks the knot \(c_j\) where the linear part hands over to the
+            nonlinear part.</div>
+        </div>
+      </div>
+      <div class="sidecol">
+        <div class="nuread"><span id="nuSym">\(\nu\)</span> =
+          <span id="nuVal">—</span></div>
+        <div class="nusub">water level (price of budget)</div>
+        <div id="wlist"></div>
+        <div class="glab">\(\textstyle\sum_j w_j\) — budget used</div>
+        <canvas id="cvB" width="90" height="150" style="margin-top:4px"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="below">
+    <div class="card wform" id="wform"></div>
+  </div>
+
+  <div class="card algo" id="algo">
+    <h2>Algorithm 1 — <code>getWeights</code> pseudocode</h2>
+    <div class="algobox">
+      <div><span class="ln"></span><b>input:</b>
+        \(\boldsymbol\alpha,\ \boldsymbol\tau,\ \tilde{\boldsymbol\gamma}\)
+        &nbsp;&nbsp; <b>output:</b> optimal weights \(\widehat{\boldsymbol w}\)</div>
+      <div><span class="ln">1</span>\(\boldsymbol w \leftarrow \boldsymbol 0\);
+        &nbsp; \(\xi_j \leftarrow \alpha_j - \tau_j\) for \(j = 1,\dots,J\)</div>
+      <div><span class="ln">2</span>\(U \leftarrow [u_1, \dots, u_J]\) sorted so that
+        \(\xi_{u_1}^2 \ge \xi_{u_2}^2 \ge \cdots \ge \xi_{u_J}^2\)</div>
+      <div><span class="ln">3</span>\(U \leftarrow U \setminus \{\, j :\ \xi_j \ge 0,\
+        \tilde\gamma_j = 0 \,\}\) &nbsp;
+        <span class="cmt">// groups that remain inactive get \(w_j = 0\)</span></div>
+      <div><span class="ln">4</span><b>for</b> \(k = 1, \dots, |U|\):</div>
+      <div><span class="ln">5</span>&emsp;\(\nu \leftarrow \xi_{u_k}^2\) &nbsp;
+        <span class="cmt">// try Case 1: level on the \(k\)-th base width</span></div>
+      <div><span class="ln">6</span>&emsp;\(w_{u_j} \leftarrow
+        \tilde\gamma_{u_j}\tau_{u_j} / \sqrt{\nu}\) for \(j &lt; k\); &nbsp;
+        \(w_{u_k} \leftarrow 1 - \sum_{j&lt;k} w_{u_j}\)</div>
+      <div><span class="ln">7</span>&emsp;\(c_k \leftarrow
+        \tilde\gamma_{u_k}\tau_{u_k} / \xi_{u_k}\)</div>
+      <div><span class="ln">8</span>&emsp;<b>if</b> \(0 &lt; w_{u_k}\) <b>and</b>
+        (\(w_{u_k} &lt; c_k\) <b>or</b> \(\xi_{u_k} \le 0\)): <b>break</b> &nbsp;
+        <span class="cmt">// Case 1 holds</span></div>
+      <div><span class="ln">9</span>&emsp;\(\nu \leftarrow \bigl(\sum_{j \le k}
+        \tilde\gamma_{u_j}\tau_{u_j}\bigr)^2\) &nbsp;
+        <span class="cmt">// try Case 2: level between base widths</span></div>
+      <div><span class="ln">10</span>&emsp;<b>if</b> \(\xi_{u_k}^2 \ge \nu \ge
+        \xi_{u_{k+1}}^2\): &nbsp; \(w_{u_j} \leftarrow
+        \tilde\gamma_{u_j}\tau_{u_j} / \sqrt{\nu}\) for \(j \le k\); <b>break</b>
+        &nbsp; <span class="cmt">// Case 2 holds</span></div>
+      <div><span class="ln">11</span><b>return</b>
+        \(\widehat{\boldsymbol w} = \boldsymbol w\)</div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+
+<script>
+(function () {
+const DATA = {"scenarios": [{"id": "split3", "title": "Three-way proportional split", "blurb": "", "case_group": 2, "alpha": [5.0, 5.0, 5.0, 5.0, 5.0], "tau": [0.5, 1.8, 3.0, 4.1, 4.7], "gammat": [0.6, 0.35, 0.25, 0.1, 0.15], "xi": [4.5, 3.2, 2.0, 0.9, 0.3], "gb": [0.3, 0.63, 0.75, 0.41, 0.705], "c": [0.0667, 0.1969, 0.375, 0.4556, 2.35], "skip": [false, false, false, false, false], "w": [0.17857, 0.375, 0.44643, 0.0, 0.0], "case": 2, "k": 3, "nustar": 2.82466, "fobj": 21.0404, "fscipy": 21.0404, "frames": [[0.00025, 20.25, [0.00025, 0.0, 0.0, 0.0, 0.0]], [0.01125, 20.25, [0.01125, 0.0, 0.0, 0.0, 0.0]], [0.02225, 20.25, [0.02225, 0.0, 0.0, 0.0, 0.0]], [0.03325, 20.25, [0.03325, 0.0, 0.0, 0.0, 0.0]], [0.04425, 20.25, [0.04425, 0.0, 0.0, 0.0, 0.0]], [0.05525, 20.25, [0.05525, 0.0, 0.0, 0.0, 0.0]], [0.06625, 20.25, [0.06625, 0.0, 0.0, 0.0, 0.0]], [0.07725, 15.179625569235938, [0.07725, 0.0, 0.0, 0.0, 0.0]], [0.08825, 11.621900826446264, [0.08825, 0.0, 0.0, 0.0, 0.0]], [0.09925, 10.240000000000002, [0.09375, 0.0055, 0.0, 0.0, 0.0]], [0.11025, 10.240000000000002, [0.09375, 0.0165, 0.0, 0.0, 0.0]], [0.12125, 10.240000000000002, [0.09375, 0.0275, 0.0, 0.0, 0.0]], [0.13225, 10.240000000000002, [0.09375, 0.0385, 0.0, 0.0, 0.0]], [0.14325, 10.240000000000002, [0.09375, 0.0495, 0.0, 0.0, 0.0]], [0.15425, 10.240000000000002, [0.09375, 0.0605, 0.0, 0.0, 0.0]], [0.16525, 10.240000000000002, [0.09375, 0.0715, 0.0, 0.0, 0.0]], [0.17625, 10.240000000000002, [0.09375, 0.0825, 0.0, 0.0, 0.0]], [0.18725, 10.240000000000002, [0.09375, 0.0935, 0.0, 0.0, 0.0]], [0.19825, 10.240000000000002, [0.09375, 0.1045, 0.0, 0.0, 0.0]], [0.20925, 10.240000000000002, [0.09375, 0.1155, 0.0, 0.0, 0.0]], [0.22025, 10.240000000000002, [0.09375, 0.1265, 0.0, 0.0, 0.0]], [0.23125, 10.240000000000002, [0.09375, 0.1375, 0.0, 0.0, 0.0]], [0.24225, 10.240000000000002, [0.09375, 0.1485, 0.0, 0.0, 0.0]], [0.25325, 10.240000000000002, [0.09375, 0.1595, 0.0, 0.0, 0.0]], [0.26425, 10.240000000000002, [0.09375, 0.1705, 0.0, 0.0, 0.0]], [0.27525, 10.240000000000002, [0.09375, 0.1815, 0.0, 0.0, 0.0]], [0.28625, 10.240000000000002, [0.09375, 0.1925, 0.0, 0.0, 0.0]], [0.29725, 9.81668700447885, [0.096, 0.20125, 0.0, 0.0, 0.0]], [0.30825, 9.129962217276525, [0.0995, 0.20875, 0.0, 0.0, 0.0]], [0.31925, 8.506944444444432, [0.103, 0.21625, 0.0, 0.0, 0.0]], [0.33025, 7.945588036574918, [0.1065, 0.22375, 0.0, 0.0, 0.0]], [0.34125, 7.438016528925609, [0.11, 0.23125, 0.0, 0.0, 0.0]], [0.35225, 6.986357196918229, [0.11375, 0.2385, 0.0, 0.0, 0.0]], [0.36325, 6.571946902013777, [0.11725, 0.246, 0.0, 0.0, 0.0]], [0.37425, 6.18845433841795, [0.12075, 0.2535, 0.0, 0.0, 0.0]], [0.38525, 5.8375748840142805, [0.12425, 0.261, 0.0, 0.0, 0.0]], [0.39625, 5.51571271113651, [0.12775, 0.2685, 0.0, 0.0, 0.0]], [0.40725, 5.22448979591836, [0.1315, 0.27575, 0.0, 0.0, 0.0]], [0.41825, 4.955736742873675, [0.135, 0.28325, 0.0, 0.0, 0.0]], [0.42925, 4.703149949194508, [0.1385, 0.29075, 0.0, 0.0, 0.0]], [0.44025, 4.469393270573551, [0.142, 0.29825, 0.0, 0.0, 0.0]], [0.45125, 4.252640489016321, [0.1455, 0.30575, 0.0, 0.0, 0.0]], [0.46225, 4.053871447232101, [0.14925, 0.313, 0.0, 0.0, 0.0]], [0.47325, 4.0, [0.15, 0.31525, 0.008, 0.0, 0.0]], [0.48425, 4.0, [0.15, 0.31525, 0.019, 0.0, 0.0]], [0.49525, 4.0, [0.15, 0.31525, 0.03, 0.0, 0.0]], [0.50625, 4.0, [0.15, 0.31525, 0.041, 0.0, 0.0]], [0.51725, 4.0, [0.15, 0.31525, 0.052, 0.0, 0.0]], [0.52825, 4.0, [0.15, 0.31525, 0.063, 0.0, 0.0]], [0.53925, 4.0, [0.15, 0.31525, 0.074, 0.0, 0.0]], [0.55025, 4.0, [0.15, 0.31525, 0.085, 0.0, 0.0]], [0.56125, 4.0, [0.15, 0.31525, 0.096, 0.0, 0.0]], [0.57225, 4.0, [0.15, 0.31525, 0.107, 0.0, 0.0]], [0.58325, 4.0, [0.15, 0.31525, 0.118, 0.0, 0.0]], [0.59425, 4.0, [0.15, 0.31525, 0.129, 0.0, 0.0]], [0.60525, 4.0, [0.15, 0.31525, 0.14, 0.0, 0.0]], [0.61625, 4.0, [0.15, 0.31525, 0.151, 0.0, 0.0]], [0.62725, 4.0, [0.15, 0.31525, 0.162, 0.0, 0.0]], [0.63825, 4.0, [0.15, 0.31525, 0.173, 0.0, 0.0]], [0.64925, 4.0, [0.15, 0.31525, 0.184, 0.0, 0.0]], [0.66025, 4.0, [0.15, 0.31525, 0.195, 0.0, 0.0]], [0.67125, 4.0, [0.15, 0.31525, 0.206, 0.0, 0.0]], [0.68225, 4.0, [0.15, 0.31525, 0.217, 0.0, 0.0]], [0.69325, 4.0, [0.15, 0.31525, 0.228, 0.0, 0.0]], [0.70425, 4.0, [0.15, 0.31525, 0.239, 0.0, 0.0]], [0.71525, 4.0, [0.15, 0.31525, 0.25, 0.0, 0.0]], [0.72625, 4.0, [0.15, 0.31525, 0.261, 0.0, 0.0]], [0.73725, 4.0, [0.15, 0.31525, 0.272, 0.0, 0.0]], [0.74825, 4.0, [0.15, 0.31525, 0.283, 0.0, 0.0]], [0.75925, 4.0, [0.15, 0.31525, 0.294, 0.0, 0.0]], [0.77025, 4.0, [0.15, 0.31525, 0.305, 0.0, 0.0]], [0.78125, 4.0, [0.15, 0.31525, 0.316, 0.0, 0.0]], [0.79225, 4.0, [0.15, 0.31525, 0.327, 0.0, 0.0]], [0.80325, 4.0, [0.15, 0.31525, 0.338, 0.0, 0.0]], [0.81425, 4.0, [0.15, 0.31525, 0.349, 0.0, 0.0]], [0.82525, 4.0, [0.15, 0.31525, 0.36, 0.0, 0.0]], [0.83625, 4.0, [0.15, 0.31525, 0.371, 0.0, 0.0]], [0.84725, 3.9367598891411317, [0.15125, 0.31775, 0.37825, 0.0, 0.0]], [0.85825, 3.834643361124846, [0.15325, 0.32175, 0.38325, 0.0, 0.0]], [0.86925, 3.74035006293424, [0.15525, 0.326, 0.388, 0.0, 0.0]], [0.88025, 3.6466168916969828, [0.15725, 0.33, 0.393, 0.0, 0.0]], [0.89125, 3.5578543511780776, [0.15925, 0.33425, 0.39775, 0.0, 0.0]], [0.90225, 3.472088268199524, [0.16125, 0.33825, 0.40275, 0.0, 0.0]], [0.91325, 3.387406375851842, [0.163, 0.3425, 0.40775, 0.0, 0.0]], [0.92425, 3.305785123967226, [0.165, 0.3465, 0.41275, 0.0, 0.0]], [0.93525, 3.230762656160852, [0.167, 0.35075, 0.4175, 0.0, 0.0]], [0.94625, 3.15488265413996, [0.169, 0.35475, 0.4225, 0.0, 0.0]], [0.95725, 3.0838786436646886, [0.171, 0.359, 0.42725, 0.0, 0.0]], [0.96825, 3.014081790123734, [0.173, 0.363, 0.43225, 0.0, 0.0]], [0.97925, 2.946788527645372, [0.175, 0.36725, 0.437, 0.0, 0.0]], [0.99025, 2.8808700227468655, [0.177, 0.37125, 0.442, 0.0, 0.0]], [1.0, 2.824659275475167, [0.1785, 0.375, 0.4465, 0.0, 0.0]]]}, {"id": "split2", "title": "Two-way proportional split", "blurb": "", "case_group": 2, "alpha": [5.0, 5.0, 5.0, 5.0, 5.0], "tau": [0.5, 1.8, 4.1, 4.5, 4.8], "gammat": [0.8, 0.6, 0.2, 0.1, 0.1], "xi": [4.5, 3.2, 0.9, 0.5, 0.2], "gb": [0.4, 1.08, 0.82, 0.45, 0.48], "c": [0.0889, 0.3375, 0.9111, 0.9, 2.4], "skip": [false, false, false, false, false], "w": [0.27027, 0.72973, 0.0, 0.0, 0.0], "case": 2, "k": 2, "nustar": 2.19178, "fobj": 23.9784, "fscipy": 23.9784, "frames": [[0.00025, 20.25, [0.00025, 0.0, 0.0, 0.0, 0.0]], [0.01125, 20.25, [0.01125, 0.0, 0.0, 0.0, 0.0]], [0.02225, 20.25, [0.02225, 0.0, 0.0, 0.0, 0.0]], [0.03325, 20.25, [0.03325, 0.0, 0.0, 0.0, 0.0]], [0.04425, 20.25, [0.04425, 0.0, 0.0, 0.0, 0.0]], [0.05525, 20.25, [0.05525, 0.0, 0.0, 0.0, 0.0]], [0.06625, 20.25, [0.06625, 0.0, 0.0, 0.0, 0.0]], [0.07725, 20.25, [0.07725, 0.0, 0.0, 0.0, 0.0]], [0.08825, 20.25, [0.08825, 0.0, 0.0, 0.0, 0.0]], [0.09925, 16.324864809713272, [0.09925, 0.0, 0.0, 0.0, 0.0]], [0.11025, 13.223140495867751, [0.11025, 0.0, 0.0, 0.0, 0.0]], [0.12125, 10.928215285841116, [0.12125, 0.0, 0.0, 0.0, 0.0]], [0.13225, 10.240000000000002, [0.125, 0.00725, 0.0, 0.0, 0.0]], [0.14325, 10.240000000000002, [0.125, 0.01825, 0.0, 0.0, 0.0]], [0.15425, 10.240000000000002, [0.125, 0.02925, 0.0, 0.0, 0.0]], [0.16525, 10.240000000000002, [0.125, 0.04025, 0.0, 0.0, 0.0]], [0.17625, 10.240000000000002, [0.125, 0.05125, 0.0, 0.0, 0.0]], [0.18725, 10.240000000000002, [0.125, 0.06225, 0.0, 0.0, 0.0]], [0.19825, 10.240000000000002, [0.125, 0.07325, 0.0, 0.0, 0.0]], [0.20925, 10.240000000000002, [0.125, 0.08425, 0.0, 0.0, 0.0]], [0.22025, 10.240000000000002, [0.125, 0.09525, 0.0, 0.0, 0.0]], [0.23125, 10.240000000000002, [0.125, 0.10625, 0.0, 0.0, 0.0]], [0.24225, 10.240000000000002, [0.125, 0.11725, 0.0, 0.0, 0.0]], [0.25325, 10.240000000000002, [0.125, 0.12825, 0.0, 0.0, 0.0]], [0.26425, 10.240000000000002, [0.125, 0.13925, 0.0, 0.0, 0.0]], [0.27525, 10.240000000000002, [0.125, 0.15025, 0.0, 0.0, 0.0]], [0.28625, 10.240000000000002, [0.125, 0.16125, 0.0, 0.0, 0.0]], [0.29725, 10.240000000000002, [0.125, 0.17225, 0.0, 0.0, 0.0]], [0.30825, 10.240000000000002, [0.125, 0.18325, 0.0, 0.0, 0.0]], [0.31925, 10.240000000000002, [0.125, 0.19425, 0.0, 0.0, 0.0]], [0.33025, 10.240000000000002, [0.125, 0.20525, 0.0, 0.0, 0.0]], [0.34125, 10.240000000000002, [0.125, 0.21625, 0.0, 0.0, 0.0]], [0.35225, 10.240000000000002, [0.125, 0.22725, 0.0, 0.0, 0.0]], [0.36325, 10.240000000000002, [0.125, 0.23825, 0.0, 0.0, 0.0]], [0.37425, 10.240000000000002, [0.125, 0.24925, 0.0, 0.0, 0.0]], [0.38525, 10.240000000000002, [0.125, 0.26025, 0.0, 0.0, 0.0]], [0.39625, 10.240000000000002, [0.125, 0.27125, 0.0, 0.0, 0.0]], [0.40725, 10.240000000000002, [0.125, 0.28225, 0.0, 0.0, 0.0]], [0.41825, 10.240000000000002, [0.125, 0.29325, 0.0, 0.0, 0.0]], [0.42925, 10.240000000000002, [0.125, 0.30425, 0.0, 0.0, 0.0]], [0.44025, 10.240000000000002, [0.125, 0.31525, 0.0, 0.0, 0.0]], [0.45125, 10.240000000000002, [0.125, 0.32625, 0.0, 0.0, 0.0]], [0.46225, 10.240000000000002, [0.125, 0.33725, 0.0, 0.0, 0.0]], [0.47325, 9.799621928166937, [0.128, 0.34525, 0.0, 0.0, 0.0]], [0.48425, 9.35915387399507, [0.131, 0.35325, 0.0, 0.0, 0.0]], [0.49525, 8.944012577517677, [0.134, 0.36125, 0.0, 0.0, 0.0]], [0.50625, 8.555892369547697, [0.137, 0.36925, 0.0, 0.0, 0.0]], [0.51725, 8.195755882202421, [0.13975, 0.3775, 0.0, 0.0, 0.0]], [0.52825, 7.858908207039778, [0.14275, 0.3855, 0.0, 0.0, 0.0]], [0.53925, 7.542408467104206, [0.14575, 0.3935, 0.0, 0.0, 0.0]], [0.55025, 7.244650187789923, [0.14875, 0.4015, 0.0, 0.0, 0.0]], [0.56125, 6.964182360495097, [0.15175, 0.4095, 0.0, 0.0, 0.0]], [0.57225, 6.699691731755878, [0.15475, 0.4175, 0.0, 0.0, 0.0]], [0.58325, 6.449987402368347, [0.15775, 0.4255, 0.0, 0.0, 0.0]], [0.59425, 6.211119845498386, [0.16075, 0.4335, 0.0, 0.0, 0.0]], [0.60525, 5.985279952117753, [0.16375, 0.4415, 0.0, 0.0, 0.0]], [0.61625, 5.772821364982787, [0.1665, 0.44975, 0.0, 0.0, 0.0]], [0.62725, 5.572695511959704, [0.1695, 0.45775, 0.0, 0.0, 0.0]], [0.63825, 5.38279871844773, [0.1725, 0.46575, 0.0, 0.0, 0.0]], [0.64925, 5.202445559757409, [0.1755, 0.47375, 0.0, 0.0, 0.0]], [0.66025, 5.031007074854229, [0.1785, 0.48175, 0.0, 0.0, 0.0]], [0.67125, 4.867905275338283, [0.1815, 0.48975, 0.0, 0.0, 0.0]], [0.68225, 4.712608267468507, [0.1845, 0.49775, 0.0, 0.0, 0.0]], [0.69325, 4.563271723223304, [0.1875, 0.50575, 0.0, 0.0, 0.0]], [0.70425, 4.420492435950339, [0.1905, 0.51375, 0.0, 0.0, 0.0]], [0.71525, 4.2847214680796295, [0.19325, 0.522, 0.0, 0.0, 0.0]], [0.72625, 4.1562874916962125, [0.19625, 0.53, 0.0, 0.0, 0.0]], [0.73725, 4.033542830132998, [0.19925, 0.538, 0.0, 0.0, 0.0]], [0.74825, 3.916156348278679, [0.20225, 0.546, 0.0, 0.0, 0.0]], [0.75925, 3.8038206564114447, [0.20525, 0.554, 0.0, 0.0, 0.0]], [0.77025, 3.69625009581133, [0.20825, 0.562, 0.0, 0.0, 0.0]], [0.78125, 3.593178920957013, [0.21125, 0.57, 0.0, 0.0, 0.0]], [0.79225, 3.493754913092842, [0.21425, 0.578, 0.0, 0.0, 0.0]], [0.80325, 3.3978211471893607, [0.21725, 0.586, 0.0, 0.0, 0.0]], [0.81425, 3.305785123967362, [0.22, 0.59425, 0.0, 0.0, 0.0]], [0.82525, 3.2185075219924433, [0.223, 0.60225, 0.0, 0.0, 0.0]], [0.83625, 3.1346412254774276, [0.226, 0.61025, 0.0, 0.0, 0.0]], [0.84725, 3.0540107455937626, [0.229, 0.61825, 0.0, 0.0, 0.0]], [0.85825, 2.9764517347328074, [0.232, 0.62625, 0.0, 0.0, 0.0]], [0.86925, 2.9018101483748344, [0.235, 0.63425, 0.0, 0.0, 0.0]], [0.88025, 2.8299414796055844, [0.238, 0.64225, 0.0, 0.0, 0.0]], [0.89125, 2.7604977091103935, [0.241, 0.65025, 0.0, 0.0, 0.0]], [0.90225, 2.692965154503612, [0.244, 0.65825, 0.0, 0.0, 0.0]], [0.91325, 2.6278807886516575, [0.247, 0.66625, 0.0, 0.0, 0.0]], [0.92425, 2.565698384436899, [0.24975, 0.6745, 0.0, 0.0, 0.0]], [0.93525, 2.5058808790835125, [0.25275, 0.6825, 0.0, 0.0, 0.0]], [0.94625, 2.448131152582074, [0.25575, 0.6905, 0.0, 0.0, 0.0]], [0.95725, 2.3923549859768634, [0.25875, 0.6985, 0.0, 0.0, 0.0]], [0.96825, 2.338463466207552, [0.26175, 0.7065, 0.0, 0.0, 0.0]], [0.97925, 2.286372631547549, [0.26475, 0.7145, 0.0, 0.0, 0.0]], [0.99025, 2.2360031443794517, [0.26775, 0.7225, 0.0, 0.0, 0.0]], [1.0, 2.191779792275439, [0.27025, 0.72975, 0.0, 0.0, 0.0]]]}, {"id": "pivot", "title": "Pivot group takes the leftover", "blurb": "", "case_group": 1, "alpha": [5.0, 5.0, 5.0, 5.0, 5.0], "tau": [0.5, 1.8, 3.0, 4.5, 4.8], "gammat": [1.0, 0.4, 0.3, 0.1, 0.1], "xi": [4.5, 3.2, 2.0, 0.5, 0.2], "gb": [0.5, 0.72, 0.9, 0.45, 0.48], "c": [0.1111, 0.225, 0.45, 0.9, 2.4], "skip": [false, false, false, false, false], "w": [0.25, 0.36, 0.39, 0.0, 0.0], "case": 1, "k": 3, "nustar": 4.0, "fobj": 22.272, "fscipy": 22.272, "frames": [[0.00025, 20.25, [0.00025, 0.0, 0.0, 0.0, 0.0]], [0.01125, 20.25, [0.01125, 0.0, 0.0, 0.0, 0.0]], [0.02225, 20.25, [0.02225, 0.0, 0.0, 0.0, 0.0]], [0.03325, 20.25, [0.03325, 0.0, 0.0, 0.0, 0.0]], [0.04425, 20.25, [0.04425, 0.0, 0.0, 0.0, 0.0]], [0.05525, 20.25, [0.05525, 0.0, 0.0, 0.0, 0.0]], [0.06625, 20.25, [0.06625, 0.0, 0.0, 0.0, 0.0]], [0.07725, 20.25, [0.07725, 0.0, 0.0, 0.0, 0.0]], [0.08825, 20.25, [0.08825, 0.0, 0.0, 0.0, 0.0]], [0.09925, 20.25, [0.09925, 0.0, 0.0, 0.0, 0.0]], [0.11025, 20.25, [0.11025, 0.0, 0.0, 0.0, 0.0]], [0.12125, 17.075336384126743, [0.12125, 0.0, 0.0, 0.0, 0.0]], [0.13225, 14.348025711662057, [0.13225, 0.0, 0.0, 0.0, 0.0]], [0.14325, 12.22553670106116, [0.14325, 0.0, 0.0, 0.0, 0.0]], [0.15425, 10.541406645302734, [0.15425, 0.0, 0.0, 0.0, 0.0]], [0.16525, 10.240000000000002, [0.15625, 0.009, 0.0, 0.0, 0.0]], [0.17625, 10.240000000000002, [0.15625, 0.02, 0.0, 0.0, 0.0]], [0.18725, 10.240000000000002, [0.15625, 0.031, 0.0, 0.0, 0.0]], [0.19825, 10.240000000000002, [0.15625, 0.042, 0.0, 0.0, 0.0]], [0.20925, 10.240000000000002, [0.15625, 0.053, 0.0, 0.0, 0.0]], [0.22025, 10.240000000000002, [0.15625, 0.064, 0.0, 0.0, 0.0]], [0.23125, 10.240000000000002, [0.15625, 0.075, 0.0, 0.0, 0.0]], [0.24225, 10.240000000000002, [0.15625, 0.086, 0.0, 0.0, 0.0]], [0.25325, 10.240000000000002, [0.15625, 0.097, 0.0, 0.0, 0.0]], [0.26425, 10.240000000000002, [0.15625, 0.108, 0.0, 0.0, 0.0]], [0.27525, 10.240000000000002, [0.15625, 0.119, 0.0, 0.0, 0.0]], [0.28625, 10.240000000000002, [0.15625, 0.13, 0.0, 0.0, 0.0]], [0.29725, 10.240000000000002, [0.15625, 0.141, 0.0, 0.0, 0.0]], [0.30825, 10.240000000000002, [0.15625, 0.152, 0.0, 0.0, 0.0]], [0.31925, 10.240000000000002, [0.15625, 0.163, 0.0, 0.0, 0.0]], [0.33025, 10.240000000000002, [0.15625, 0.174, 0.0, 0.0, 0.0]], [0.34125, 10.240000000000002, [0.15625, 0.185, 0.0, 0.0, 0.0]], [0.35225, 10.240000000000002, [0.15625, 0.196, 0.0, 0.0, 0.0]], [0.36325, 10.240000000000002, [0.15625, 0.207, 0.0, 0.0, 0.0]], [0.37425, 10.240000000000002, [0.15625, 0.218, 0.0, 0.0, 0.0]], [0.38525, 10.046187346324714, [0.158, 0.22725, 0.0, 0.0, 0.0]], [0.39625, 9.496653616681808, [0.1625, 0.23375, 0.0, 0.0, 0.0]], [0.40725, 8.991006745502798, [0.167, 0.24025, 0.0, 0.0, 0.0]], [0.41825, 8.524694975757887, [0.1715, 0.24675, 0.0, 0.0, 0.0]], [0.42925, 8.0937417165612, [0.176, 0.25325, 0.0, 0.0, 0.0]], [0.44025, 7.6946604827245135, [0.1805, 0.25975, 0.0, 0.0, 0.0]], [0.45125, 7.324384156624619, [0.185, 0.26625, 0.0, 0.0, 0.0]], [0.46225, 6.980205881172456, [0.1895, 0.27275, 0.0, 0.0, 0.0]], [0.47325, 6.659729448491146, [0.194, 0.27925, 0.0, 0.0, 0.0]], [0.48425, 6.359936327026523, [0.1985, 0.28575, 0.0, 0.0, 0.0]], [0.49525, 6.0799399512105445, [0.203, 0.29225, 0.0, 0.0, 0.0]], [0.50625, 5.818034898108836, [0.2075, 0.29875, 0.0, 0.0, 0.0]], [0.51725, 5.572695511959367, [0.212, 0.30525, 0.0, 0.0, 0.0]], [0.52825, 5.342553635518316, [0.2165, 0.31175, 0.0, 0.0, 0.0]], [0.53925, 5.126379494482259, [0.221, 0.31825, 0.0, 0.0, 0.0]], [0.55025, 4.923065234888101, [0.2255, 0.32475, 0.0, 0.0, 0.0]], [0.56125, 4.731610700888341, [0.23, 0.33125, 0.0, 0.0, 0.0]], [0.57225, 4.551111111111368, [0.2345, 0.33775, 0.0, 0.0, 0.0]], [0.58325, 4.3807463493783025, [0.239, 0.34425, 0.0, 0.0, 0.0]], [0.59425, 4.219771632536624, [0.2435, 0.35075, 0.0, 0.0, 0.0]], [0.60525, 4.067509356684115, [0.248, 0.35725, 0.0, 0.0, 0.0]], [0.61625, 4.0, [0.25, 0.36025, 0.006, 0.0, 0.0]], [0.62725, 4.0, [0.25, 0.36025, 0.017, 0.0, 0.0]], [0.63825, 4.0, [0.25, 0.36025, 0.028, 0.0, 0.0]], [0.64925, 4.0, [0.25, 0.36025, 0.039, 0.0, 0.0]], [0.66025, 4.0, [0.25, 0.36025, 0.05, 0.0, 0.0]], [0.67125, 4.0, [0.25, 0.36025, 0.061, 0.0, 0.0]], [0.68225, 4.0, [0.25, 0.36025, 0.072, 0.0, 0.0]], [0.69325, 4.0, [0.25, 0.36025, 0.083, 0.0, 0.0]], [0.70425, 4.0, [0.25, 0.36025, 0.094, 0.0, 0.0]], [0.71525, 4.0, [0.25, 0.36025, 0.105, 0.0, 0.0]], [0.72625, 4.0, [0.25, 0.36025, 0.116, 0.0, 0.0]], [0.73725, 4.0, [0.25, 0.36025, 0.127, 0.0, 0.0]], [0.74825, 4.0, [0.25, 0.36025, 0.138, 0.0, 0.0]], [0.75925, 4.0, [0.25, 0.36025, 0.149, 0.0, 0.0]], [0.77025, 4.0, [0.25, 0.36025, 0.16, 0.0, 0.0]], [0.78125, 4.0, [0.25, 0.36025, 0.171, 0.0, 0.0]], [0.79225, 4.0, [0.25, 0.36025, 0.182, 0.0, 0.0]], [0.80325, 4.0, [0.25, 0.36025, 0.193, 0.0, 0.0]], [0.81425, 4.0, [0.25, 0.36025, 0.204, 0.0, 0.0]], [0.82525, 4.0, [0.25, 0.36025, 0.215, 0.0, 0.0]], [0.83625, 4.0, [0.25, 0.36025, 0.226, 0.0, 0.0]], [0.84725, 4.0, [0.25, 0.36025, 0.237, 0.0, 0.0]], [0.85825, 4.0, [0.25, 0.36025, 0.248, 0.0, 0.0]], [0.86925, 4.0, [0.25, 0.36025, 0.259, 0.0, 0.0]], [0.88025, 4.0, [0.25, 0.36025, 0.27, 0.0, 0.0]], [0.89125, 4.0, [0.25, 0.36025, 0.281, 0.0, 0.0]], [0.90225, 4.0, [0.25, 0.36025, 0.292, 0.0, 0.0]], [0.91325, 4.0, [0.25, 0.36025, 0.303, 0.0, 0.0]], [0.92425, 4.0, [0.25, 0.36025, 0.314, 0.0, 0.0]], [0.93525, 4.0, [0.25, 0.36025, 0.325, 0.0, 0.0]], [0.94625, 4.0, [0.25, 0.36025, 0.336, 0.0, 0.0]], [0.95725, 4.0, [0.25, 0.36025, 0.347, 0.0, 0.0]], [0.96825, 4.0, [0.25, 0.36025, 0.358, 0.0, 0.0]], [0.97925, 4.0, [0.25, 0.36025, 0.369, 0.0, 0.0]], [0.99025, 4.0, [0.25, 0.36025, 0.38, 0.0, 0.0]], [1.0, 4.0, [0.25, 0.36025, 0.38975, 0.0, 0.0]]]}, {"id": "wta_thr", "title": "Winner takes all: \\(\\xi_j < \\tilde\\gamma_j\\tau_j\\) for all \\(j\\) (all \\(p_j\\) linear)", "blurb": "", "case_group": 1, "alpha": [5.0, 5.0, 5.0, 5.0, 5.0], "tau": [4.9, 4.7, 3.6, 4.4, 4.1], "gammat": [0.3, 0.3, 0.5, 0.3, 0.4], "xi": [0.1, 0.3, 1.4, 0.6, 0.9], "gb": [1.47, 1.41, 1.8, 1.32, 1.64], "c": [14.7, 4.7, 1.2857, 2.2, 1.8222], "skip": [false, false, false, false, false], "w": [0.0, 0.0, 1.0, 0.0, 0.0], "case": 1, "k": 1, "nustar": 1.96, "fobj": 74.44, "fscipy": 74.44, "frames": [[0.00025, 1.9599999999999997, [0.0, 0.0, 0.00025, 0.0, 0.0]], [0.01125, 1.9599999999999997, [0.0, 0.0, 0.01125, 0.0, 0.0]], [0.02225, 1.9599999999999997, [0.0, 0.0, 0.02225, 0.0, 0.0]], [0.03325, 1.9599999999999997, [0.0, 0.0, 0.03325, 0.0, 0.0]], [0.04425, 1.9599999999999997, [0.0, 0.0, 0.04425, 0.0, 0.0]], [0.05525, 1.9599999999999997, [0.0, 0.0, 0.05525, 0.0, 0.0]], [0.06625, 1.9599999999999997, [0.0, 0.0, 0.06625, 0.0, 0.0]], [0.07725, 1.9599999999999997, [0.0, 0.0, 0.07725, 0.0, 0.0]], [0.08825, 1.9599999999999997, [0.0, 0.0, 0.08825, 0.0, 0.0]], [0.09925, 1.9599999999999997, [0.0, 0.0, 0.09925, 0.0, 0.0]], [0.11025, 1.9599999999999997, [0.0, 0.0, 0.11025, 0.0, 0.0]], [0.12125, 1.9599999999999997, [0.0, 0.0, 0.12125, 0.0, 0.0]], [0.13225, 1.9599999999999997, [0.0, 0.0, 0.13225, 0.0, 0.0]], [0.14325, 1.9599999999999997, [0.0, 0.0, 0.14325, 0.0, 0.0]], [0.15425, 1.9599999999999997, [0.0, 0.0, 0.15425, 0.0, 0.0]], [0.16525, 1.9599999999999997, [0.0, 0.0, 0.16525, 0.0, 0.0]], [0.17625, 1.9599999999999997, [0.0, 0.0, 0.17625, 0.0, 0.0]], [0.18725, 1.9599999999999997, [0.0, 0.0, 0.18725, 0.0, 0.0]], [0.19825, 1.9599999999999997, [0.0, 0.0, 0.19825, 0.0, 0.0]], [0.20925, 1.9599999999999997, [0.0, 0.0, 0.20925, 0.0, 0.0]], [0.22025, 1.9599999999999997, [0.0, 0.0, 0.22025, 0.0, 0.0]], [0.23125, 1.9599999999999997, [0.0, 0.0, 0.23125, 0.0, 0.0]], [0.24225, 1.9599999999999997, [0.0, 0.0, 0.24225, 0.0, 0.0]], [0.25325, 1.9599999999999997, [0.0, 0.0, 0.25325, 0.0, 0.0]], [0.26425, 1.9599999999999997, [0.0, 0.0, 0.26425, 0.0, 0.0]], [0.27525, 1.9599999999999997, [0.0, 0.0, 0.27525, 0.0, 0.0]], [0.28625, 1.9599999999999997, [0.0, 0.0, 0.28625, 0.0, 0.0]], [0.29725, 1.9599999999999997, [0.0, 0.0, 0.29725, 0.0, 0.0]], [0.30825, 1.9599999999999997, [0.0, 0.0, 0.30825, 0.0, 0.0]], [0.31925, 1.9599999999999997, [0.0, 0.0, 0.31925, 0.0, 0.0]], [0.33025, 1.9599999999999997, [0.0, 0.0, 0.33025, 0.0, 0.0]], [0.34125, 1.9599999999999997, [0.0, 0.0, 0.34125, 0.0, 0.0]], [0.35225, 1.9599999999999997, [0.0, 0.0, 0.35225, 0.0, 0.0]], [0.36325, 1.9599999999999997, [0.0, 0.0, 0.36325, 0.0, 0.0]], [0.37425, 1.9599999999999997, [0.0, 0.0, 0.37425, 0.0, 0.0]], [0.38525, 1.9599999999999997, [0.0, 0.0, 0.38525, 0.0, 0.0]], [0.39625, 1.9599999999999997, [0.0, 0.0, 0.39625, 0.0, 0.0]], [0.40725, 1.9599999999999997, [0.0, 0.0, 0.40725, 0.0, 0.0]], [0.41825, 1.9599999999999997, [0.0, 0.0, 0.41825, 0.0, 0.0]], [0.42925, 1.9599999999999997, [0.0, 0.0, 0.42925, 0.0, 0.0]], [0.44025, 1.9599999999999997, [0.0, 0.0, 0.44025, 0.0, 0.0]], [0.45125, 1.9599999999999997, [0.0, 0.0, 0.45125, 0.0, 0.0]], [0.46225, 1.9599999999999997, [0.0, 0.0, 0.46225, 0.0, 0.0]], [0.47325, 1.9599999999999997, [0.0, 0.0, 0.47325, 0.0, 0.0]], [0.48425, 1.9599999999999997, [0.0, 0.0, 0.48425, 0.0, 0.0]], [0.49525, 1.9599999999999997, [0.0, 0.0, 0.49525, 0.0, 0.0]], [0.50625, 1.9599999999999997, [0.0, 0.0, 0.50625, 0.0, 0.0]], [0.51725, 1.9599999999999997, [0.0, 0.0, 0.51725, 0.0, 0.0]], [0.52825, 1.9599999999999997, [0.0, 0.0, 0.52825, 0.0, 0.0]], [0.53925, 1.9599999999999997, [0.0, 0.0, 0.53925, 0.0, 0.0]], [0.55025, 1.9599999999999997, [0.0, 0.0, 0.55025, 0.0, 0.0]], [0.56125, 1.9599999999999997, [0.0, 0.0, 0.56125, 0.0, 0.0]], [0.57225, 1.9599999999999997, [0.0, 0.0, 0.57225, 0.0, 0.0]], [0.58325, 1.9599999999999997, [0.0, 0.0, 0.58325, 0.0, 0.0]], [0.59425, 1.9599999999999997, [0.0, 0.0, 0.59425, 0.0, 0.0]], [0.60525, 1.9599999999999997, [0.0, 0.0, 0.60525, 0.0, 0.0]], [0.61625, 1.9599999999999997, [0.0, 0.0, 0.61625, 0.0, 0.0]], [0.62725, 1.9599999999999997, [0.0, 0.0, 0.62725, 0.0, 0.0]], [0.63825, 1.9599999999999997, [0.0, 0.0, 0.63825, 0.0, 0.0]], [0.64925, 1.9599999999999997, [0.0, 0.0, 0.64925, 0.0, 0.0]], [0.66025, 1.9599999999999997, [0.0, 0.0, 0.66025, 0.0, 0.0]], [0.67125, 1.9599999999999997, [0.0, 0.0, 0.67125, 0.0, 0.0]], [0.68225, 1.9599999999999997, [0.0, 0.0, 0.68225, 0.0, 0.0]], [0.69325, 1.9599999999999997, [0.0, 0.0, 0.69325, 0.0, 0.0]], [0.70425, 1.9599999999999997, [0.0, 0.0, 0.70425, 0.0, 0.0]], [0.71525, 1.9599999999999997, [0.0, 0.0, 0.71525, 0.0, 0.0]], [0.72625, 1.9599999999999997, [0.0, 0.0, 0.72625, 0.0, 0.0]], [0.73725, 1.9599999999999997, [0.0, 0.0, 0.73725, 0.0, 0.0]], [0.74825, 1.9599999999999997, [0.0, 0.0, 0.74825, 0.0, 0.0]], [0.75925, 1.9599999999999997, [0.0, 0.0, 0.75925, 0.0, 0.0]], [0.77025, 1.9599999999999997, [0.0, 0.0, 0.77025, 0.0, 0.0]], [0.78125, 1.9599999999999997, [0.0, 0.0, 0.78125, 0.0, 0.0]], [0.79225, 1.9599999999999997, [0.0, 0.0, 0.79225, 0.0, 0.0]], [0.80325, 1.9599999999999997, [0.0, 0.0, 0.80325, 0.0, 0.0]], [0.81425, 1.9599999999999997, [0.0, 0.0, 0.81425, 0.0, 0.0]], [0.82525, 1.9599999999999997, [0.0, 0.0, 0.82525, 0.0, 0.0]], [0.83625, 1.9599999999999997, [0.0, 0.0, 0.83625, 0.0, 0.0]], [0.84725, 1.9599999999999997, [0.0, 0.0, 0.84725, 0.0, 0.0]], [0.85825, 1.9599999999999997, [0.0, 0.0, 0.85825, 0.0, 0.0]], [0.86925, 1.9599999999999997, [0.0, 0.0, 0.86925, 0.0, 0.0]], [0.88025, 1.9599999999999997, [0.0, 0.0, 0.88025, 0.0, 0.0]], [0.89125, 1.9599999999999997, [0.0, 0.0, 0.89125, 0.0, 0.0]], [0.90225, 1.9599999999999997, [0.0, 0.0, 0.90225, 0.0, 0.0]], [0.91325, 1.9599999999999997, [0.0, 0.0, 0.91325, 0.0, 0.0]], [0.92425, 1.9599999999999997, [0.0, 0.0, 0.92425, 0.0, 0.0]], [0.93525, 1.9599999999999997, [0.0, 0.0, 0.93525, 0.0, 0.0]], [0.94625, 1.9599999999999997, [0.0, 0.0, 0.94625, 0.0, 0.0]], [0.95725, 1.9599999999999997, [0.0, 0.0, 0.95725, 0.0, 0.0]], [0.96825, 1.9599999999999997, [0.0, 0.0, 0.96825, 0.0, 0.0]], [0.97925, 1.9599999999999997, [0.0, 0.0, 0.97925, 0.0, 0.0]], [0.99025, 1.9599999999999997, [0.0, 0.0, 0.99025, 0.0, 0.0]], [1.0, 1.9599999999999997, [0.0, 0.0, 1.0, 0.0, 0.0]]]}]};
+const SC = DATA.scenarios;
+const COLORS = ["#7dabf8", "#f87171", "#34d399", "#fbbf24", "#b795f5", "#22d3ee"];
+
+let cur = 0, frameIdx = 0, playing = false, lastT = 0;
+
+const cvM = document.getElementById("cvM"), ctxM = cvM.getContext("2d");
+const cvP = document.getElementById("cvP"), ctxP = cvP.getContext("2d");
+const cvV = document.getElementById("cvV"), ctxV = cvV.getContext("2d");
+const cvB = document.getElementById("cvB"), ctxB = cvB.getContext("2d");
+
+function fmt(x, d=3) {
+  if (x === null || x === undefined || !isFinite(x)) return "—";
+  return Number(x).toFixed(d);
+}
+function fmtv(x) {   // exact-looking value labels: trim trailing zeros (1.96, 4, 20.25)
+  if (x === null || x === undefined || !isFinite(x)) return "—";
+  return String(Number(Number(x).toFixed(2)));
+}
+function tex(el) {
+  if (window.renderMathInElement) {
+    window.renderMathInElement(el, {
+      throwOnError: false,
+      delimiters: [
+        {left: "\\(", right: "\\)", display: false},
+        {left: "\\[", right: "\\]", display: true}]});
+  }
+}
+
+function pj(sc, j, w) {
+  const g = sc.gammat[j], t = sc.tau[j], a = sc.alpha[j], xi = sc.xi[j],
+        gb = sc.gb[j], c = sc.c[j];
+  if (sc.skip[j]) return 0;
+  if (c !== null && c > 0 && c <= 1 && w >= c) return gb*gb/w + 2*g*t*t;
+  return 2*g*a*t - w*xi*xi;
+}
+function mpj(sc, j, w) {      // -p_j'(w)
+  if (sc.skip[j]) return 0;
+  const xi = sc.xi[j], gb = sc.gb[j], c = sc.c[j];
+  if (c !== null && c > 0 && c <= 1 && w >= c) return gb*gb/(w*w);
+  return xi*xi;
+}
+
+/* ---------- static example p_j figure (labels are KaTeX overlays) ---------- */
+function drawExample() {
+  const cv = document.getElementById("cvEx"), ctx = cv.getContext("2d");
+  const W = cv.width, H = cv.height, mL = 50, mR = 16, mT = 18, mB = 36;
+  const g = 0.4, t = 3, a = 7, xi = a - t, gb = g*t, c = gb/xi;   // c = 0.3
+  const P = w => (w >= c) ? gb*gb/w + 2*g*t*t : 2*g*a*t - w*xi*xi;
+  const wmin = 0.02, wmax = 1.0;
+  let ymin = P(wmax), ymax = P(wmin);
+  const pad = (ymax-ymin)*0.10; ymin -= pad; ymax += pad;
+  const X = w => mL + (w)/(wmax)*(W-mL-mR);
+  const Y = v => mT + (ymax-v)/(ymax-ymin)*(H-mT-mB);
+
+  ctx.clearRect(0,0,W,H);
+  // grid + axes
+  ctx.fillStyle = "#a49a8c"; ctx.font = "11.5px sans-serif"; ctx.textAlign = "center";
+  for (let x = 0; x <= 1.001; x += 0.25) {
+    ctx.strokeStyle = "#2b2620"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(X(x), mT); ctx.lineTo(X(x), H-mB); ctx.stroke();
+    ctx.fillText(x.toFixed(2), X(x), H-mB+16);
+  }
+  ctx.textAlign = "right";
+  for (let v = 8; v <= ymax; v += 2) {
+    ctx.strokeStyle = "#2b2620";
+    ctx.beginPath(); ctx.moveTo(mL, Y(v)); ctx.lineTo(W-mR, Y(v)); ctx.stroke();
+    ctx.fillText(v.toFixed(0), mL-7, Y(v)+4);
+  }
+  ctx.strokeStyle = "#57503f"; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(mL,mT); ctx.lineTo(mL,H-mB); ctx.lineTo(W-mR,H-mB);
+  ctx.stroke();
+
+  // linear part (orange) and nonlinear part (blue)
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#fbbf24"; ctx.lineWidth = 3.4;
+  ctx.beginPath(); ctx.moveTo(X(wmin), Y(P(wmin))); ctx.lineTo(X(c), Y(P(c))); ctx.stroke();
+  ctx.strokeStyle = "#7dabf8"; ctx.lineWidth = 3.4;
+  ctx.beginPath();
+  for (let k = 0; k <= 160; k++) {
+    const w = c + (wmax-c)*k/160;
+    if (k===0) ctx.moveTo(X(w), Y(P(w))); else ctx.lineTo(X(w), Y(P(w)));
+  }
+  ctx.stroke();
+
+  // knot marker + dropline
+  ctx.setLineDash([4,4]); ctx.strokeStyle = "#8a8175"; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(X(c), Y(P(c))); ctx.lineTo(X(c), H-mB); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(X(c), Y(P(c)), 5.5, 0, 7);
+  ctx.fillStyle = "#1a1713"; ctx.fill();
+  ctx.strokeStyle = "#e3ddd3"; ctx.lineWidth = 2; ctx.stroke();
+}
+
+function axes(ctx, W, H, mL, mR, mT, mB, xlab, ylab) {
+  ctx.strokeStyle = "#57503f"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(mL,mT); ctx.lineTo(mL,H-mB); ctx.lineTo(W-mR,H-mB);
+  ctx.stroke();
+  ctx.fillStyle = "#a49a8c"; ctx.font = "11px sans-serif"; ctx.textAlign = "center";
+  ctx.fillText(xlab, (mL+W-mR)/2, H-5);
+  ctx.save(); ctx.translate(13,(mT+H-mB)/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText(ylab, 0, 0); ctx.restore();
+}
+
+/* ---------- (a) vessels: width = negative gradient, height = weight ----------
+   Each vessel is a bottle standing on the ground: constant width xi_j^2 up to the
+   knot bar at height c_j, then narrowing as (gb_j/h)^2 above it. Water pours
+   bottom-up into the currently WIDEST vessel; funded surfaces narrow until they
+   all share the common width nu. The fill height is w_j; poured volume equals
+   the decrease of the bound. */
+function drawV(sc, w, level) {
+  const W = cvV.width, H = cvV.height, mL = 46, mR = 16, mT = 24, mB = 30;
+  ctxV.clearRect(0,0,W,H);
+  const J = sc.tau.length;
+  const xis = sc.xi.map(x => x*x);
+  const vmax = Math.max(...xis.map((v,j) => sc.skip[j] ? 0 : v), 1e-12) * 1.06;
+  const plotH = H - mT - mB;
+  const Yh = h => H - mB - h*plotH;                    // height h in [0,1] (weight)
+  const gap = (W - mL - mR)/J;
+  const halfMax = gap*0.46;
+  const halfw = v => halfMax * Math.sqrt(Math.max(v,0)/vmax);   // width scale (√)
+  const cxj = j => mL + gap*j + gap/2;
+
+  // axes: height = weight
+  ctxV.strokeStyle = "#57503f"; ctxV.lineWidth = 1;
+  ctxV.beginPath(); ctxV.moveTo(mL-6, mT-6); ctxV.lineTo(mL-6, H-mB);
+  ctxV.lineTo(W-mR, H-mB); ctxV.stroke();
+  ctxV.fillStyle = "#a49a8c"; ctxV.font = "10.5px sans-serif"; ctxV.textAlign = "right";
+  for (let h = 0; h <= 1.001; h += 0.25) {
+    ctxV.fillText(h.toFixed(2), mL-10, Yh(h)+3.5);
+    ctxV.strokeStyle = "#2b2620";
+    ctxV.beginPath(); ctxV.moveTo(mL-6, Yh(h)); ctxV.lineTo(W-mR, Yh(h)); ctxV.stroke();
+  }
+
+  for (let j = 0; j < J; j++) {
+    if (sc.skip[j]) continue;
+    const cx = cxj(j);
+    const c = sc.c[j];
+    const hasKnot = (c !== null && c > 0 && c <= 1);
+
+    // vessel outline: symmetric bottle, width = -p'_j(h) at fill height h
+    ctxV.strokeStyle = COLORS[j]; ctxV.lineWidth = 1.5;
+    for (const side of [-1, 1]) {
+      ctxV.beginPath();
+      for (let k = 0; k <= 120; k++) {
+        const h = Math.max(0.012, k/120);
+        const x = cx + side*halfw(mpj(sc, j, h));
+        const y = Yh(h);
+        if (k === 0) ctxV.moveTo(x, y); else ctxV.lineTo(x, y);
+      }
+      ctxV.stroke();
+    }
+    // base
+    ctxV.beginPath();
+    ctxV.moveTo(cx - halfw(xis[j]), Yh(0)); ctxV.lineTo(cx + halfw(xis[j]), Yh(0));
+    ctxV.lineWidth = 2.2; ctxV.stroke();
+
+    // knot bar: horizontal bar at height c_j, after which the vessel narrows
+    if (hasKnot) {
+      ctxV.strokeStyle = "#e3ddd3"; ctxV.lineWidth = 2.2;
+      ctxV.beginPath();
+      ctxV.moveTo(cx - halfw(xis[j]) - 3, Yh(c));
+      ctxV.lineTo(cx + halfw(xis[j]) + 3, Yh(c));
+      ctxV.stroke();
+      ctxV.fillStyle = "#e3ddd3"; ctxV.font = "9.5px sans-serif"; ctxV.textAlign = "left";
+      ctxV.fillText("c=" + fmt(c,2), cx + halfw(xis[j]) + 5, Yh(c)+3);
+    }
+
+    // water: fill from the bottom up to height w_j, following the profile
+    if (w[j] > 1e-9) {
+      ctxV.fillStyle = COLORS[j] + "55";
+      ctxV.beginPath();
+      const hTop = Math.min(w[j], 1);
+      ctxV.moveTo(cx - halfw(mpj(sc, j, 0.012)), Yh(0));
+      for (let k = 0; k <= 60; k++) {                       // up the left wall
+        const h = Math.max(0.012, hTop*k/60);
+        ctxV.lineTo(cx - halfw(mpj(sc, j, h)), Yh(h));
+      }
+      for (let k = 60; k >= 0; k--) {                       // down the right wall
+        const h = Math.max(0.012, hTop*k/60);
+        ctxV.lineTo(cx + halfw(mpj(sc, j, h)), Yh(h));
+      }
+      ctxV.closePath(); ctxV.fill();
+      // surface line: its width is the current marginal; funded surfaces match
+      const sw = halfw(mpj(sc, j, Math.max(w[j], 0.012)));
+      ctxV.strokeStyle = COLORS[j]; ctxV.lineWidth = 2.4;
+      ctxV.beginPath();
+      ctxV.moveTo(cx - sw, Yh(hTop)); ctxV.lineTo(cx + sw, Yh(hTop));
+      ctxV.stroke();
+    }
+
+  }
+
+  // nu reference ruler (top-left): a bar of the current common surface width
+  if (level !== null) {
+    const rw = 2*halfw(Math.min(level, vmax));
+    ctxV.strokeStyle = "#7dabf8"; ctxV.lineWidth = 3;
+    ctxV.beginPath(); ctxV.moveTo(mL+2, mT-12); ctxV.lineTo(mL+2+rw, mT-12); ctxV.stroke();
+  }
+}
+
+/* group labels under the vessels — KaTeX overlays, rebuilt per scenario */
+function buildVesselLabels(sc) {
+  const W = cvV.width, H = cvV.height, mL = 46, mR = 16, mB = 30;
+  const J = sc.tau.length;
+  const gap = (W - mL - mR)/J;
+  const holder = document.getElementById("vGroupLabs");
+  let html = "";
+  for (let j = 0; j < J; j++) {
+    const cx = mL + gap*j + gap/2;
+    const xis = sc.xi[j]*sc.xi[j];
+    html += `<div class="vglab" style="left:${(cx-65).toFixed(0)}px; ` +
+      `top:${H-mB+6}px; color:${COLORS[j]}">` +
+      `group ${j+1}: \\(\\xi_{${j+1}}^2 = ${fmtv(xis)}\\)</div>`;
+  }
+  holder.innerHTML = html;
+  tex(holder);
+}
+
+/* ---------- (b) marginals ---------- */
+function drawM(sc, w, level) {
+  const W = cvM.width, H = cvM.height, mL = 52, mR = 12, mT = 14, mB = 30;
+  ctxM.clearRect(0,0,W,H);
+  const J = sc.tau.length;
+  const xis = sc.xi.map(x => x*x);
+  const vmax = Math.max(...xis.map((v,j) => sc.skip[j] ? 0 : v), 1e-12) * 1.06;
+  const S = v => Math.sqrt(Math.max(v,0)/vmax);
+  const X = x => mL + x*(W - mL - mR);
+  const Y = v => mT + (1 - S(v))*(H - mT - mB);
+
+  axes(ctxM, W, H, mL, mR, mT, mB, "", "");
+  ctxM.fillStyle = "#a49a8c"; ctxM.font = "11px sans-serif"; ctxM.textAlign = "center";
+  for (let x = 0; x <= 1.001; x += 0.25) ctxM.fillText(x.toFixed(2), X(x), H-mB+15);
+
+  ctxM.textAlign = "right";
+  for (let j = 0; j < J; j++) {
+    if (sc.skip[j]) continue;
+    ctxM.strokeStyle = COLORS[j] + "33"; ctxM.setLineDash([2,4]);
+    ctxM.beginPath(); ctxM.moveTo(mL, Y(xis[j])); ctxM.lineTo(W-mR, Y(xis[j])); ctxM.stroke();
+    ctxM.setLineDash([]);
+    ctxM.fillStyle = COLORS[j];
+    ctxM.fillText(fmtv(xis[j]), mL-5, Y(xis[j])+4);
+  }
+  for (let j = 0; j < J; j++) {
+    if (sc.skip[j]) continue;
+    ctxM.strokeStyle = COLORS[j]; ctxM.lineWidth = 1.8;
+    ctxM.beginPath();
+    for (let k = 0; k <= 220; k++) {
+      const x = 0.002 + (1-0.002)*k/220;
+      const v = Math.min(mpj(sc, j, x), vmax);
+      if (k===0) ctxM.moveTo(X(x), Y(v)); else ctxM.lineTo(X(x), Y(v));
+    }
+    ctxM.stroke();
+  }
+  if (level !== null) {
+    const yl = Y(Math.min(level, vmax));
+    ctxM.strokeStyle = "#7dabf8"; ctxM.setLineDash([7,5]); ctxM.lineWidth = 1.8;
+    ctxM.beginPath(); ctxM.moveTo(mL, yl); ctxM.lineTo(W-mR, yl); ctxM.stroke();
+    ctxM.setLineDash([]);
+  }
+  for (let j = 0; j < J; j++) {
+    if (sc.skip[j]) continue;
+    const v = Math.min(mpj(sc, j, Math.max(w[j], 1e-9)), vmax);
+    ctxM.beginPath(); ctxM.arc(X(w[j]), Y(v), 5, 0, 7);
+    ctxM.fillStyle = COLORS[j]; ctxM.fill();
+    ctxM.strokeStyle = "#1a1713"; ctxM.lineWidth = 1.2; ctxM.stroke();
+  }
+}
+
+/* ---------- (c) p_j curves ---------- */
+function drawP(sc, w, level) {
+  const W = cvP.width, H = cvP.height, mL = 52, mR = 12, mT = 12, mB = 30;
+  ctxP.clearRect(0,0,W,H);
+  const J = sc.tau.length, wmin = 0.015, wmax = 1.0;
+  let ymin = Infinity, ymax = -Infinity;
+  for (let j = 0; j < J; j++) {
+    if (sc.skip[j]) continue;
+    for (let k = 0; k <= 80; k++) {
+      const v = pj(sc, j, wmin + (wmax-wmin)*k/80);
+      ymin = Math.min(ymin, v); ymax = Math.max(ymax, v);
+    }
+  }
+  if (!isFinite(ymin)) { ymin = 0; ymax = 1; }
+  const pad = (ymax - ymin)*0.08 + 1e-12; ymin -= pad; ymax += pad;
+  const X = x => mL + x*(W - mL - mR);
+  const Y = v => mT + (ymax - v)/(ymax - ymin)*(H - mT - mB);
+
+  axes(ctxP, W, H, mL, mR, mT, mB, "", "");
+  ctxP.fillStyle = "#a49a8c"; ctxP.textAlign = "center";
+  for (let x = 0; x <= 1.001; x += 0.25) {
+    ctxP.fillText(x.toFixed(2), X(x), H-mB+15);
+    ctxP.strokeStyle = "#2b2620";
+    ctxP.beginPath(); ctxP.moveTo(X(x), mT); ctxP.lineTo(X(x), H-mB); ctxP.stroke();
+  }
+  ctxP.textAlign = "right";
+  ctxP.fillText(fmt(ymax,0), mL-5, mT+9);
+  ctxP.fillText(fmt(ymin,0), mL-5, H-mB);
+
+  for (let j = 0; j < J; j++) {
+    ctxP.strokeStyle = COLORS[j];
+    ctxP.lineWidth = sc.skip[j] ? 1.1 : 1.8;
+    ctxP.setLineDash(sc.skip[j] ? [4,4] : []);
+    ctxP.beginPath();
+    for (let k = 0; k <= 160; k++) {
+      const x = wmin + (wmax-wmin)*k/160;
+      const v = pj(sc, j, x);
+      if (k===0) ctxP.moveTo(X(x), Y(v)); else ctxP.lineTo(X(x), Y(v));
+    }
+    ctxP.stroke(); ctxP.setLineDash([]);
+    const c = sc.c[j];
+    if (!sc.skip[j] && c !== null && c > 0 && c <= 1) {
+      ctxP.beginPath(); ctxP.arc(X(c), Y(pj(sc,j,c)), 4, 0, 7);
+      ctxP.fillStyle = "#1a1713"; ctxP.fill();
+      ctxP.strokeStyle = COLORS[j]; ctxP.stroke();
+    }
+  }
+  for (let j = 0; j < J; j++) {
+    if (sc.skip[j]) continue;
+    const wj = Math.max(w[j], wmin);
+    const yj = pj(sc, j, wj);
+    if (w[j] > 1e-9 && level !== null) {
+      const dw = 0.045;
+      ctxP.strokeStyle = "#e3ddd3"; ctxP.lineWidth = 1.4;
+      ctxP.beginPath();
+      ctxP.moveTo(X(wj-dw), Y(yj + level*dw));
+      ctxP.lineTo(X(wj+dw), Y(yj - level*dw));
+      ctxP.stroke();
+    }
+    ctxP.beginPath(); ctxP.arc(X(wj), Y(yj), 5, 0, 7);
+    ctxP.fillStyle = COLORS[j]; ctxP.fill();
+    ctxP.strokeStyle = "#1a1713"; ctxP.lineWidth = 1.2; ctxP.stroke();
+  }
+}
+
+/* ---------- side column: live weights + budget gauge ---------- */
+function drawSide(sc, w, level, budget) {
+  const nuTxt = fmt(level, level !== null && level < 1 ? 3 : 2);
+  document.getElementById("nuVal").textContent = nuTxt;
+  document.getElementById("nuValV").textContent = nuTxt;
+  document.getElementById("nuValM").textContent = nuTxt;
+  // move the nu label in panel (b) along with the level line
+  if (level !== null) {
+    const H = cvM.height, mT = 14, mB = 30;
+    const xis = sc.xi.map(x => x*x);
+    const vmax = Math.max(...xis.map((v,j) => sc.skip[j] ? 0 : v), 1e-12) * 1.06;
+    const yl = mT + (1 - Math.sqrt(Math.min(level, vmax)/vmax))*(H - mT - mB);
+    document.getElementById("nulabM").style.top = Math.max(0, yl - 22) + "px";
+  }
+  const J = sc.tau.length;
+  let html = "";
+  for (let j = 0; j < J; j++) {
+    const xis = sc.xi[j]*sc.xi[j];
+    let st;
+    if (sc.skip[j]) st = "inactive";
+    else if (w[j] < 1e-9) st = "waiting (ξ² = " + fmtv(xis) + ")";
+    else if (level !== null && level >= xis*(1-1e-9)) st = "base section (below knot)";
+    else st = "filling past knot";
+    html += `<div class="wrow"><span class="chip" style="background:${COLORS[j]}"></span>` +
+      `<span>group ${j+1}<br><span class="st">${st}</span></span>` +
+      `<b>w = ${fmt(w[j], 3)}</b></div>`;
+  }
+  document.getElementById("wlist").innerHTML = html;
+
+  const W = cvB.width, H = cvB.height, mT2 = 24, mB2 = 26;
+  ctxB.clearRect(0,0,W,H);
+  const gx = 22, gw = 28, gy0 = mT2, gh = H-mT2-mB2;
+  ctxB.strokeStyle = "#57503f"; ctxB.lineWidth = 1.2;
+  ctxB.strokeRect(gx, gy0, gw, gh);
+  ctxB.fillStyle = "#7dabf8aa";
+  const bh = Math.max(gh*Math.min(budget,1)-1, 0);
+  ctxB.fillRect(gx+1, gy0 + gh - bh, gw-2, bh);
+  ctxB.fillStyle = "#a49a8c"; ctxB.font = "11px sans-serif"; ctxB.textAlign = "center";
+  ctxB.fillText(fmt(budget,2) + " / 1", gx+gw/2, gy0+gh+16);
+}
+
+/* ---------- weight formulas card ---------- */
+function drawWform(sc) {
+  const J = sc.tau.length;
+  const nu = sc.nustar;
+  let rows = "";
+  for (let j = 0; j < J; j++) {
+    let f_;
+    if (sc.skip[j]) {
+      f_ = `\\(\\widehat w_{${j+1}} = 0\\) — inactive group, removed up front`;
+    } else if (sc.w[j] < 1e-9) {
+      f_ = `\\(\\widehat w_{${j+1}} = 0\\) — not funded: \\(\\xi_{${j+1}}^2 = ` +
+           `${fmt(sc.xi[j]*sc.xi[j],2)} \\le \\nu^*\\)`;
+    } else if (sc.case === 1 && Math.abs(sc.xi[j]*sc.xi[j] - nu) < 1e-6*Math.max(1,nu)) {
+      f_ = `\\(\\widehat w_{${j+1}} = 1 - \\sum_{i \\ne ${j+1}} \\widehat w_i = ` +
+           `${fmt(sc.w[j])}\\) — pivot group: takes the leftover in its base section at ` +
+           `\\(\\nu^* = \\xi_{${j+1}}^2\\)`;
+    } else {
+      f_ = `\\(\\widehat w_{${j+1}} = \\dfrac{\\tilde\\gamma_{${j+1}}\\tau_{${j+1}}}` +
+           `{\\sqrt{\\nu^*}} = \\dfrac{${fmt(sc.gb[j],2)}}{${fmt(Math.sqrt(nu),3)}} = ` +
+           `${fmt(sc.w[j])}\\) — funded on its nonlinear part`;
+    }
+    rows += `<div style="margin-bottom:7px"><span style="display:inline-block;width:11px;` +
+            `height:11px;border-radius:3px;background:${COLORS[j]};margin-right:7px"></span>` +
+            `${f_}</div>`;
+  }
+  const el = document.getElementById("wform");
+  el.innerHTML = `<h2>The formulas the weights take here &nbsp;` +
+    `(\\(\\nu^* = ${fmt(nu,3)}\\))</h2>` + rows;
+  tex(el);
+}
+
+/* ---------- animation ---------- */
+function render(typeset) {
+  const sc = SC[cur];
+  const fr = sc.frames[Math.min(frameIdx, sc.frames.length-1)];
+  drawV(sc, fr[2], fr[1]);
+  drawM(sc, fr[2], fr[1]);
+  drawP(sc, fr[2], fr[1]);
+  drawSide(sc, fr[2], fr[1], fr[0]);
+  if (typeset) { drawWform(sc); }
+  document.getElementById("status").innerHTML =
+    `Case ${sc.case}, k = ${sc.k} · ν* = ${fmt(sc.nustar,3)}`;
+}
+
+function setPlayBtn() {
+  document.getElementById("btnPlay").innerHTML =
+    playing ? "&#10074;&#10074; Pause" : "&#9654; Play";
+}
+
+function tick(t) {
+  if (!playing) return;
+  const speed = parseFloat(document.getElementById("speed").value);
+  if (t - lastT > 28/speed) {
+    lastT = t;
+    frameIdx++;
+    const sc = SC[cur];
+    if (frameIdx >= sc.frames.length + 20) { playing = false; setPlayBtn(); }
+    render(false);
+  }
+  if (playing) requestAnimationFrame(tick);
+}
+
+function start(i, typeset) {
+  cur = i; frameIdx = 0; playing = true; lastT = 0;
+  btnRefs.forEach((b, j) => b.classList.toggle("active", j === i));
+  setPlayBtn();
+  if (typeset) buildVesselLabels(SC[i]);
+  render(typeset);
+  requestAnimationFrame(tick);
+}
+
+const btnHolder = document.getElementById("scenarioBtns");
+const groups = {};
+for (const cg of [1, 2]) {
+  const div = document.createElement("div");
+  div.className = "casegroup cg" + cg;
+  const h = document.createElement("h4");
+  h.textContent = cg === 1 ? "Case 1 — level lands on a base width"
+                           : "Case 2 — level rests between base widths";
+  div.appendChild(h);
+  const btns = document.createElement("div");
+  btns.className = "btns";
+  div.appendChild(btns);
+  btnHolder.appendChild(div);
+  groups[cg] = btns;
+}
+const btnRefs = [];
+SC.forEach((sc, i) => {
+  const b = document.createElement("button");
+  b.innerHTML = sc.title;          // titles may contain KaTeX delimiters
+  b.onclick = () => start(i, true);
+  groups[sc.case_group || sc.case].appendChild(b);
+  btnRefs[i] = b;
+});
+
+document.getElementById("btnPlay").onclick = () => {
+  const sc = SC[cur];
+  if (playing) { playing = false; }
+  else {
+    if (frameIdx >= sc.frames.length + 19) frameIdx = 0;
+    playing = true; lastT = 0; requestAnimationFrame(tick);
+  }
+  setPlayBtn();
+};
+document.getElementById("btnReplay").onclick = () => start(cur, false);
+
+window.addEventListener("DOMContentLoaded", () => {
+  drawExample();
+  const wait = setInterval(() => {
+    if (window.renderMathInElement) {
+      clearInterval(wait);
+      tex(document.body);
+      start(0, true);
+    }
+  }, 60);
+  setTimeout(() => { if (!window.renderMathInElement) start(0, true); }, 2500);
+});
+
+})();
+</script>
+
+<div class="container">
 
   <h2>Closing the loop</h2>
 
