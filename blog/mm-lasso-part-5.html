@@ -276,8 +276,6 @@
     <code>getWeights</code>, and the filled portion of each column shows its optimal weight
     $\widehat w_j$ (the weights sum to 1). Drag the $\lambda$ slider or randomize the scenario
     and watch weight flow to the groups furthest from optimality.
-    <a href="../demos/mm-weight-allocation.html" target="_blank" rel="noopener">A more detailed
-    standalone demo lives here →</a>
   </p>
 
   <canvas id="wfdemo" width="720" height="400"></canvas>
@@ -305,9 +303,7 @@
     How the group-lasso MM algorithm distributes its unit weight budget across the
     <b>groups</b> at one iteration (supplementary, Appendix “Derivation of Optimal
     Weights”). The animation pours the budget into whichever group currently lowers the
-    bound fastest. Every example is verified: the animated final weights equal the
-    <code>getWeights</code> (<a href="#algo">Algorithm&nbsp;1</a>, pseudocode at the
-    bottom) output and the scipy SLSQP optimum.
+    bound fastest.
   </div>
 
   <div class="defs">
@@ -418,7 +414,7 @@
     \( -p_j'(\widehat w_j) = \nu^* \), unfunded ones have \( \xi_j^2 \le \nu^* \).
     Where \( \nu^* \) lands decides the case:
 
-    <h3 id="cases">The two termination cases of <a href="#algo">Algorithm 1</a>
+    <h3 id="cases">The two termination cases
       &nbsp;(groups sorted so \(\xi_{(1)}^2 \ge \xi_{(2)}^2 \ge \cdots\))</h3>
     <div class="branchrow">
       <div class="b case1">
@@ -526,41 +522,6 @@
     <div class="card wform" id="wform"></div>
   </div>
 
-  <div class="card algo" id="algo">
-    <h2>Algorithm 1 — <code>getWeights</code> pseudocode</h2>
-    <div class="algobox">
-      <div><span class="ln"></span><b>input:</b>
-        \(\boldsymbol\alpha,\ \boldsymbol\tau,\ \tilde{\boldsymbol\gamma}\)
-        &nbsp;&nbsp; <b>output:</b> optimal weights \(\widehat{\boldsymbol w}\)</div>
-      <div><span class="ln">1</span>\(\boldsymbol w \leftarrow \boldsymbol 0\);
-        &nbsp; \(\xi_j \leftarrow \alpha_j - \tau_j\) for \(j = 1,\dots,J\)</div>
-      <div><span class="ln">2</span>\(U \leftarrow [u_1, \dots, u_J]\) sorted so that
-        \(\xi_{u_1}^2 \ge \xi_{u_2}^2 \ge \cdots \ge \xi_{u_J}^2\)</div>
-      <div><span class="ln">3</span>\(U \leftarrow U \setminus \{\, j :\ \xi_j \ge 0,\
-        \tilde\gamma_j = 0 \,\}\) &nbsp;
-        <span class="cmt">// groups that remain inactive get \(w_j = 0\)</span></div>
-      <div><span class="ln">4</span><b>for</b> \(k = 1, \dots, |U|\):</div>
-      <div><span class="ln">5</span>&emsp;\(\nu \leftarrow \xi_{u_k}^2\) &nbsp;
-        <span class="cmt">// try Case 1: level on the \(k\)-th base width</span></div>
-      <div><span class="ln">6</span>&emsp;\(w_{u_j} \leftarrow
-        \tilde\gamma_{u_j}\tau_{u_j} / \sqrt{\nu}\) for \(j &lt; k\); &nbsp;
-        \(w_{u_k} \leftarrow 1 - \sum_{j&lt;k} w_{u_j}\)</div>
-      <div><span class="ln">7</span>&emsp;\(c_k \leftarrow
-        \tilde\gamma_{u_k}\tau_{u_k} / \xi_{u_k}\)</div>
-      <div><span class="ln">8</span>&emsp;<b>if</b> \(0 &lt; w_{u_k}\) <b>and</b>
-        (\(w_{u_k} &lt; c_k\) <b>or</b> \(\xi_{u_k} \le 0\)): <b>break</b> &nbsp;
-        <span class="cmt">// Case 1 holds</span></div>
-      <div><span class="ln">9</span>&emsp;\(\nu \leftarrow \bigl(\sum_{j \le k}
-        \tilde\gamma_{u_j}\tau_{u_j}\bigr)^2\) &nbsp;
-        <span class="cmt">// try Case 2: level between base widths</span></div>
-      <div><span class="ln">10</span>&emsp;<b>if</b> \(\xi_{u_k}^2 \ge \nu \ge
-        \xi_{u_{k+1}}^2\): &nbsp; \(w_{u_j} \leftarrow
-        \tilde\gamma_{u_j}\tau_{u_j} / \sqrt{\nu}\) for \(j \le k\); <b>break</b>
-        &nbsp; <span class="cmt">// Case 2 holds</span></div>
-      <div><span class="ln">11</span><b>return</b>
-        \(\widehat{\boldsymbol w} = \boldsymbol w\)</div>
-    </div>
-  </div>
 </div>
 
 
