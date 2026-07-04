@@ -214,10 +214,10 @@
     <a class="here" href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
   </div>
 
-  <h2>Optimal weights</h2>
+  <h2>Deriving the weight problem</h2>
 
   <p>
-    Part 4 ended with a question: with only a total mass of $1$ to distribute across the weights
+    Part 4 ended with a question: with only a unit budget to distribute across the weights
     $w_1, \ldots, w_J$ at each MM iteration, where should it go? The principled answer is to
     pick the weights giving the <em>least upper bound</em> — the surrogate whose minimum drives
     $g$ down the most:
@@ -229,52 +229,106 @@
   $$
 
   <p>
-    This inner–outer problem looks daunting, but it is a constrained convex program with an
-    exact solution computable in $\c{O}(J \ln J)$ time — the cost of sorting the array
-    $[\xi_1, \ldots, \xi_J]$, where
+    The inner minimization is exactly the closed-form MM update from Part 4. Substituting it
+    back into $h_{\v w}$ makes the bound <em>separable in the weights</em>: up to terms that do
+    not depend on $\v w$, the problem becomes
   </p>
 
   $$
-  \xi_j := \big(\alpha_j - \tau_j^{(t)}\big)^2
-  = \Big(\alpha_j - \big\|\m Z_j^\top \m G(\v\gamma^{(t)})\,\v y\big\|_2\Big)^2 .
+  \widehat{\v w} = \argmin_{\v w \,\ge\, \v 0,\; \v 1^\top \v w = 1}\;
+  \sum_{j=1}^{J} p_j(w_j),
   $$
 
   <p>
-    The quantity $\xi_j$ measures how far group $j$ is from satisfying the auxiliary KKT
-    conditions of Part 3. The optimal allocation pours weight onto the groups with the largest
-    $\xi_j$ — like pouring a fixed volume of water into a terrain whose depth profile is given
-    by the KKT violations, filling the deepest basins first. Concretely: if $\xi_j$ is large and
-    group $j$ is activated, weight is assigned to push it toward the KKT boundary; if
-    $\gamma_j^{(t)} = 0$ but $\tau_j^{(t)} > \alpha_j$, the group <em>should</em> be active, and
-    a positive $w_j$ lets the shrinkage operator switch it on; if $\gamma_j^{(t)} = 0$ and the
-    KKT condition already holds, $w_j = 0$ and the group stays out. This mirrors greedy
-    coordinate descent for the lasso
+    a sum of one-dimensional convex costs. Writing $\widetilde\gamma_j$ for the current
+    iterate, $\tau_j := \|\m Z_j^\top \m G(\widetilde{\v\gamma})\,\v y\|_2$ for the
+    signal carried by group $j$, and defining the <em>KKT gap</em>
+  </p>
+
+  $$
+  \xi_j := \alpha_j - \tau_j,
+  $$
+
+  <p>each per-group cost has two branches, meeting smoothly at the knot
+    $c_j := \widetilde\gamma_j \tau_j / \xi_j$:
+  </p>
+
+  $$
+  p_j(w_j) =
+  \begin{cases}
+    \dfrac{(\widetilde\gamma_j \tau_j)^2}{w_j} + 2\widetilde\gamma_j \tau_j^2,
+      & w_j \ge c_j \text{ and } c_j \in (0, 1], \\[0.8em]
+    2\widetilde\gamma_j \alpha_j \tau_j - w_j\, \xi_j^2,
+      & \text{otherwise.}
+  \end{cases}
+  $$
+
+  <p>
+    The branches have a precise meaning: giving group $j$ a weight $w_j \ge c_j$ is exactly
+    enough for the shrinkage step to <em>deactivate</em> it ($\gamma_j \to 0$), landing on the
+    nonlinear branch; smaller weights leave it active on the linear branch, where every unit of
+    weight buys a constant $\xi_j^2$ of bound decrease. When $\xi_j &lt; 0$ the knot is
+    vacuous — no admissible weight can switch the group off, and $p_j$ stays linear on all of
+    $[0, 1]$.
+  </p>
+
+  <h2>The KKT gap decides who gets weight</h2>
+
+  <p>
+    Why is $\xi_j = \alpha_j - \tau_j$ the right currency? Recall the auxiliary KKT
+    conditions of Part 3: at the optimum, $\tau_j = \alpha_j$ for every active group and
+    $\tau_j \le \alpha_j$ for every inactive one. So $\xi_j$ measures how far group $j$
+    currently is from optimality, and the cost derivation above says a unit of weight given to
+    group $j$ initially removes $-p_j'(0) = \xi_j^2$ from the bound — <em>the squared KKT gap
+    is precisely the marginal value of weighting group $j$</em>.
+  </p>
+
+  <p>
+    Now impose the KKT conditions of the weight problem itself. The simplex constraint
+    contributes a multiplier $\nu^*$, and optimality requires
+  </p>
+
+  $$
+  -p_j'(\widehat w_j) = \nu^* \;\; \text{whenever } \widehat w_j > 0,
+  \qquad
+  \xi_j^2 \le \nu^* \;\; \text{whenever } \widehat w_j = 0 .
+  $$
+
+  <p>
+    Reading this through the gap: an <em>active</em> group far from its KKT boundary (large
+    $\xi_j^2$) is funded and pushed toward $\tau_j = \alpha_j$; an <em>inactive</em> group
+    with $\xi_j &lt; 0$ is violating its condition ($\tau_j > \alpha_j$ — it should be in the
+    model), so it is funded and the shrinkage operator switches it on; an inactive group with
+    $\xi_j \ge 0$ already satisfies its condition and gets $w_j = 0$. Every group still
+    updates each iteration — the weights only decide who gets the privileged shrinkage
+    treatment, much as greedy coordinate descent for the lasso picks the steepest coordinate
     (<a href="https://doi.org/10.1214/07-AOAS147" target="_blank" rel="noopener">Wu &amp; Lange,
-    2008</a>) — but here every group still updates in the same iteration; the weights only
-    decide which groups get the privileged shrinkage treatment.
+    2008</a>).
   </p>
 
-  <h2>How the water level works</h2>
+  <h2>The solution is water-filling</h2>
 
   <p>
-    The KKT conditions for the weight problem reveal a classic water-filling structure. Each
-    group contributes a convex cost $p_j(w_j)$ whose <em>negative slope</em> $-p_j'(w_j)$ starts
-    at height $\xi_j = (\alpha_j - \tau_j)^2$ and is non-increasing in $w_j$. Optimality requires
-    a common level $\nu^*$ (the Lagrange multiplier of $\v 1^\top \v w = 1$) such that every
-    group with positive weight has $-p_j'(\widehat w_j) = \nu^*$, while every group with
-    $\xi_j &lt; \nu^*$ receives $\widehat w_j = 0$. Sorting the $\xi_j$ in decreasing order and
-    lowering the level until the unit mass is exhausted gives the exact solution — the
-    <code>getWeights</code> algorithm — in $\c{O}(J \ln J)$ time. Groups whose KKT-violation
-    columns rise above the water line get weight; the rest stay dry.
+    Because each $-p_j'(w_j)$ starts at height $\xi_j^2$ and only decreases as $w_j$ grows,
+    the KKT conditions above describe a classic <em>water-filling</em> scheme. Picture one
+    vessel per group whose width at fill height $w_j$ is $-p_j'(w_j)$ — base width $\xi_j^2$,
+    narrowing past the knot $c_j$. Pour the unit budget into whichever vessel is currently
+    widest: funded surfaces then always share one common width — the water level $\nu$ — which
+    only descends. When the budget is exhausted the level rests at $\nu^*$: vessels whose base
+    $\xi_j^2$ never rose above the final level stay dry. Termination lands in one of two
+    cases — either $\nu^*$ equals some group's base width $\xi_{(k)}^2$ (that pivot group
+    takes the leftover budget), or $\nu^* = (\sum_{j \le k} \widetilde\gamma_j \tau_j)^2$
+    sits strictly between two base widths and the funded weights split proportionally to
+    $\widetilde\gamma_j \tau_j$. Sorting the $\xi_j^2$ once gives the exact solution in
+    $\c{O}(J \ln J)$ — negligible next to the linear solve in each MM step.
   </p>
 
-  <h2>Interactive demo</h2>
+  <h2>Explore it</h2>
 
   <p>
-    Below, each column is a group $j$ with height $\xi_j = (\alpha_j - \tau_j)^2$ (its KKT
-    violation). The dashed line is the optimal level $\nu^*$ computed by
-    <code>getWeights</code>, and the filled portion of each column shows its optimal weight
-    $\widehat w_j$ (the weights sum to 1). Drag the $\lambda$ slider or randomize the scenario
+    Each column below is a group $j$ with height $\xi_j^2$ (its squared KKT gap). The dashed
+    line is the optimal level $\nu^*$, and the filled portion of each column is its optimal
+    weight $\widehat w_j$ (summing to 1). Drag the $\lambda$ slider or randomize the scenario
     and watch weight flow to the groups furthest from optimality.
   </p>
 
@@ -287,12 +341,12 @@
   </div>
   <div id="wf-legend" class="demo-caption"></div>
 
-  <h2>The full demo</h2>
+  <h2>The full animation</h2>
 
   <p>
-    For the complete picture — the two branches of the per-group cost $p_j(w_j)$, the knot at
-    $c_j = \widetilde\gamma_j \tau_j / (\alpha_j - \tau_j)$, and Case 1 vs. Case 2 of the
-    <code>getWeights</code> solution — the complete demo — vessels, gradients, objective curves and the exact weight formulas — is integrated below.
+    The animation below pours the budget in real time: vessels narrowing past their knots
+    $c_j$, the level $\nu$ descending onto $\nu^*$, and the two termination cases side by
+    side, with the resulting weight formulas worked out for each scenario.
   </p>
 
 </div>
@@ -1175,7 +1229,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.save();
     ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif';
     ctx.translate(16, T + plotH / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center';
-    ctx.fillText('ξⱼ = (αⱼ − τⱼ)²', 0, 0);
+    ctx.fillText('ξⱼ² = (αⱼ − τⱼ)²', 0, 0);
     ctx.restore();
     ctx.textAlign = 'left';
 
@@ -1183,7 +1237,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const nPos = w.filter(x => x > 1e-9).length;
     document.getElementById('wf-legend').textContent =
       nPos + ' of ' + J + ' groups receive positive weight · Σⱼ wⱼ = ' + total.toFixed(3) +
-      ' · groups sorted by KKT violation ξⱼ (bars above the water line ν* get weight; "stays out" groups are excluded because γ̃ⱼ = 0 and αⱼ ≥ τⱼ).';
+      ' · groups sorted by squared KKT gap ξⱼ² (bars above the water line ν* get weight; "stays out" groups are excluded because γ̃ⱼ = 0 and αⱼ ≥ τⱼ).';
   }
 
   document.getElementById('wf-random').onclick = () => { randomize(); draw(); };
