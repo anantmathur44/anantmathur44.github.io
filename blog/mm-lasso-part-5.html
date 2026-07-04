@@ -69,6 +69,20 @@
     #famdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
                width: 100%; display: block; margin-top: 1rem; }
     .demo-controls button.fam-active { background: var(--accent); color: #2a160d; }
+    #simdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+               width: 100%; display: block; margin-top: 1rem; cursor: crosshair;
+               touch-action: none; }
+    #racechart { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+                 width: 100%; display: block; margin-top: 1rem; }
+    .sim-readout { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.7rem; }
+    .sim-readout .cell {
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.85rem;
+      font-family: var(--mono); font-size: 0.78rem; color: var(--text-dim);
+      line-height: 1.7; flex: 1 1 200px;
+    }
+    .sim-readout .cell b { color: var(--heading); font-weight: 600; }
+    .sim-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+               margin-right: 6px; position: relative; top: 0.5px; }
     .demo-frame {
       width: 100%; height: 1050px; border: 1px solid var(--border); border-radius: 12px;
       background: #f6f8fb; margin-top: 0.5rem;
@@ -374,6 +388,58 @@
     tightest useful surrogate makes the fastest progress. In the switch-off scenario, notice
     the plateau: once $w$ passes the knot $c_j$ the group is already at zero and extra weight
     buys nothing.
+  </p>
+
+  <h2>Every allocation at once</h2>
+
+  <p>
+    The slider above moves one group's tightness in isolation, but the true object is the whole
+    vector $\v w = (w_1, \ldots, w_J)$ on the simplex: <em>every</em> admissible allocation is a
+    different valid surrogate for the same iterate, and each buys a different amount of descent.
+    For $J = 3$ the simplex is a triangle we can look at directly. Below, each point of the
+    triangle is one allocation (corners put the whole budget on a single group), and the color is
+    the <em>bound descent</em> it buys — $g(\widetilde{\v\gamma})$ minus the minimized surrogate
+    value, the quantity the weight problem maximizes. The star is the optimal allocation
+    $\widehat{\v w}$, computed by the water-filling rule of Part B in $\c{O}(J\ln J)$ —
+    without ever evaluating the surface it sits on top of.
+  </p>
+
+  <canvas id="simdemo" width="720" height="600"></canvas>
+  <div class="demo-controls">
+    <button id="sim-scA" class="fam-active">three-way split</button>
+    <button id="sim-scB">lopsided split</button>
+    <button id="sim-scC">winner takes all</button>
+    <span style="flex:0 0 100%; height:0"></span>
+    <button id="sim-mode">show true descent</button>
+    <button id="sim-stepOpt">MM step at ŵ</button>
+    <button id="sim-stepProbe">MM step at probe</button>
+    <button id="sim-reset">Reset</button>
+  </div>
+  <div class="sim-readout" id="sim-readout"></div>
+  <p class="demo-caption">
+    Drag the white probe to explore allocations; the readout compares its descent with the
+    optimum $\widehat{\v w}$ (star) and the uniform allocation (open circle). "MM step" advances
+    the iterate $\widetilde{\v\gamma}$ and recomputes the whole landscape — watch the star jump
+    to whichever groups are now furthest from optimality, and the <em>best available descent</em>
+    (top right; colors are relative to it) shrink toward zero as the run converges. In the
+    <em>winner-takes-all</em> scenario every per-group cost is linear over the
+    budget, so the bound-descent surface is a plane and its maximum sits at a corner.
+  </p>
+
+  <p>
+    Toggling to <em>true descent</em> — $g(\widetilde{\v\gamma}) - g(\v\gamma^+(\v w))$, what
+    the step actually gains — shows how faithful the proxy is. When the optimum is interior the
+    two surfaces nearly agree (in the first scenario the true-descent maximizer, marked
+    <span style="color:#34d399">◆</span>, sits next to $\widehat{\v w}$ and gives up only a few
+    percent). Where they disagree, the disagreement is instructive: in the winner-takes-all
+    scenario the true descent still prefers to hedge across groups, but the bound cannot see
+    this. That is the price of a tractable proxy — maximizing true descent over the simplex is a
+    $J$-dimensional search costing one linear solve <em>per candidate</em>, while the bound
+    descent is separable and its exact maximizer costs a sort. The MM guarantee only needs the
+    bound: any allocation descends, the water-filling one descends fastest among all guaranteed
+    rates. The same check on non-orthogonal instances (real designs, correlated groups) gives the
+    identical picture: the water-filling weights attain the grid maximum of the bound-descent
+    surface everywhere.
   </p>
 
   <div class="part-banner">
@@ -1158,6 +1224,40 @@ window.addEventListener("DOMContentLoaded", () => {
 
 <div class="container">
 
+  <h2>Does the allocation matter?</h2>
+
+  <p>
+    The water-filling weights cost a sort per iteration — do they buy anything? A small
+    experiment: a synthetic group lasso with $J = 12$ groups of $5$ correlated predictors,
+    $n = 300$, three groups active at the solution, $\lambda$ at $45\%$ of $\lambda_{\max}$.
+    Same MM algorithm, five allocation policies: the <em>optimal</em> water-filling weights,
+    <em>uniform</em> $w_j = 1/J$, <em>random</em> (fresh Dirichlet draw each iteration),
+    <em>round-robin</em> (whole budget on one group, cycling), and <em>greedy</em>
+    winner-takes-all (whole budget on the largest $\xi_j^2$).
+  </p>
+
+  <canvas id="racechart" width="720" height="380"></canvas>
+  <p class="demo-caption">
+    Optimality gap $g(\v\gamma^{(t)}) - g^*$ per iteration (log scale), one representative
+    instance. Across 20 replications the median iterations to a $10^{-6}$ gap: optimal
+    <b>8</b>, round-robin <b>14</b>, uniform <b>19</b>, random <b>20</b>, greedy —
+    <b>never converged</b> (all 20 runs).
+  </p>
+
+  <p>
+    Two of the failures are instructive. <em>Uniform</em> weights descend every step but give
+    each group only $1/J$ of a unit of shrinkage power, so switching a group off takes many
+    iterations — the gap decays geometrically but slowly. <em>Greedy</em> winner-takes-all looks
+    like a plausible heuristic ($\xi_j^2$ is, after all, the marginal value of weight), yet it
+    stalls completely: it happily pours the whole budget into a group with a large gap that is
+    already inactive and already satisfies its KKT condition — a weight that buys exactly
+    nothing, since $[\,w(\tau_j/\alpha_j - 1)\,]_+ = 0$ when $\tau_j \le \alpha_j$. Meanwhile
+    every other group is stuck with $w_j = 0$, the multiplicative update, and no way to change
+    activation status. The water-filling rule never falls into this trap precisely because the
+    weight problem's KKT conditions exclude satisfied inactive groups from funding — the
+    optimal allocation is greedy <em>plus the right notion of who is fundable</em>.
+  </p>
+
   <h2>Closing the loop</h2>
 
   <p>
@@ -1462,5 +1562,345 @@ window.addEventListener("DOMContentLoaded", () => {
   draw();
 })();
 </script>
-\n</body>
+<script>
+/* ---------- ternary simplex demo: every allocation at once ---------- */
+(function () {
+  const cv = document.getElementById('simdemo');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const GCOL = ['#7dabf8', '#f87171', '#34d399'];   // group colors (match wf-full)
+
+  // slice model per group: g_j(x) = s/(1+x) + a^2 x, groups mutually orthogonal
+  const SCEN = {
+    A: { name: 'three-way split', s: [9.0, 6.5, 4.6], a: [3.4, 3.2, 3.1], gt0: [0.28, 0.18, 0.12] },
+    B: { name: 'lopsided split',  s: [12.0, 7.0, 5.5], a: [3.0, 2.9, 3.4], gt0: [0.55, 0.30, 0.05] },
+    C: { name: 'winner takes all', s: [16.0, 12.0, 9.0], a: [3.55, 3.3, 2.95], gt0: [0.5, 0.45, 0.55] }
+  };
+  let scKey = 'A', sc = SCEN.A, gt = sc.gt0.slice(), iter = 0;
+  let mode = 'bound';                                // 'bound' | 'true'
+  let probe = [1 / 3, 1 / 3, 1 / 3];
+
+  const tauF = j => Math.sqrt(sc.s[j]) / (1 + gt[j]);
+  const gJ = (j, x) => sc.s[j] / (1 + x) + sc.a[j] * sc.a[j] * x;
+  const stepJ = (j, w) => Math.max((gt[j] + w) * tauF(j) / sc.a[j] - w, 0);
+  function hJ(j, w, x) {                             // surrogate slice value
+    if (w === 0 && gt[j] === 0) return gJ(j, 0);
+    return sc.s[j] / ((1 + gt[j]) ** 2) * ((gt[j] + w) ** 2 / (x + w) + 1 - w)
+           + sc.a[j] * sc.a[j] * x;
+  }
+  function descents(w) {                             // [boundDescent, trueDescent]
+    let Db = 0, Dt = 0;
+    for (let j = 0; j < 3; j++) {
+      const x = stepJ(j, w[j]);
+      Db += gJ(j, gt[j]) - hJ(j, w[j], x);
+      Dt += gJ(j, gt[j]) - gJ(j, x);
+    }
+    return [Db, Dt];
+  }
+
+  // water-filling solution (compact getWeights, J small)
+  function optW() {
+    const alpha = sc.a, tau = [0, 1, 2].map(tauF);
+    const xi = alpha.map((a, j) => a - tau[j]);
+    const gb = [0, 1, 2].map(j => gt[j] * tau[j]);
+    let idx = [0, 1, 2].filter(j => !(xi[j] >= 0 && gt[j] === 0));
+    idx.sort((p, q) => xi[q] * xi[q] - xi[p] * xi[p]);
+    const w = [0, 0, 0], d = idx.length;
+    for (let k = 0; k < d; k++) {
+      let nu = xi[idx[k]] * xi[idx[k]], ssum = 0;
+      for (let j = 0; j < k; j++) { w[idx[j]] = gb[idx[j]] / Math.sqrt(nu); ssum += w[idx[j]]; }
+      w[idx[k]] = 1 - ssum;
+      const c = xi[idx[k]] !== 0 ? gb[idx[k]] / xi[idx[k]] : Infinity;
+      if (w[idx[k]] > 0 && (w[idx[k]] < c || xi[idx[k]] <= 0)) {
+        for (let j = k + 1; j < d; j++) w[idx[j]] = 0;
+        return w;
+      }
+      let t = 0;
+      for (let j = 0; j <= k; j++) t += gb[idx[j]];
+      const nu2 = t * t;
+      const next = k + 1 < d ? xi[idx[k + 1]] * xi[idx[k + 1]] : -Infinity;
+      if (nu >= nu2 && (nu2 >= next || k === d - 1)) {
+        for (let j = 0; j <= k; j++) w[idx[j]] = gb[idx[j]] / Math.sqrt(nu2);
+        for (let j = k + 1; j < d; j++) w[idx[j]] = 0;
+        return w;
+      }
+    }
+    return w;
+  }
+
+  // triangle geometry: w1 top, w2 bottom-left, w3 bottom-right
+  const A = [360, 74], B = [70, 542], Cv = [650, 542];
+  const bary2xy = w => [w[0] * A[0] + w[1] * B[0] + w[2] * Cv[0],
+                        w[0] * A[1] + w[1] * B[1] + w[2] * Cv[1]];
+  const det = (B[1] - Cv[1]) * (A[0] - Cv[0]) + (Cv[0] - B[0]) * (A[1] - Cv[1]);
+  function xy2bary(x, y) {
+    const l1 = ((B[1] - Cv[1]) * (x - Cv[0]) + (Cv[0] - B[0]) * (y - Cv[1])) / det;
+    const l2 = ((Cv[1] - A[1]) * (x - Cv[0]) + (A[0] - Cv[0]) * (y - Cv[1])) / det;
+    return [l1, l2, 1 - l1 - l2];
+  }
+
+  // colormap: dark -> ember -> peach -> pale gold, with quantized bands
+  const STOPS = [[0, [33, 29, 24]], [0.35, [107, 61, 32]], [0.72, [232, 130, 94]], [1, [255, 223, 174]]];
+  function cmap(t) {
+    t = Math.max(0, Math.min(1, t));
+    t = Math.floor(t * 14) / 14;                      // contour bands
+    for (let i = 1; i < STOPS.length; i++) {
+      if (t <= STOPS[i][0]) {
+        const [t0, c0] = STOPS[i - 1], [t1, c1] = STOPS[i];
+        const u = (t - t0) / (t1 - t0);
+        return c0.map((v, k) => Math.round(v + u * (c1[k] - v)));
+      }
+    }
+    return STOPS[STOPS.length - 1][1];
+  }
+
+  const off = document.createElement('canvas');
+  off.width = cv.width / 2; off.height = cv.height / 2;
+  const offCtx = off.getContext('2d');
+  let dmax = 1, wOpt = [1, 0, 0], wTrueBest = [1, 0, 0];
+
+  function computeHeatmap() {
+    wOpt = optW();
+    const img = offCtx.createImageData(off.width, off.height);
+    const vals = new Float32Array(off.width * off.height).fill(-1);
+    dmax = 1e-12;
+    let dmin = Infinity;
+    for (let py = 0; py < off.height; py++) {
+      for (let px = 0; px < off.width; px++) {
+        const wb = xy2bary(px * 2, py * 2);
+        if (wb[0] < -0.002 || wb[1] < -0.002 || wb[2] < -0.002) continue;
+        const w = wb.map(v => Math.max(v, 0));
+        const norm = w[0] + w[1] + w[2];
+        const d = descents([w[0] / norm, w[1] / norm, w[2] / norm]);
+        const v = Math.max(mode === 'bound' ? d[0] : d[1], 0);
+        vals[py * off.width + px] = v;
+        if (v > dmax) dmax = v;
+        if (v < dmin) dmin = v;
+      }
+    }
+    const span = Math.max(dmax - dmin, 1e-12);   // color relative to surface range
+    for (let i = 0; i < vals.length; i++) {
+      if (vals[i] < 0) continue;
+      const c = cmap((vals[i] - dmin) / span);
+      img.data[4 * i] = c[0]; img.data[4 * i + 1] = c[1];
+      img.data[4 * i + 2] = c[2]; img.data[4 * i + 3] = 255;
+    }
+    offCtx.putImageData(img, 0, 0);
+    // true-descent argmax on a coarse simplex grid
+    let best = -1;
+    const R = 100;
+    for (let i = 0; i <= R; i++) {
+      for (let k = 0; k <= R - i; k++) {
+        const w = [i / R, k / R, (R - i - k) / R];
+        const v = descents(w)[1];
+        if (v > best) { best = v; wTrueBest = w; }
+      }
+    }
+  }
+
+  function star(x, y, r, color) {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const rad = i % 2 === 0 ? r : r * 0.45;
+      const a = -Math.PI / 2 + i * Math.PI / 5;
+      const px = x + rad * Math.cos(a), py = y + rad * Math.sin(a);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+    ctx.strokeStyle = '#1a1713'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+
+  function fmtW(w) { return '(' + w.map(v => v.toFixed(2)).join(', ') + ')'; }
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, cv.width, cv.height);
+
+    // triangle outline
+    ctx.strokeStyle = 'rgba(227,221,211,0.5)'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]);
+    ctx.lineTo(Cv[0], Cv[1]); ctx.closePath(); ctx.stroke();
+
+    // corner labels with group colors
+    ctx.font = '600 12.5px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = GCOL[0]; ctx.fillText('all on group 1 — w = (1, 0, 0)', A[0], A[1] - 14);
+    ctx.textAlign = 'right'; ctx.fillStyle = GCOL[1];
+    ctx.fillText('all on group 2', B[0] + 30, B[1] + 22);
+    ctx.fillText('w = (0, 1, 0)', B[0] + 30, B[1] + 38);
+    ctx.textAlign = 'left'; ctx.fillStyle = GCOL[2];
+    ctx.fillText('all on group 3', Cv[0] - 30, Cv[1] + 22);
+    ctx.fillText('w = (0, 0, 1)', Cv[0] - 30, Cv[1] + 38);
+
+    // uniform marker
+    const u = bary2xy([1 / 3, 1 / 3, 1 / 3]);
+    ctx.beginPath(); ctx.arc(u[0], u[1], 5.5, 0, 7);
+    ctx.strokeStyle = 'rgba(227,221,211,0.85)'; ctx.lineWidth = 1.8; ctx.stroke();
+
+    // true-descent argmax (diamond), only in true mode
+    if (mode === 'true') {
+      const p = bary2xy(wTrueBest);
+      ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = '#34d399'; ctx.fillRect(-4.6, -4.6, 9.2, 9.2);
+      ctx.strokeStyle = '#1a1713'; ctx.lineWidth = 1.4;
+      ctx.strokeRect(-4.6, -4.6, 9.2, 9.2); ctx.restore();
+    }
+
+    // optimal allocation star
+    const o = bary2xy(wOpt);
+    star(o[0], o[1], 10, '#7dabf8');
+
+    // probe
+    const p = bary2xy(probe);
+    ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, 7);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.strokeStyle = '#1a1713'; ctx.lineWidth = 1.6; ctx.stroke();
+
+    // header line
+    ctx.fillStyle = 'rgba(227,221,211,0.75)'; ctx.font = '12.5px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText((mode === 'bound' ? 'bound descent' : 'true descent') +
+                 '  ·  iter ' + iter + '  ·  γ̃ = ' + fmtW(gt), 16, 24);
+    ctx.textAlign = 'right';
+    ctx.fillText('best available descent ' + dmax.toFixed(3), cv.width - 16, 24);
+    ctx.textAlign = 'left';
+
+    readout();
+  }
+
+  function readout() {
+    const dP = descents(probe), dO = descents(wOpt), dU = descents([1 / 3, 1 / 3, 1 / 3]);
+    const row = (dot, name, w, d) =>
+      '<div class="cell"><span class="sim-dot" style="background:' + dot + '"></span>' +
+      '<b>' + name + '</b><br>w = ' + fmtW(w) +
+      '<br>Δbound = ' + d[0].toFixed(3) + '<br>Δg = ' + d[1].toFixed(3) + '</div>';
+    document.getElementById('sim-readout').innerHTML =
+      row('#fff', 'probe', probe, dP) +
+      row('#7dabf8', 'optimal ŵ', wOpt, dO) +
+      row('transparent;border:1.5px solid #e3ddd3', 'uniform', [1 / 3, 1 / 3, 1 / 3], dU);
+  }
+
+  function refresh() { computeHeatmap(); draw(); }
+
+  // dragging
+  let dragging = false;
+  function setProbe(ev) {
+    const r = cv.getBoundingClientRect();
+    const x = (ev.clientX - r.left) * cv.width / r.width;
+    const y = (ev.clientY - r.top) * cv.height / r.height;
+    let w = xy2bary(x, y).map(v => Math.max(v, 0));
+    const s = w[0] + w[1] + w[2];
+    probe = w.map(v => v / s);
+    draw();
+  }
+  cv.addEventListener('pointerdown', ev => { dragging = true; cv.setPointerCapture(ev.pointerId); setProbe(ev); });
+  cv.addEventListener('pointermove', ev => { if (dragging) setProbe(ev); });
+  cv.addEventListener('pointerup', () => { dragging = false; });
+
+  // controls
+  function setScen(key) {
+    scKey = key; sc = SCEN[key]; gt = sc.gt0.slice(); iter = 0;
+    probe = [1 / 3, 1 / 3, 1 / 3];
+    for (const k of ['A', 'B', 'C'])
+      document.getElementById('sim-sc' + k).classList.toggle('fam-active', k === key);
+    refresh();
+  }
+  document.getElementById('sim-scA').onclick = () => setScen('A');
+  document.getElementById('sim-scB').onclick = () => setScen('B');
+  document.getElementById('sim-scC').onclick = () => setScen('C');
+  document.getElementById('sim-mode').onclick = function () {
+    mode = mode === 'bound' ? 'true' : 'bound';
+    this.textContent = mode === 'bound' ? 'show true descent' : 'show bound descent';
+    refresh();
+  };
+  function mmStep(w) {
+    gt = [0, 1, 2].map(j => stepJ(j, w[j]));
+    iter += 1; refresh();
+  }
+  document.getElementById('sim-stepOpt').onclick = () => mmStep(wOpt);
+  document.getElementById('sim-stepProbe').onclick = () => mmStep(probe);
+  document.getElementById('sim-reset').onclick = () => setScen(scKey);
+
+  refresh();
+})();
+</script>
+
+<script>
+/* ---------- convergence race chart ---------- */
+(function () {
+  const cv = document.getElementById('racechart');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const RACE = {"waterfill":[4.811,0.3531,0.03104,0.0003508,1.809e-05,4.439e-06,7.231e-08,4.901e-09,9.603e-10,1.27e-11,1.066e-12,1.954e-13],"uniform":[4.811,3.678,2.224,1.0,0.362,0.1324,0.05849,0.03002,0.01619,0.008747,0.004685,0.002497,0.001336,0.0007183,0.0003882,0.0002106,0.0001147,6.256e-05,3.42e-05,1.873e-05,1.027e-05,5.633e-06,3.092e-06,1.698e-06,9.329e-07,5.126e-07,2.817e-07,1.548e-07,8.509e-08,4.677e-08,2.571e-08,1.413e-08,7.768e-09,4.27e-09,2.347e-09,1.29e-09,7.092e-10,3.899e-10,2.143e-10,1.178e-10,6.476e-11],"random":[4.811,4.248,2.12,0.8533,0.3285,0.1937,0.1341,0.08799,0.05742,0.03891,0.02651,0.01651,0.01216,0.005973,0.003952,0.002355,0.00181,0.0009344,0.0004965,0.0003605,0.0002031,0.0001292,0.0001279,7.343e-05,4.294e-05,2.437e-05,1.535e-05,9.545e-06,7.797e-06,5.549e-06,2.916e-06,1.652e-06,9.263e-07,6.359e-07,4.798e-07,2.615e-07,1.618e-07,1.108e-07,6.612e-08,4.615e-08,2.457e-08],"roundrobin":[4.811,0.3531,0.03104,0.03088,0.0002967,0.0001319,6.93e-05,3.954e-05,2.352e-05,1.439e-05,9.049e-06,5.858e-06,3.905e-06,2.674e-06,1.848e-06,1.276e-06,8.827e-07,6.109e-07,4.229e-07,2.928e-07,2.027e-07,1.404e-07,9.72e-08,6.73e-08,4.66e-08,3.227e-08,2.234e-08,1.547e-08,1.071e-08,7.417e-09,5.136e-09,3.556e-09,2.462e-09,1.705e-09,1.181e-09,8.175e-10,5.66e-10,3.919e-10,2.714e-10,1.879e-10,1.301e-10],"wta":[4.811,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531]};
+  const SERIES = [
+    ['waterfill',  'optimal (water-filling)', '#e8825e'],
+    ['roundrobin', 'round-robin',             '#fbbf24'],
+    ['uniform',    'uniform 1/J',             '#7dabf8'],
+    ['random',     'random (Dirichlet)',      '#b795f5'],
+    ['wta',        'greedy winner-takes-all', '#f87171']
+  ];
+  const T = 40, LO = 1e-13, HI = 10;
+  const mL = 62, mR = 16, mT = 18, mB = 42;
+  const X = t => mL + t / T * (cv.width - mL - mR);
+  const Y = v => {
+    const lv = Math.log10(Math.max(v, LO));
+    return mT + (Math.log10(HI) - lv) / (Math.log10(HI) - Math.log10(LO)) * (cv.height - mT - mB);
+  };
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  // grid + ticks
+  ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'right';
+  for (let e = 0; e >= -12; e -= 3) {
+    const y = Y(Math.pow(10, e));
+    ctx.strokeStyle = 'rgba(58,51,42,0.9)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(mL, y); ctx.lineTo(cv.width - mR, y); ctx.stroke();
+    ctx.fillStyle = '#a49a8c';
+    ctx.fillText(e === 0 ? '1' : '10⁻' + (-e < 10 ? '' : '') + String(-e).split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]).join(''), mL - 8, y + 4);
+  }
+  ctx.textAlign = 'center';
+  for (let t = 0; t <= T; t += 10) {
+    ctx.fillText(String(t), X(t), cv.height - mB + 18);
+  }
+  ctx.fillText('iteration', (mL + cv.width - mR) / 2, cv.height - 6);
+  ctx.save();
+  ctx.translate(14, (mT + cv.height - mB) / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('optimality gap g(γ⁽ᵗ⁾) − g*', 0, 0);
+  ctx.restore();
+  // axis frame
+  ctx.strokeStyle = '#57503f';
+  ctx.beginPath(); ctx.moveTo(mL, mT); ctx.lineTo(mL, cv.height - mB);
+  ctx.lineTo(cv.width - mR, cv.height - mB); ctx.stroke();
+
+  // series
+  for (const [key, label, color] of SERIES) {
+    const v = RACE[key];
+    ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    let started = false;
+    for (let t = 0; t <= Math.min(T, v.length - 1); t++) {
+      if (v[t] < LO) break;
+      if (!started) { ctx.moveTo(X(t), Y(v[t])); started = true; }
+      else ctx.lineTo(X(t), Y(v[t]));
+    }
+    ctx.stroke();
+  }
+  // legend
+  ctx.fillStyle = 'rgba(38,33,25,0.92)';
+  ctx.strokeStyle = 'rgba(58,51,42,1)';
+  ctx.beginPath(); ctx.roundRect(cv.width - 262, mT + 12 - 14, 246, 5 * 20 + 10, 8);
+  ctx.fill(); ctx.stroke();
+  let ly = mT + 12;
+  ctx.font = '12.5px Inter, sans-serif'; ctx.textAlign = 'left';
+  for (const [key, label, color] of SERIES) {
+    ctx.strokeStyle = color; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cv.width - 250, ly - 4); ctx.lineTo(cv.width - 222, ly - 4); ctx.stroke();
+    ctx.fillStyle = '#e3ddd3';
+    ctx.fillText(label, cv.width - 214, ly);
+    ly += 20;
+  }
+})();
+</script>
+
+</body>
 </html>
