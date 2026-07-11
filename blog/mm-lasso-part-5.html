@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Part 5: Water-Filling Demo — Anant Mathur</title>
+  <title>Part 5: Optimal Weights - Anant Mathur</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/dark.css">
+  <link rel="stylesheet" href="../assets/css/dark.css?v=4">
   <script>
     window.MathJax = {
       tex: {
@@ -29,6 +29,18 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
   <style>
+    /* wider text column for this post, and one shared width for every demo */
+    .container { max-width: 840px; }
+    .breakout {
+      width: min(1020px, 100vw - 28px);
+      position: relative; left: 50%; transform: translateX(-50%);
+    }
+    .plain {
+      color: var(--text-dim); font-style: italic; font-size: 0.95rem;
+      margin: -0.4rem 0 1rem;
+    }
+    .plain::before { content: "In plain terms: "; color: var(--accent); font-style: normal;
+                     font-weight: 600; font-size: 0.85rem; }
     .post-meta { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.4rem; }
     mjx-container { color: var(--text); }
     mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 0.3rem 0; }
@@ -40,8 +52,10 @@
     .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
     .series-nav a.here { color: var(--accent); border-color: var(--accent); }
     .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
-    #wfdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
-              width: 100%; display: block; margin-top: 1rem; }
+    #phidemo { border: 1px solid var(--border); border-radius: 8px; background: var(--card);
+               width: 100%; display: block; margin-top: 1rem; }
+    #wfexplore { border: 1px solid var(--border); border-radius: 8px; background: var(--card);
+                 width: 100%; display: block; margin-top: 1rem; }
     .demo-controls { display: flex; gap: 1.2rem; margin-top: 0.7rem; flex-wrap: wrap; align-items: center; }
     .demo-controls button {
       font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer;
@@ -49,14 +63,18 @@
       border: 1px solid var(--accent); background: transparent; color: var(--accent);
     }
     .demo-controls button:hover { background: var(--accent); color: #2a160d; }
-    .wf-label { color: var(--text-dim); font-size: 0.88rem; display: flex; align-items: center; gap: 0.6rem; }
-    .wf-label input[type=range] { accent-color: var(--accent); width: 180px; }
+    .demo-controls label { color: var(--text-dim); font-size: 0.88rem; }
+    .demo-controls select { margin-left: 0.4rem; font: inherit; color: var(--text);
+                            background: var(--card); border: 1px solid var(--border);
+                            border-radius: 6px; padding: 0.28rem 0.45rem; }
+    .explore-status { margin-left: auto; color: var(--text-dim); font-family: var(--mono);
+                      font-size: 0.78rem; }
     .part-banner {
       margin: 3.2rem 0 0.4rem;
       padding: 0.9rem 1.2rem;
       border: 1px solid var(--border);
       border-left: 4px solid var(--accent);
-      border-radius: 10px;
+      border-radius: 8px;
       background: var(--card);
     }
     .part-banner .kicker {
@@ -66,13 +84,16 @@
     .part-banner .name { font-size: 1.3rem; font-weight: 700; color: var(--heading); }
     .part-banner .sub-line { color: var(--text-dim); font-size: 0.9rem; margin-top: 0.15rem; }
     .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.6rem; }
-    #famdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
-               width: 100%; display: block; margin-top: 1rem; }
+    .fam-visual {
+      width: 100%; height: 620px; margin-top: 1rem;
+      background: var(--card); border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    #fam-plot { display: block; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
     .demo-controls button.fam-active { background: var(--accent); color: #2a160d; }
-    #simdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
-               width: 100%; display: block; margin-top: 1rem; cursor: crosshair;
-               touch-action: none; }
-    #racechart { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+    #fam-reset { width: 40px; height: 36px; padding: 0; display: inline-grid; place-items: center;
+                 font-size: 1.05rem; }
+    #racechart { border: 1px solid var(--border); border-radius: 8px; background: var(--card);
                  width: 100%; display: block; margin-top: 1rem; }
     .sim-readout { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.7rem; }
     .sim-readout .cell {
@@ -87,11 +108,18 @@
       width: 100%; height: 1050px; border: 1px solid var(--border); border-radius: 12px;
       background: #f6f8fb; margin-top: 0.5rem;
     }
+    @media (max-width: 640px) {
+      .breakout { overflow-x: auto; overscroll-behavior-inline: contain; }
+      #racechart, #phidemo { width: 680px; max-width: none; }
+      .fam-visual { width: 680px; height: auto; }
+      #fam-plot { width: 680px; height: auto; }
+      #wfexplore { width: 760px; max-width: none; }
+    }
   </style>
   <style>
 
 #wf-full {
-  width: min(1100px, 96vw);
+  width: min(1020px, 100vw - 28px);
   position: relative; left: 50%; transform: translateX(-50%);
   overflow-x: auto;
   color: #e3ddd3;
@@ -107,7 +135,7 @@
 #wf-full .wrap { max-width: 1080px; margin: 0 auto; padding: 22px 26px 60px; }
 #wf-full h1 { font-size: 20px; margin: 8px 0 6px; }
 #wf-full .sub { color: var(--muted); font-size: 13.5px; line-height: 1.55; max-width: 980px; }
-#wf-full .defs { background:#262119; border:1px solid var(--line); border-radius:10px;
+#wf-full .defs { background:#262119; border:1px solid var(--line); border-radius:8px;
           padding: 14px 22px 16px; margin-top: 14px; font-size: 14px;
           line-height: 1.75; }
 #wf-full .defs h3 { font-size: 13.5px; font-weight: 700; letter-spacing: .02em;
@@ -137,7 +165,7 @@
             font-size: 13.5px; }
 #wf-full .casebar { display:flex; gap:18px; flex-wrap:wrap; margin-top:18px;
              align-items: stretch; }
-#wf-full .casegroup { border: 1px solid var(--line); border-radius: 10px;
+#wf-full .casegroup { border: 1px solid var(--line); border-radius: 8px;
                padding: 10px 14px 12px; background: #262119; }
 #wf-full .casegroup h4 { margin: 0 0 8px; font-size: 12.5px; font-weight: 700;
                   letter-spacing: .02em; }
@@ -148,10 +176,10 @@
 #wf-full .casegroup .btns { display:flex; gap:8px; flex-wrap:wrap; }
 #wf-full .casegroup button { font: inherit; font-size: 12.8px; padding: 7px 12px;
       border-radius: 8px; border: 1px solid var(--line); background:#262119;
-      cursor:pointer; }
+      color: var(--fg); cursor:pointer; }
 #wf-full .casegroup button.active { background: var(--accent); color:#fff;
       border-color: var(--accent); }
-#wf-full .card { background: #262119; border: 1px solid var(--line); border-radius: 10px;
+#wf-full .card { background: #262119; border: 1px solid var(--line); border-radius: 8px;
           padding: 12px 16px; box-shadow: 0 1px 2px rgba(20,30,60,.05); }
 #wf-full .card h2 { font-size: 13.5px; margin: 0 0 6px; font-weight: 600; }
 #wf-full canvas { display: block; }
@@ -167,8 +195,6 @@
 #wf-full .nulab { position: absolute; font-size: 13px; color: #8fb8ff;
            white-space: nowrap; pointer-events: none; font-weight: 600;
            font-variant-numeric: tabular-nums; }
-#wf-full .vglab { position: absolute; font-size: 12px; color: #a49a8c; width: 130px;
-           text-align: center; pointer-events: none; }
 #wf-full .glab { font-size: 13px; color: #a49a8c; margin-top: 14px; }
 #wf-full .algo { margin-top: 16px; }
 #wf-full .algobox { font-size: 14px; line-height: 2.05; border: 1px solid var(--line);
@@ -197,7 +223,7 @@
               border-bottom: 1px solid var(--line); backdrop-filter: blur(3px); }
 #wf-full .controls button { font: inherit; font-size: 13.5px; padding: 6px 14px;
       border-radius: 7px; border: 1px solid var(--line); background:#262119;
-      cursor:pointer; min-width: 96px; }
+      color: var(--fg); cursor:pointer; min-width: 96px; }
 #wf-full .controls button.primary { background: var(--accent); border-color: var(--accent);
       color:#fff; }
 #wf-full select { font: inherit; font-size: 13px; padding: 4px 6px; border-radius: 6px;
@@ -217,6 +243,14 @@
 #wf-full th:first-child, #wf-full td:first-child { text-align: left; }
 #wf-full th { background: #2b2620; font-weight: 600; }
 #wf-full td.swatch { width: 14px; padding: 0; }
+#wf-full .derivation-details { margin-top: 14px; }
+#wf-full .derivation-details > summary {
+  cursor: pointer; color: #c9c1b2; font-weight: 650; font-size: 13.5px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: #262119; list-style-position: inside;
+}
+#wf-full .derivation-details[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+#wf-full .derivation-details[open] .defs { margin-top: 0; border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
   </style>
 </head>
 <body>
@@ -233,263 +267,315 @@
 
 <div class="container">
 
-  <h1>Part 5: Water-Filling Demo</h1>
-  <p class="post-meta">MM Algorithms and the Lasso · Part 5 of 5 · Anant Mathur · July 2026</p>
+  <span class="chapter-kicker">The Lasso and MM Algorithms - 5 of 5</span>
+  <h1>Part 5: Optimal Weights</h1>
+  <p class="post-meta">Anant Mathur · July 2026</p>
 
   <div class="series-nav">
-    <a href="mm-lasso-part-1.html">1 · MM Algorithms</a>
-    <a href="mm-lasso-part-2.html">2 · The Lasso</a>
-    <a href="mm-lasso-part-3.html">3 · Auxiliary KKT</a>
-    <a href="mm-lasso-part-4.html">4 · An Interesting Bound</a>
-    <a class="here" href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
+    <a href="mm-lasso-part-1.html">1 · Lasso + CD</a>
+    <a href="mm-lasso-part-2.html">2 · Auxiliary KKT</a>
+    <a href="mm-lasso-part-3.html">3 · MM Algorithms</a>
+    <a href="mm-lasso-part-4.html">4 · A Separable Bound</a>
+    <a class="here" href="mm-lasso-part-5.html">5 · Optimal Weights</a>
   </div>
+
+  <p class="chapter-intro">
+    The bound in Part 4 leaves one degree of freedom: a unit budget
+    $\v 1^\top\v w=1$ that decides which coefficients receive the strongest update. This part
+    derives the optimal allocation and shows why it improves the MM step.
+  </p>
 
   <div class="part-banner">
     <div class="kicker">Part A</div>
-    <div class="name">The optimal surrogate</div>
-    <div class="sub-line">Derive the weight problem, read it through the KKT gap, and see the
-    surrogate family it selects from.</div>
+    <div class="name">Why the allocation matters</div>
+    <div class="sub-line">Start with the computational consequence, then inspect the geometry
+    behind it.</div>
   </div>
 
-  <h2>Deriving the weight problem</h2>
+  <h2>A convergence race</h2>
+  <p class="plain">the optimal allocation reaches the solution in fewer iterations than the
+    baseline allocations.</p>
 
   <p>
-    Part 4 ended with a question: with only a unit budget to distribute across the weights
-    $w_1, \ldots, w_J$ at each MM iteration, where should it go? The principled answer is to
-    pick the weights giving the <em>least upper bound</em> — the surrogate whose minimum drives
-    $g$ down the most:
+    Consider an ordinary lasso with $p=12$ correlated, standardized predictors and $n=300$
+    observations. Three coefficients generate the response; at
+    $\lambda=0.45\lambda_{\max}$, two remain active in the representative solution. The MM
+    update is identical in every run; only the weight policy changes.
+  </p>
+
+  <div class="breakout">
+    <canvas id="racechart" width="1020" height="420"></canvas>
+    <p class="demo-caption">
+      Optimality gap $g(\v\gamma^{(t)})-g^*$ on one representative instance. Across 20
+      replications, median iterations to a $10^{-6}$ gap were: optimal weights <b>7.5</b>,
+      round-robin <b>26.5</b>, uniform <b>30</b>, and random <b>31.5</b>.
+    </p>
+  </div>
+
+  <p>
+    Uniform and random allocations spend most of the budget on coordinates that do not need
+    it. Round-robin eventually visits the right coordinates, but must wait for its turn. The
+    optimal-weight rule instead removes zero coefficients that already satisfy
+    $\tau_j\le\alpha$, then equalizes the marginal value among the eligible coordinates it
+    funds.
+  </p>
+
+  <div class="reference-note">
+    <strong>Reproducible experiment.</strong> The published
+    <a href="../assets/data/lasso_weight_experiments.py">Python script</a> generates the
+    <a href="../assets/data/lasso_weight_results.json">chart data and replication summary</a>.
+  </div>
+
+  <h2 id="surrogate-family-animation">Explore the surrogate family</h2>
+  <p class="plain">drag the white point on the simplex to choose $\v w$ and compare its surrogate
+    with the optimal choice in blue.</p>
+
+  <p>
+    Every point on the simplex defines a valid MM surrogate for the same lasso objective. Changing
+    $\v w$ leaves the objective and current iterate fixed, but redistributes the curvature of the
+    upper bound and therefore changes the proposed next step. All the surrogates touch the orange
+    objective at the current iterate. The blue curve uses the optimal weights: its minimum is the
+    lowest in the family, so it gives the strongest guaranteed one-step improvement.
+  </p>
+
+  <div class="breakout">
+  <div class="fam-visual">
+    <canvas id="fam-plot" width="2040" height="1240" aria-label="Surrogate family and weight simplex"></canvas>
+  </div>
+  <div class="demo-controls">
+    <button id="fam-play" title="Play the weight path" aria-label="Play weight path">▶ Play</button>
+    <button id="fam-reset" title="Reset selected weight" aria-label="Reset selected weight">↻</button>
+    <span id="fam-status" class="explore-status"></span>
+  </div>
+  <div class="sim-readout" id="fam-readout"></div>
+  <p class="demo-caption" id="fam-caption">
+    Peach curves sample the surrogate family, blue is the optimal choice, and the dashed curve
+    follows the white simplex point. Vertical guides mark the current iterate, the optimal MM step,
+    and the selected surrogate's minimum. The star marks the optimal weight and the open circle the
+    uniform allocation.
+  </p>
+  </div>
+
+  <div class="part-banner">
+    <div class="kicker">Part B</div>
+    <div class="name">Computing the optimal weights</div>
+    <div class="sub-line">Derive the separable weight problem, then compute its minimizer
+    with a water-filling procedure.</div>
+  </div>
+
+  <h2>From the surrogate to a budget problem</h2>
+  <p class="plain">choose the allocation that gives the smallest guaranteed upper bound after
+    the next MM step.</p>
+
+  <p>
+    Substitute the closed-form update of Part 4 into the surrogate and minimize over the unit
+    simplex:
   </p>
 
   $$
-  \v w^{(t+1)} = \argmin_{\v w \,\in\, \bb{R}_+^J,\; \v 1^\top \v w = 1}\;
-  \min_{\v\gamma \,\in\, \bb{R}_+^J}\; h_{\v w}(\v\gamma, \v\gamma^{(t)}).
+  \widehat{\v w}
+  =\argmin_{\v w\ge\v0,\;\v1^\top\v w=1}
+    \sum_{j=1}^p\phi_j(w_j).
   $$
 
   <p>
-    The inner minimization is exactly the closed-form MM update from Part 4. Substituting it
-    back into $h_{\v w}$ makes the bound <em>separable in the weights</em>: up to terms that do
-    not depend on $\v w$, the problem becomes
+    At the current iterate write $\tau_j:=|\v x_j^\top
+    \m G(\widetilde{\v\gamma})\v y|$ and $\xi_j:=\alpha-\tau_j$. A zero coordinate with
+    $\xi_j\ge0$ already satisfies its lasso KKT condition, so it is removed before allocation.
+    For every remaining coordinate, define the deactivation threshold
   </p>
 
   $$
-  \widehat{\v w} = \argmin_{\v w \,\ge\, \v 0,\; \v 1^\top \v w = 1}\;
-  \sum_{j=1}^{J} p_j(w_j),
-  $$
-
-  <p>
-    a sum of one-dimensional convex costs. Writing $\widetilde\gamma_j$ for the current
-    iterate, $\tau_j := \|\m Z_j^\top \m G(\widetilde{\v\gamma})\,\v y\|_2$ for the
-    signal carried by group $j$, and defining the <em>KKT gap</em>
-  </p>
-
-  $$
-  \xi_j := \alpha_j - \tau_j,
-  $$
-
-  <p>each per-group cost has two branches, meeting smoothly at the knot
-    $c_j := \widetilde\gamma_j \tau_j / \xi_j$:
-  </p>
-
-  $$
-  p_j(w_j) =
+  c_j:=
   \begin{cases}
-    \dfrac{(\widetilde\gamma_j \tau_j)^2}{w_j} + 2\widetilde\gamma_j \tau_j^2,
-      & w_j \ge c_j \text{ and } c_j \in (0, 1], \\[0.8em]
-    2\widetilde\gamma_j \alpha_j \tau_j - w_j\, \xi_j^2,
+    \widetilde\gamma_j\tau_j/\xi_j, & \xi_j>0,\\
+    +\infty, & \xi_j\le0.
+  \end{cases}
+  $$
+
+  <p>
+    The cost contributed by coordinate $j$ is the continuously differentiable convex function
+  </p>
+
+  $$
+  \phi_j(w_j)=
+  \begin{cases}
+    \dfrac{(\widetilde\gamma_j\tau_j)^2}{w_j}
+      +2\widetilde\gamma_j\tau_j^2,
+      & w_j\ge c_j\text{ and }c_j\in(0,1],\\[0.8em]
+    2\widetilde\gamma_j\alpha\tau_j-w_j\xi_j^2,
       & \text{otherwise.}
   \end{cases}
   $$
 
   <p>
-    The branches have a precise meaning: giving group $j$ a weight $w_j \ge c_j$ is exactly
-    enough for the shrinkage step to <em>deactivate</em> it ($\gamma_j \to 0$), landing on the
-    nonlinear branch; smaller weights leave it active on the linear branch, where every unit of
-    weight buys a constant $\xi_j^2$ of bound decrease. When $\xi_j &lt; 0$ the knot is
-    vacuous — no admissible weight can switch the group off, and $p_j$ stays linear on all of
-    $[0, 1]$.
+    Before the knot, one unit of weight improves the bound at the constant marginal rate
+    $-\phi_j'(w_j)=\xi_j^2$. <strong>At $w_j=c_j$, the next update sets coefficient $j$ to
+    zero, so $c_j$ is its deactivation point.</strong> Beyond that point, additional weight no
+    longer changes its active status and has diminishing marginal value,
+    $(\widetilde\gamma_j\tau_j)^2/w_j^2$.
   </p>
 
-  <h2>The KKT gap decides who gets weight</h2>
+  <div class="math-note">
+    <strong>A direct KKT interpretation.</strong> At zero allocated weight,
+    $-\phi_j'(0)=\xi_j^2$, so an eligible coordinate's squared KKT discrepancy is exactly its
+    initial marginal contribution to improving the surrogate bound. The optimal-weight problem
+    therefore prioritizes the coordinates furthest from KKT balance. In particular, for a zero
+    coefficient that violates $\tau_j\le\alpha$, this priority is
+    $(\tau_j-\alpha)^2$: the larger the violation, the greater the initial value of assigning
+    weight to that coordinate.
+  </div>
+
+  <h2 id="allocation-picture">The allocation problem in one picture</h2>
+  <p class="plain">minimize a sum of convex coordinate costs while distributing one unit of
+    weight among them.</p>
 
   <p>
-    Why is $\xi_j = \alpha_j - \tau_j$ the right currency? Recall the auxiliary KKT
-    conditions of Part 3: at the optimum, $\tau_j = \alpha_j$ for every active group and
-    $\tau_j \le \alpha_j$ for every inactive one. So $\xi_j$ measures how far group $j$
-    currently is from optimality, and the cost derivation above says a unit of weight given to
-    group $j$ initially removes $-p_j'(0) = \xi_j^2$ from the bound — <em>the squared KKT gap
-    is precisely the marginal value of weighting group $j$</em>.
-  </p>
-
-  <p>
-    Now impose the KKT conditions of the weight problem itself. The simplex constraint
-    contributes a multiplier $\nu^*$, and optimality requires
+    This is a general separable resource-allocation problem. Each curve $\phi_j(w_j)$ tells us
+    the surrogate cost remaining after coordinate $j$ receives weight $w_j$. Every curve would
+    prefer more weight, but the coordinates share one budget:
   </p>
 
   $$
-  -p_j'(\widehat w_j) = \nu^* \;\; \text{whenever } \widehat w_j > 0,
+  \underset{\v w\ge\v0}{\operatorname{minimize}}
+  \quad \sum_{j=1}^p\phi_j(w_j)
+  \qquad\text{subject to}\qquad
+  \sum_{j=1}^p w_j=1.
+  $$
+
+  <div class="reference-note">
+    <strong>The classical picture.</strong>
+    <a href="https://web.stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf#page=257"
+       target="_blank" rel="noopener">Boyd and Vandenberghe, Example 5.2 and Figure 5.7</a>,
+    use the same simplex-constrained allocation problem with
+    $\phi_j(w_j)=-\log(w_j+a_j)$. The figure below replaces those logarithms by the actual
+    MM coordinate costs from one lasso iteration.
+  </div>
+
+  <div class="breakout">
+    <canvas id="phidemo" width="1020" height="500"></canvas>
+    <p class="demo-caption">
+      Four actual costs with common $\alpha=5$. Filled circles mark the funded optima
+      $\widehat w_j$; the open circle is an unfunded coordinate. The short dashed tangents at
+      the funded points are parallel because their slopes all equal $-\nu^*$.
+    </p>
+  </div>
+
+  <div class="math-note">
+    <strong>How to read the plot.</strong> Moving right by $dw_j$ spends that much of the unit
+    budget on coordinate $j$ and lowers the objective by approximately
+    $-\phi_j'(w_j)\,dw_j$. The vertical cost values themselves do not equal water heights.
+    The allocation geometry lives in <em>marginal-slope space</em>: in the vessel picture,
+    $w_j$ is the fill height and $-\phi_j'(w_j)$ is the vessel width.
+  </div>
+
+  <p>
+    The connection to the lasso KKT gap is at the left edge of the plot. For every eligible
+    coordinate, before any budget is allocated,
+  </p>
+
+  $$
+  -\phi_j'(0)=\xi_j^2=(\alpha-\tau_j)^2.
+  $$
+
+  <p>
+    Thus the squared auxiliary KKT gap is the coordinate's <em>initial marginal value</em>: it
+    is the amount by which an infinitesimal unit of weight lowers the surrogate bound. As
+    weight is added, that marginal value stays flat until $c_j$ and then decreases. The
+    optimal-weight procedure repeatedly gives the next increment to the currently largest
+    $-\phi_j'(w_j)$. It stops
+    when $\sum_jw_j=1$; at that point all funded coordinates have the same marginal value
+    $\nu^*$, while every unfunded coordinate starts at or below it.
+  </p>
+
+  <h2>The common marginal value</h2>
+
+  <p>
+    The KKT conditions for the simplex problem introduce one multiplier $\nu^*$. Every funded
+    coordinate has the same final marginal value, while an eligible but unfunded coordinate
+    starts below it:
+  </p>
+
+  $$
+  -\phi_j'(\widehat w_j)=\nu^*\quad\text{if }\widehat w_j>0,
   \qquad
-  \xi_j^2 \le \nu^* \;\; \text{whenever } \widehat w_j = 0 .
+  \xi_j^2\le\nu^*\quad\text{if }\widehat w_j=0.
   $$
 
-  <p>
-    Reading this through the gap: an <em>active</em> group far from its KKT boundary (large
-    $\xi_j^2$) is funded and pushed toward $\tau_j = \alpha_j$; an <em>inactive</em> group
-    with $\xi_j &lt; 0$ is violating its condition ($\tau_j > \alpha_j$ — it should be in the
-    model), so it is funded and the shrinkage operator switches it on; an inactive group with
-    $\xi_j \ge 0$ already satisfies its condition and gets $w_j = 0$. Every group still
-    updates each iteration — the weights only decide who gets the privileged shrinkage
-    treatment, much as greedy coordinate descent for the lasso picks the steepest coordinate
-    (<a href="https://doi.org/10.1214/07-AOAS147" target="_blank" rel="noopener">Wu &amp; Lange,
-    2008</a>).
-  </p>
+  <h2>Water-filling computes the optimal weights</h2>
 
-  <h2>A family of surrogates</h2>
-
-  <p>
-    The weight $w_j$ has a second life: it parameterizes a whole <em>family of majorizers</em>.
-    To see it, restrict the auxiliary objective to a single group's coordinate $\gamma$ (groups
-    mutually orthogonal, other coordinates held fixed). Along this slice, with
-    $s := \|\m Z_j^\top \v y\|_2^2$,
-  </p>
-
-  $$
-  g(\gamma) = \frac{s}{1+\gamma} + \alpha^2 \gamma,
-  \qquad
-  h_w(\gamma, \widetilde\gamma) = \frac{s}{(1+\widetilde\gamma)^2}
-  \left( \frac{(\widetilde\gamma + w)^2}{\gamma + w} + 1 - w \right) + \alpha^2 \gamma ,
-  $$
-
-  <p>
-    and every $w \in (0, 1]$ gives a valid surrogate: $h_w \ge g$ with tangency at
-    $\gamma = \widetilde\gamma$. Minimizing $h_w$ recovers exactly the MM update of Part 4,
-    $\gamma^+ = \big[(\widetilde\gamma + w)\,\widetilde\tau/\alpha - w\big]_+$ with
-    $\widetilde\tau = \sqrt{s}/(1+\widetilde\gamma)$. Small $w$ gives a loose surrogate and
-    a timid step; as $w \to 1$ the bound tightens onto $g$ — at $w = 1$ it is <em>exact</em>,
-    and one MM step jumps straight to the slice minimizer. That is the whole tension: every
-    group wants $w_j = 1$, but the weights share a unit budget. The weight problem resolves the
-    competition, and $\xi_j^2$ is the exchange rate.
-  </p>
-
-  <canvas id="famdemo" width="720" height="470"></canvas>
-  <div class="demo-controls">
-    <button id="fam-step">Take MM step</button>
-    <button id="fam-reset">Reset</button>
-    <label class="wf-label">w
-      <input type="range" id="fam-w" min="0.02" max="1" step="0.01" value="0.3">
-    </label>
-    <button id="fam-scA" class="fam-active">active group</button>
-    <button id="fam-scB">group that should switch off</button>
-  </div>
-  <p class="demo-caption" id="fam-caption">
-    Top: the objective $g$ (orange), the surrogate family $h_w$ (thin peach curves, all tangent
-    at the white dot $\widetilde\gamma$), and the highlighted surrogate for the slider's $w$
-    (bright dashed) with its minimizer marked. Bottom: the descent
-    $g(\widetilde\gamma) - g(\gamma^+(w))$ one MM step buys, as a function of $w$ — the
-    tightest useful surrogate makes the fastest progress. In the switch-off scenario, notice
-    the plateau: once $w$ passes the knot $c_j$ the group is already at zero and extra weight
-    buys nothing.
-  </p>
-
-  <h2>Every allocation at once</h2>
-
-  <p>
-    The slider above moves one group's tightness in isolation, but the true object is the whole
-    vector $\v w = (w_1, \ldots, w_J)$ on the simplex: <em>every</em> admissible allocation is a
-    different valid surrogate for the same iterate, and each buys a different amount of descent.
-    For $J = 3$ the simplex is a triangle we can look at directly. Below, each point of the
-    triangle is one allocation (corners put the whole budget on a single group), and the color is
-    the <em>bound descent</em> it buys — $g(\widetilde{\v\gamma})$ minus the minimized surrogate
-    value, the quantity the weight problem maximizes. The star is the optimal allocation
-    $\widehat{\v w}$, computed by the water-filling rule of Part B in $\c{O}(J\ln J)$ —
-    without ever evaluating the surface it sits on top of.
-  </p>
-
-  <canvas id="simdemo" width="720" height="600"></canvas>
-  <div class="demo-controls">
-    <button id="sim-scA" class="fam-active">three-way split</button>
-    <button id="sim-scB">lopsided split</button>
-    <button id="sim-scC">winner takes all</button>
-    <span style="flex:0 0 100%; height:0"></span>
-    <button id="sim-mode">show true descent</button>
-    <button id="sim-stepOpt">MM step at ŵ</button>
-    <button id="sim-stepProbe">MM step at probe</button>
-    <button id="sim-reset">Reset</button>
-  </div>
-  <div class="sim-readout" id="sim-readout"></div>
-  <p class="demo-caption">
-    Drag the white probe to explore allocations; the readout compares its descent with the
-    optimum $\widehat{\v w}$ (star) and the uniform allocation (open circle). "MM step" advances
-    the iterate $\widetilde{\v\gamma}$ and recomputes the whole landscape — watch the star jump
-    to whichever groups are now furthest from optimality, and the <em>best available descent</em>
-    (top right; colors are relative to it) shrink toward zero as the run converges. In the
-    <em>winner-takes-all</em> scenario every per-group cost is linear over the
-    budget, so the bound-descent surface is a plane and its maximum sits at a corner.
-  </p>
-
-  <p>
-    Toggling to <em>true descent</em> — $g(\widetilde{\v\gamma}) - g(\v\gamma^+(\v w))$, what
-    the step actually gains — shows how faithful the proxy is. When the optimum is interior the
-    two surfaces nearly agree (in the first scenario the true-descent maximizer, marked
-    <span style="color:#34d399">◆</span>, sits next to $\widehat{\v w}$ and gives up only a few
-    percent). Where they disagree, the disagreement is instructive: in the winner-takes-all
-    scenario the true descent still prefers to hedge across groups, but the bound cannot see
-    this. That is the price of a tractable proxy — maximizing true descent over the simplex is a
-    $J$-dimensional search costing one linear solve <em>per candidate</em>, while the bound
-    descent is separable and its exact maximizer costs a sort. The MM guarantee only needs the
-    bound: any allocation descends, the water-filling one descends fastest among all guaranteed
-    rates. The same check on non-orthogonal instances (real designs, correlated groups) gives the
-    identical picture: the water-filling weights attain the grid maximum of the bound-descent
-    surface everywhere.
-  </p>
-
-  <div class="part-banner">
-    <div class="kicker">Part B</div>
-    <div class="name">Water-filling</div>
-    <div class="sub-line">The exact solution of the weight problem, and two interactive views
-    of it.</div>
+  <div class="reference-note">
+    <strong>Background.</strong> The <strong>water-filling algorithm</strong> is best known from
+    <a href="https://en.wikipedia.org/wiki/Digital_communications" target="_blank"
+       rel="noopener">digital communications</a>, where it allocates a fixed power budget
+    across parallel channels in multicarrier systems. Power is assigned first where it gives
+    the greatest marginal increase in transmission rate. As power is added, these marginal
+    returns decrease until every funded channel has the same marginal return. A channel whose
+    initial marginal return is already below that common level receives no power.
   </div>
 
-  <h2>The solution is water-filling</h2>
+  <p class="plain">Here, channels become eligible coordinates, power becomes the unit budget
+    of MM weights, and transmission-rate gain becomes reduction of the surrogate bound.</p>
 
   <p>
-    Because each $-p_j'(w_j)$ starts at height $\xi_j^2$ and only decreases as $w_j$ grows,
-    the KKT conditions above describe a classic <em>water-filling</em> scheme. Picture one
-    vessel per group whose width at fill height $w_j$ is $-p_j'(w_j)$ — base width $\xi_j^2$,
+    Because each $-\phi_j'(w_j)$ starts at height $\xi_j^2$ and only decreases as $w_j$ grows,
+    the KKT conditions above lead to a classic <em>water-filling</em> procedure. Picture one
+    vessel per coordinate whose width at fill height $w_j$ is $-\phi_j'(w_j)$ — base width $\xi_j^2$,
     narrowing past the knot $c_j$. Pour the unit budget into whichever vessel is currently
     widest: funded surfaces then always share one common width — the water level $\nu$ — which
     only descends. When the budget is exhausted the level rests at $\nu^*$: vessels whose base
     $\xi_j^2$ never rose above the final level stay dry. Termination lands in one of two
-    cases — either $\nu^*$ equals some group's base width $\xi_{(k)}^2$ (that pivot group
+    cases — either $\nu^*$ equals some coordinate's base width $\xi_{(k)}^2$ (that pivot
+    coordinate
     takes the leftover budget), or $\nu^* = (\sum_{j \le k} \widetilde\gamma_j \tau_j)^2$
     sits strictly between two base widths and the funded weights split proportionally to
     $\widetilde\gamma_j \tau_j$. Sorting the $\xi_j^2$ once gives the exact solution in
-    $\c{O}(J \ln J)$ — negligible next to the linear solve in each MM step.
+    $\c O(p\log p)$ — negligible next to the linear solve in each MM step.
   </p>
 
-  <h2>Explore it</h2>
+  <h2 id="explore-water-filling">Explore the optimal-weight procedure</h2>
 
   <p>
-    Each column below is a group $j$ with height $\xi_j^2$ (its squared KKT gap). The dashed
-    line is the optimal level $\nu^*$, and the filled portion of each column is its optimal
-    weight $\widehat w_j$ (summing to 1). Drag the $\lambda$ slider or randomize the scenario
-    and watch weight flow to the groups furthest from optimality.
+    Each eligible coordinate is now a vessel. Its <em>base width</em> is the squared auxiliary
+    KKT gap $\xi_j^2$, its fill height is the allocated weight $w_j$, and its width at height
+    $w_j$ is the current marginal value $-\phi_j'(w_j)$. The budget always enters the vessel
+    with the widest available surface.
   </p>
 
-  <canvas id="wfdemo" width="720" height="400"></canvas>
-  <div class="demo-controls">
-    <button id="wf-random">Randomize scenario</button>
-    <label class="wf-label">λ scale
-      <input type="range" id="wf-lambda" min="0.4" max="2.2" step="0.02" value="1">
-    </label>
+  <div class="breakout">
+    <canvas id="wfexplore" width="1020" height="520"></canvas>
+    <div class="demo-controls">
+      <button id="wf-play" title="Pause or play the optimal-weight allocation">Play</button>
+      <button id="wf-restart" title="Restart the allocation from zero">Restart</button>
+      <label>speed
+        <select id="wf-speed">
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+        </select>
+      </label>
+      <span id="wf-status" class="explore-status"></span>
+    </div>
+    <p class="demo-caption">
+      The colored fill rises as the unit budget is allocated. A horizontal white bar marks
+      $c_j$, the point where coefficient $j$ becomes inactive; above it the vessel narrows
+      because additional weight has diminishing marginal value. An empty
+      vessel is not excluded from the model: its base is simply narrower than the current
+      surface width $\nu$, so it has not started receiving budget. Widths are drawn on a
+      square-root scale so that all five vessels remain visible; the labels give the exact
+      squared KKT gaps $\xi_j^2$.
+    </p>
   </div>
-  <div id="wf-legend" class="demo-caption"></div>
 
-  <h2>The full animation</h2>
+  <h2 id="kkt-allocation-animation">Follow the KKT allocation</h2>
 
   <p>
-    The animation below pours the budget in real time: vessels narrowing past their knots
-    $c_j$, the level $\nu$ descending onto $\nu^*$, and the two termination cases side by
-    side, with the resulting weight formulas worked out for each scenario.
+    The vessel picture has already supplied the intuition. The animation below keeps only the
+    two views needed to follow the algorithm: the marginal curves show which coordinate should
+    receive the next increment of budget, while the cost curves show the resulting decrease in
+    the separable objective. At each step the algorithm increases a coordinate with the largest
+    available value of $-\phi_j'(w_j)$. It stops when $\sum_j w_j=1$ and the KKT conditions hold.
+    The controls compare the two ways that this stopping point can occur.
   </p>
 
 </div>
@@ -497,72 +583,75 @@
 <div id="wf-full" class="tex2jax_ignore">
 <div class="wrap">
   <div class="sub">
-    How the group-lasso MM algorithm distributes its unit weight budget across the
-    <b>groups</b> at one iteration (supplementary, Appendix “Derivation of Optimal
-    Weights”). The animation pours the budget into whichever group currently lowers the
-    bound fastest.
+    How the scalar-lasso MM algorithm distributes one unit of update budget across
+    coefficients. The animation assigns the next increment to the eligible coordinate with
+    the greatest marginal improvement to the surrogate bound.
   </div>
 
+  <details class="derivation-details">
+  <summary>Show the full allocation derivation</summary>
   <div class="defs">
-    <h3>Setup &amp; notation &nbsp;—&nbsp; \(j = 1, \dots, J\) indexes the groups</h3>
-    Group \(j\) holds \(p_j\) predictors \(\mathbf Z_j\); \(\tilde{\gamma}_j \ge 0\) is
-    its coefficient scale at the current MM iterate \(\tilde{\boldsymbol\gamma}\).
-    Two numbers summarise group \(j\) this iteration:
+    <h3>Setup &amp; notation &nbsp;—&nbsp; \(j=1,\dots,p\) indexes coefficients</h3>
+    Predictor \(\mathbf x_j\) is centred and scaled to \(\|\mathbf x_j\|_2=1\), and
+    \(\tilde\gamma_j\ge0\) is its scale at the current MM iterate.
+    Two quantities determine coordinate \(j\)'s update:
     \[
-      \alpha_j := n\lambda\sqrt{p_j}
-      \;\;\text{(penalty threshold of group } j\text{)},
+      \alpha:=n\lambda
+      \;\;\text{(common lasso threshold)},
       \qquad\quad
-      \tau_j := \bigl\lVert \mathbf Z_j^{\top}\,
-        \mathbf G(\tilde{\boldsymbol\gamma})\,\mathbf y \bigr\rVert
-      \;\;\text{(signal carried by group } j\text{)}.
+      \tau_j:=\bigl|\mathbf x_j^\top
+        \mathbf G(\tilde{\boldsymbol\gamma})\mathbf y\bigr|
+      \;\;\text{(current residual signal)}.
     \]
 
     <h3>KKT conditions of the auxiliary problem</h3>
     At the global minimiser \(\widehat{\boldsymbol\gamma}\),
     \[
-      \tau_j = \alpha_j \;\;\text{ for every active group } (\widehat\gamma_j > 0),
+      \tau_j = \alpha \;\;\text{ for every active coefficient } (\widehat\gamma_j > 0),
       \qquad\quad
-      \tau_j \le \alpha_j \;\;\text{ for every inactive group } (\widehat\gamma_j = 0).
+      \tau_j \le \alpha \;\;\text{ for every zero coefficient } (\widehat\gamma_j = 0).
     \]
-    The <b>KKT gap</b> \( \;\xi_j := \alpha_j - \tau_j\; \) measures how far group
-    \(j\) is from optimality: \(\xi_j &lt; 0\) means its signal exceeds the penalty
-    threshold (the group “wants” weight); \(\xi_j \ge 0\) with
-    \(\tilde\gamma_j = 0\) means group \(j\) already satisfies the conditions and is
-    ignored by the allocation.
+    Write \(\xi_j:=\alpha-\tau_j\). For an active coefficient, \(\xi_j^2\) is its
+    initial marginal value. A zero coefficient with \(\xi_j&lt;0\) violates its KKT condition
+    and remains eligible. A zero coefficient with \(\xi_j\ge0\) is already correct and is
+    removed before allocation. Hence, among eligible coordinates, a larger \(\xi_j^2\) means
+    a larger KKT discrepancy and a greater initial benefit from assigning weight there. For a
+    violating zero coefficient, \(\xi_j^2=(\tau_j-\alpha)^2\).
 
     <h3>The weight problem &nbsp;and&nbsp; the deactivation threshold \(c_j\)</h3>
     \[
       \widehat{\boldsymbol w} \;=\; \mathop{\mathrm{argmin}}\limits_{\;\boldsymbol w
-        \,\ge\, 0,\; w_1 + \cdots + w_J \,=\, 1}\;\; \sum_{j=1}^{J} p_j(w_j),
+        \,\ge\, 0,\; w_1 + \cdots + w_p \,=\, 1}\;\; \sum_{j=1}^{p} \phi_j(w_j),
       \qquad\quad
-      c_j := \frac{\tilde\gamma_j\,\tau_j}{\xi_j}
-      \;\;\text{(smallest weight that switches group } j \text{ off)}.
+      c_j := \frac{\tilde\gamma_j\,\tau_j}{\xi_j}\quad\text{when }\xi_j>0
+      \;\;\text{(smallest weight that switches coefficient }j\text{ off)}.
     \]
-    Giving group \(j\) weight \(w_j \ge c_j\) makes the next MM update set
-    \(\gamma_j \to 0\); smaller weights leave it active. Note that when
-    \(\xi_j &lt; 0\) the threshold \(c_j &lt; 0\) is vacuous — <b>no weight can
-    deactivate group \(j\)</b>, and \(p_j\) stays linear over the whole budget; more
-    on this in the <a href="#wta-remark">winner-takes-all remark</a> below.
+    When \(\xi_j>0\), giving coordinate \(j\) weight \(w_j\ge c_j\) makes the next update
+    set \(\gamma_j\to0\); smaller weights leave it active. Thus \(c_j\) is the point where
+    coefficient \(j\) becomes inactive. Past it, further weight has diminishing marginal
+    value because \(-\phi_j'(w_j)\) decreases as \(w_j^{-2}\). When \(\xi_j\le0\), no finite
+    deactivation threshold exists and <b>no weight can switch the coefficient off</b>;
+    \(\phi_j\) stays linear over the whole budget.
 
-    <h3>Contribution of group \(j\) to the bound, and its negative gradient</h3>
+    <h3>Coordinate \(j\)'s contribution to the bound and its marginal value</h3>
     <div class="branchrow">
       <div class="b linear">
-        <span class="tag">linear part — group j stays active</span>
+        <span class="tag">linear part - coefficient j stays active</span>
         <div>for \(w_j &lt; c_j\) (and whenever \(c_j \notin (0,1]\)):</div>
         \[
-          p_j(w_j) = 2\,\tilde\gamma_j\alpha_j\tau_j - w_j\,\xi_j^{2},
+          \phi_j(w_j) = 2\,\tilde\gamma_j\alpha\tau_j - w_j\,\xi_j^{2},
           \qquad
-          -\,p_j'(w_j) = \xi_j^{2}
+          -\,\phi_j'(w_j) = \xi_j^{2}
           \;\;\text{(constant slope)}
         \]
       </div>
       <div class="b curved">
-        <span class="tag">nonlinear part — group j gets deactivated</span>
+        <span class="tag">curved part - coefficient j is deactivated</span>
         <div>for \( w_j \ge c_j \) when \( c_j \in (0,1] \):</div>
         \[
-          p_j(w_j) = \frac{(\tilde\gamma_j\tau_j)^2}{w_j} + 2\,\tilde\gamma_j\tau_j^2,
+          \phi_j(w_j) = \frac{(\tilde\gamma_j\tau_j)^2}{w_j} + 2\,\tilde\gamma_j\tau_j^2,
           \qquad
-          -\,p_j'(w_j) = \frac{(\tilde\gamma_j\tau_j)^2}{w_j^{2}}
+          -\,\phi_j'(w_j) = \frac{(\tilde\gamma_j\tau_j)^2}{w_j^{2}}
           \;\;\text{(decays as } w_j \text{ grows)}
         \]
       </div>
@@ -578,57 +667,46 @@
         <div class="exlab" style="left:248px; top:212px; color:#e3ddd3">
           \(\text{knot } c_j = 0.3\)</div>
         <div class="exlab x">\(w_j\)</div>
-        <div class="exlab y">\(p_j(w_j)\)</div>
+        <div class="exlab y">\(\phi_j(w_j)\)</div>
       </div>
-      <div class="cap">An example \(p_j\) with \(\tilde\gamma_j = 0.4,\ \tau_j = 3,\
-        \alpha_j = 7\): KKT gap \(\xi_j = 4\), knot at
+      <div class="cap">An example \(\phi_j\) with \(\tilde\gamma_j=0.4,\ \tau_j=3,\
+        \alpha=7\): raw gap \(\xi_j=4\), knot at
         \(c_j = \tilde\gamma_j\tau_j/\xi_j = 0.3\). The linear part (constant slope
-        \(-\xi_j^2\)) meets the nonlinear part smoothly at the knot — \(p_j\) is
-        continuously differentiable, and beyond \(c_j\) the weight is large enough to
-        deactivate group \(j\).</div>
+        \(-\xi_j^2\)) meets the nonlinear part smoothly at the knot; \(\phi_j\) is
+        continuously differentiable. At \(c_j\), coefficient \(j\) becomes inactive; beyond
+        it, further weight has diminishing marginal value.</div>
     </div>
-    <div class="remark" id="wta-remark">
-      <b>When no weight can deactivate a group.</b> Deactivating group \(j\) requires
-      \( w_j\,\xi_j \ge \tilde\gamma_j\tau_j \). So whenever
-      \( \xi_j &lt; \tilde\gamma_j\,\tau_j \) — equivalently \( c_j \notin (0,1] \),
-      i.e. either \( c_j > 1 \) (the gap is positive but too small, the required weight
-      exceeds the whole budget) or \( c_j &lt; 0 \) (the gap is <i>negative</i>: group
-      \(j\) violates the KKT conditions and no weight whatsoever can switch it off) —
-      no admissible \( w_j \in [0,1] \) reaches the threshold, and \( p_j \) is
-      <i>linear on all of</i> \([0,1]\) with constant slope \( -\xi_j^2 \). If this
-      holds for <i>every</i> group \(j\), the objective \( \sum_j p_j(w_j) \) is linear
-      over the simplex and the optimum sits at a vertex — <b>winner takes all</b>: the
-      entire budget goes to the group with the largest \( \xi_j^2 \). This is the common
-      situation mid-run; the <a href="#scenarios">“winner takes all” example
-      below</a> shows it with \( 0 &lt; \xi_j &lt; \tilde\gamma_j\tau_j \) for every
-      group.
-    </div>
+    <h3 id="nustar">\(\nu^*\) — the optimal KKT multiplier</h3>
+    The multiplier \(\nu:=\max_j-\phi_j'(w_j)\) is the greatest marginal value still
+    available; funded coordinates sit exactly on it. In the vessel picture this is the water
+    level. When the budget runs out,
+    \(-\phi_j'(\widehat w_j)=\nu^*\) for funded coordinates, while eligible unfunded ones
+    satisfy \(\xi_j^2\le\nu^*\).
+    Where \( \nu^* \) lands decides the KKT regime:
 
-    <h3 id="nustar">\(\nu^*\) — the final water level</h3>
-    The <b>water level</b> \( \nu := \max_j\, -p_j'(w_j) \) is the steepest slope
-    still available; funded groups sit exactly on it, and it only descends. When the
-    budget runs out the level rests at \( \nu^* \): funded groups have
-    \( -p_j'(\widehat w_j) = \nu^* \), unfunded ones have \( \xi_j^2 \le \nu^* \).
-    Where \( \nu^* \) lands decides the case:
-
-    <h3 id="cases">The two termination cases
-      &nbsp;(groups sorted so \(\xi_{(1)}^2 \ge \xi_{(2)}^2 \ge \cdots\))</h3>
+    <h3 id="cases">The two termination regimes
+      &nbsp;(eligible coordinates sorted by \(\xi_{(1)}^2\ge\xi_{(2)}^2\ge\cdots\))</h3>
     <div class="branchrow">
       <div class="b case1">
-        <span class="tag">Case 1 — ν* equals a vessel’s base width ξ²</span>
+        <span class="tag">Boundary threshold — ν* matches one squared KKT gap</span>
         \[ \nu^* = \xi_{(k)}^2 \quad\text{for some } k \]
         \[
           \widehat w_{(j)} = \begin{cases}
             \tilde\gamma_{(j)}\tau_{(j)} / \sqrt{\nu^*}, & j &lt; k
               \;\;\text{(nonlinear part)}\\[0.6ex]
             1 - \sum_{i&lt;k} \widehat w_{(i)}, & j = k
-              \;\;\text{(pivot: leftover, in its base section)}\\[0.6ex]
+              \;\;\text{(boundary coordinate: residual on the flat branch)}\\[0.6ex]
             0, & j &gt; k
           \end{cases}
         \]
+        <div style="font-size:12.8px; color:var(--muted)">Coordinates before \(k\) lie on
+          their curved branches. Coordinate \(k\) remains on its flat marginal segment and
+          receives exactly the residual needed to make the weights sum to one.
+          Winner-takes-all is the endpoint \(k=1\): the preceding sum is empty, so
+          \(\widehat w_{(1)}=1\) and every other weight is zero.</div>
       </div>
       <div class="b case2">
-        <span class="tag">Case 2 — ν* strictly between two base widths</span>
+        <span class="tag">Interior common slope — ν* lies between squared KKT gaps</span>
         \[ \xi_{(k)}^2 \;&gt;\; \nu^* = \Bigl(\sum_{j \le k}
            \tilde\gamma_{(j)}\tau_{(j)}\Bigr)^{2} \;&gt;\; \xi_{(k+1)}^2 \]
         \[
@@ -638,17 +716,19 @@
             0, & j &gt; k
           \end{cases}
         \]
-        <div style="font-size:12.8px; color:var(--muted)">A split proportional to
-          \(\tilde\gamma_j\tau_j\) among the funded groups.</div>
+        <div style="font-size:12.8px; color:var(--muted)">All \(k\) funded coordinates lie
+          beyond their knots. Equal marginal values and the unit-budget constraint give a
+          split proportional to \(\tilde\gamma_j\tau_j\).</div>
       </div>
     </div>
   </div>
+  </details>
 
   <div class="casebar" id="scenarioBtns"><span id="scenarios"></span></div>
 
   <div class="controls">
-    <button id="btnPlay" class="primary">&#10074;&#10074; Pause</button>
-    <button id="btnReplay">&#8635; Replay</button>
+    <button id="btnPlay" class="primary" title="Pause or play the allocation">&#10074;&#10074; Pause</button>
+    <button id="btnReplay" title="Restart this example">&#8635; Restart</button>
     <label>speed <select id="speed">
       <option value="0.5">0.5&times;</option>
       <option value="1" selected>1&times;</option>
@@ -658,48 +738,29 @@
   </div>
 
   <div class="card bigfig">
-    <h2>Water-filling animation</h2>
+    <h2>KKT allocation across coordinates</h2>
     <div class="figrow">
       <div class="figstack">
         <div class="cwrap">
-          <canvas id="cvV" width="700" height="300"></canvas>
-          <div class="axlab y">\(w_j\) (fill height)</div>
-          <div class="nulab" id="nulabV" style="left:200px; top:4px">
-            surface width <span class="ksym">\(\nu\)</span> =
-            <span id="nuValV">—</span></div>
-          <div id="vGroupLabs"></div>
-          <div class="subcap"><b>(a) Vessels — width is the negative gradient,
-            height is the weight.</b> Vessel \(j\) keeps constant width \(\xi_j^2\)
-            until the knot bar at height \(c_j\), then narrows as
-            \((\tilde\gamma_j\tau_j)^2/w_j^2\). The budget always pours into the
-            currently <b>widest</b> vessel, so the surfaces of all funded vessels
-            share one width — the water level \(\nu\). Pouring stops when the total
-            fill height reaches \(1\); the shared surface width at that instant is
-            the final water level \(\nu^*\). The <b>volume</b> of water in vessel
-            \(j\) is exactly what its weight takes off the bound:
-            \(\int_0^{w_j} -p_j'(h)\,\mathrm{d}h = p_j(0) - p_j(w_j)\) — so greedy
-            pouring into the widest vessel maximises the total bound decrease for
-            every drop of budget.</div>
-        </div>
-        <div class="cwrap">
           <canvas id="cvM" width="700" height="300"></canvas>
-          <div class="axlab y">\(-p_j'(w_j)\) (√ scale)</div>
+          <div class="axlab y">\(-\phi_j'(w_j)\) (√ scale)</div>
           <div class="axlab x">\(w_j\)</div>
           <div class="nulab" id="nulabM" style="left:570px; top:0px">
             <span class="ksym">\(\nu\)</span> = <span id="nuValM">—</span></div>
-          <div class="subcap"><b>(b) Negative gradients against weight.</b> The same
-            process as curves: group \(j\)’s negative gradient \(-p_j'(w_j)\) — flat
-            at \(\xi_j^2\), then decaying past the knot. The dashed line is the water
-            level \(\nu\): dots of funded groups ride along it, while dots of unfunded
-            groups wait at \((0,\ \xi_j^2)\) beneath it.</div>
+          <div class="subcap"><b>(a) Marginal values determine the next allocation.</b>
+            Coordinate \(j\)'s marginal value \(-\phi_j'(w_j)\) is flat at \(\xi_j^2\),
+            then decays after the knot. The next increment goes to a dot at the greatest
+            available height. The dashed line is the common KKT multiplier \(\nu\): funded
+            coordinates lie on it, while unfunded coordinates wait at \((0,\xi_j^2)\)
+            below it.</div>
         </div>
         <div class="cwrap">
           <canvas id="cvP" width="700" height="300"></canvas>
-          <div class="axlab y">\(p_j(w_j)\)</div>
+          <div class="axlab y">\(\phi_j(w_j)\)</div>
           <div class="axlab x">\(w_j\)</div>
-          <div class="subcap"><b>(c) The objective being minimised.</b> Group
-            \(j\)’s contribution \(p_j(w_j)\) to the bound. All funded groups descend
-            with the <b>same slope</b> \(-\nu\) (parallel black tangent strokes);
+          <div class="subcap"><b>(b) The separable objective decreases.</b> Coordinate
+            \(j\)'s contribution \(\phi_j(w_j)\) to the bound. All funded coordinates descend
+            with the <b>same slope</b> \(-\nu\) at the solution (parallel white tangent strokes);
             &#9675; marks the knot \(c_j\) where the linear part hands over to the
             nonlinear part.</div>
         </div>
@@ -707,7 +768,7 @@
       <div class="sidecol">
         <div class="nuread"><span id="nuSym">\(\nu\)</span> =
           <span id="nuVal">—</span></div>
-        <div class="nusub">water level (price of budget)</div>
+        <div class="nusub">KKT multiplier (marginal value of budget)</div>
         <div id="wlist"></div>
         <div class="glab">\(\textstyle\sum_j w_j\) — budget used</div>
         <canvas id="cvB" width="90" height="150" style="margin-top:4px"></canvas>
@@ -726,15 +787,51 @@
 
 <script>
 (function () {
-const DATA = {"scenarios": [{"id": "split3", "title": "Three-way proportional split", "blurb": "", "case_group": 2, "alpha": [5.0, 5.0, 5.0, 5.0, 5.0], "tau": [0.5, 1.8, 3.0, 4.1, 4.7], "gammat": [0.6, 0.35, 0.25, 0.1, 0.15], "xi": [4.5, 3.2, 2.0, 0.9, 0.3], "gb": [0.3, 0.63, 0.75, 0.41, 0.705], "c": [0.0667, 0.1969, 0.375, 0.4556, 2.35], "skip": [false, false, false, false, false], "w": [0.17857, 0.375, 0.44643, 0.0, 0.0], "case": 2, "k": 3, "nustar": 2.82466, "fobj": 21.0404, "fscipy": 21.0404, "frames": [[0.00025, 20.25, [0.00025, 0.0, 0.0, 0.0, 0.0]], [0.01125, 20.25, [0.01125, 0.0, 0.0, 0.0, 0.0]], [0.02225, 20.25, [0.02225, 0.0, 0.0, 0.0, 0.0]], [0.03325, 20.25, [0.03325, 0.0, 0.0, 0.0, 0.0]], [0.04425, 20.25, [0.04425, 0.0, 0.0, 0.0, 0.0]], [0.05525, 20.25, [0.05525, 0.0, 0.0, 0.0, 0.0]], [0.06625, 20.25, [0.06625, 0.0, 0.0, 0.0, 0.0]], [0.07725, 15.179625569235938, [0.07725, 0.0, 0.0, 0.0, 0.0]], [0.08825, 11.621900826446264, [0.08825, 0.0, 0.0, 0.0, 0.0]], [0.09925, 10.240000000000002, [0.09375, 0.0055, 0.0, 0.0, 0.0]], [0.11025, 10.240000000000002, [0.09375, 0.0165, 0.0, 0.0, 0.0]], [0.12125, 10.240000000000002, [0.09375, 0.0275, 0.0, 0.0, 0.0]], [0.13225, 10.240000000000002, [0.09375, 0.0385, 0.0, 0.0, 0.0]], [0.14325, 10.240000000000002, [0.09375, 0.0495, 0.0, 0.0, 0.0]], [0.15425, 10.240000000000002, [0.09375, 0.0605, 0.0, 0.0, 0.0]], [0.16525, 10.240000000000002, [0.09375, 0.0715, 0.0, 0.0, 0.0]], [0.17625, 10.240000000000002, [0.09375, 0.0825, 0.0, 0.0, 0.0]], [0.18725, 10.240000000000002, [0.09375, 0.0935, 0.0, 0.0, 0.0]], [0.19825, 10.240000000000002, [0.09375, 0.1045, 0.0, 0.0, 0.0]], [0.20925, 10.240000000000002, [0.09375, 0.1155, 0.0, 0.0, 0.0]], [0.22025, 10.240000000000002, [0.09375, 0.1265, 0.0, 0.0, 0.0]], [0.23125, 10.240000000000002, [0.09375, 0.1375, 0.0, 0.0, 0.0]], [0.24225, 10.240000000000002, [0.09375, 0.1485, 0.0, 0.0, 0.0]], [0.25325, 10.240000000000002, [0.09375, 0.1595, 0.0, 0.0, 0.0]], [0.26425, 10.240000000000002, [0.09375, 0.1705, 0.0, 0.0, 0.0]], [0.27525, 10.240000000000002, [0.09375, 0.1815, 0.0, 0.0, 0.0]], [0.28625, 10.240000000000002, [0.09375, 0.1925, 0.0, 0.0, 0.0]], [0.29725, 9.81668700447885, [0.096, 0.20125, 0.0, 0.0, 0.0]], [0.30825, 9.129962217276525, [0.0995, 0.20875, 0.0, 0.0, 0.0]], [0.31925, 8.506944444444432, [0.103, 0.21625, 0.0, 0.0, 0.0]], [0.33025, 7.945588036574918, [0.1065, 0.22375, 0.0, 0.0, 0.0]], [0.34125, 7.438016528925609, [0.11, 0.23125, 0.0, 0.0, 0.0]], [0.35225, 6.986357196918229, [0.11375, 0.2385, 0.0, 0.0, 0.0]], [0.36325, 6.571946902013777, [0.11725, 0.246, 0.0, 0.0, 0.0]], [0.37425, 6.18845433841795, [0.12075, 0.2535, 0.0, 0.0, 0.0]], [0.38525, 5.8375748840142805, [0.12425, 0.261, 0.0, 0.0, 0.0]], [0.39625, 5.51571271113651, [0.12775, 0.2685, 0.0, 0.0, 0.0]], [0.40725, 5.22448979591836, [0.1315, 0.27575, 0.0, 0.0, 0.0]], [0.41825, 4.955736742873675, [0.135, 0.28325, 0.0, 0.0, 0.0]], [0.42925, 4.703149949194508, [0.1385, 0.29075, 0.0, 0.0, 0.0]], [0.44025, 4.469393270573551, [0.142, 0.29825, 0.0, 0.0, 0.0]], [0.45125, 4.252640489016321, [0.1455, 0.30575, 0.0, 0.0, 0.0]], [0.46225, 4.053871447232101, [0.14925, 0.313, 0.0, 0.0, 0.0]], [0.47325, 4.0, [0.15, 0.31525, 0.008, 0.0, 0.0]], [0.48425, 4.0, [0.15, 0.31525, 0.019, 0.0, 0.0]], [0.49525, 4.0, [0.15, 0.31525, 0.03, 0.0, 0.0]], [0.50625, 4.0, [0.15, 0.31525, 0.041, 0.0, 0.0]], [0.51725, 4.0, [0.15, 0.31525, 0.052, 0.0, 0.0]], [0.52825, 4.0, [0.15, 0.31525, 0.063, 0.0, 0.0]], [0.53925, 4.0, [0.15, 0.31525, 0.074, 0.0, 0.0]], [0.55025, 4.0, [0.15, 0.31525, 0.085, 0.0, 0.0]], [0.56125, 4.0, [0.15, 0.31525, 0.096, 0.0, 0.0]], [0.57225, 4.0, [0.15, 0.31525, 0.107, 0.0, 0.0]], [0.58325, 4.0, [0.15, 0.31525, 0.118, 0.0, 0.0]], [0.59425, 4.0, [0.15, 0.31525, 0.129, 0.0, 0.0]], [0.60525, 4.0, [0.15, 0.31525, 0.14, 0.0, 0.0]], [0.61625, 4.0, [0.15, 0.31525, 0.151, 0.0, 0.0]], [0.62725, 4.0, [0.15, 0.31525, 0.162, 0.0, 0.0]], [0.63825, 4.0, [0.15, 0.31525, 0.173, 0.0, 0.0]], [0.64925, 4.0, [0.15, 0.31525, 0.184, 0.0, 0.0]], [0.66025, 4.0, [0.15, 0.31525, 0.195, 0.0, 0.0]], [0.67125, 4.0, [0.15, 0.31525, 0.206, 0.0, 0.0]], [0.68225, 4.0, [0.15, 0.31525, 0.217, 0.0, 0.0]], [0.69325, 4.0, [0.15, 0.31525, 0.228, 0.0, 0.0]], [0.70425, 4.0, [0.15, 0.31525, 0.239, 0.0, 0.0]], [0.71525, 4.0, [0.15, 0.31525, 0.25, 0.0, 0.0]], [0.72625, 4.0, [0.15, 0.31525, 0.261, 0.0, 0.0]], [0.73725, 4.0, [0.15, 0.31525, 0.272, 0.0, 0.0]], [0.74825, 4.0, [0.15, 0.31525, 0.283, 0.0, 0.0]], [0.75925, 4.0, [0.15, 0.31525, 0.294, 0.0, 0.0]], [0.77025, 4.0, [0.15, 0.31525, 0.305, 0.0, 0.0]], [0.78125, 4.0, [0.15, 0.31525, 0.316, 0.0, 0.0]], [0.79225, 4.0, [0.15, 0.31525, 0.327, 0.0, 0.0]], [0.80325, 4.0, [0.15, 0.31525, 0.338, 0.0, 0.0]], [0.81425, 4.0, [0.15, 0.31525, 0.349, 0.0, 0.0]], [0.82525, 4.0, [0.15, 0.31525, 0.36, 0.0, 0.0]], [0.83625, 4.0, [0.15, 0.31525, 0.371, 0.0, 0.0]], [0.84725, 3.9367598891411317, [0.15125, 0.31775, 0.37825, 0.0, 0.0]], [0.85825, 3.834643361124846, [0.15325, 0.32175, 0.38325, 0.0, 0.0]], [0.86925, 3.74035006293424, [0.15525, 0.326, 0.388, 0.0, 0.0]], [0.88025, 3.6466168916969828, [0.15725, 0.33, 0.393, 0.0, 0.0]], [0.89125, 3.5578543511780776, [0.15925, 0.33425, 0.39775, 0.0, 0.0]], [0.90225, 3.472088268199524, [0.16125, 0.33825, 0.40275, 0.0, 0.0]], [0.91325, 3.387406375851842, [0.163, 0.3425, 0.40775, 0.0, 0.0]], [0.92425, 3.305785123967226, [0.165, 0.3465, 0.41275, 0.0, 0.0]], [0.93525, 3.230762656160852, [0.167, 0.35075, 0.4175, 0.0, 0.0]], [0.94625, 3.15488265413996, [0.169, 0.35475, 0.4225, 0.0, 0.0]], [0.95725, 3.0838786436646886, [0.171, 0.359, 0.42725, 0.0, 0.0]], [0.96825, 3.014081790123734, [0.173, 0.363, 0.43225, 0.0, 0.0]], [0.97925, 2.946788527645372, [0.175, 0.36725, 0.437, 0.0, 0.0]], [0.99025, 2.8808700227468655, [0.177, 0.37125, 0.442, 0.0, 0.0]], [1.0, 2.824659275475167, [0.1785, 0.375, 0.4465, 0.0, 0.0]]]}, {"id": "split2", "title": "Two-way proportional split", "blurb": "", "case_group": 2, "alpha": [5.0, 5.0, 5.0, 5.0, 5.0], "tau": [0.5, 1.8, 4.1, 4.5, 4.8], "gammat": [0.8, 0.6, 0.2, 0.1, 0.1], "xi": [4.5, 3.2, 0.9, 0.5, 0.2], "gb": [0.4, 1.08, 0.82, 0.45, 0.48], "c": [0.0889, 0.3375, 0.9111, 0.9, 2.4], "skip": [false, false, false, false, false], "w": [0.27027, 0.72973, 0.0, 0.0, 0.0], "case": 2, "k": 2, "nustar": 2.19178, "fobj": 23.9784, "fscipy": 23.9784, "frames": [[0.00025, 20.25, [0.00025, 0.0, 0.0, 0.0, 0.0]], [0.01125, 20.25, [0.01125, 0.0, 0.0, 0.0, 0.0]], [0.02225, 20.25, [0.02225, 0.0, 0.0, 0.0, 0.0]], [0.03325, 20.25, [0.03325, 0.0, 0.0, 0.0, 0.0]], [0.04425, 20.25, [0.04425, 0.0, 0.0, 0.0, 0.0]], [0.05525, 20.25, [0.05525, 0.0, 0.0, 0.0, 0.0]], [0.06625, 20.25, [0.06625, 0.0, 0.0, 0.0, 0.0]], [0.07725, 20.25, [0.07725, 0.0, 0.0, 0.0, 0.0]], [0.08825, 20.25, [0.08825, 0.0, 0.0, 0.0, 0.0]], [0.09925, 16.324864809713272, [0.09925, 0.0, 0.0, 0.0, 0.0]], [0.11025, 13.223140495867751, [0.11025, 0.0, 0.0, 0.0, 0.0]], [0.12125, 10.928215285841116, [0.12125, 0.0, 0.0, 0.0, 0.0]], [0.13225, 10.240000000000002, [0.125, 0.00725, 0.0, 0.0, 0.0]], [0.14325, 10.240000000000002, [0.125, 0.01825, 0.0, 0.0, 0.0]], [0.15425, 10.240000000000002, [0.125, 0.02925, 0.0, 0.0, 0.0]], [0.16525, 10.240000000000002, [0.125, 0.04025, 0.0, 0.0, 0.0]], [0.17625, 10.240000000000002, [0.125, 0.05125, 0.0, 0.0, 0.0]], [0.18725, 10.240000000000002, [0.125, 0.06225, 0.0, 0.0, 0.0]], [0.19825, 10.240000000000002, [0.125, 0.07325, 0.0, 0.0, 0.0]], [0.20925, 10.240000000000002, [0.125, 0.08425, 0.0, 0.0, 0.0]], [0.22025, 10.240000000000002, [0.125, 0.09525, 0.0, 0.0, 0.0]], [0.23125, 10.240000000000002, [0.125, 0.10625, 0.0, 0.0, 0.0]], [0.24225, 10.240000000000002, [0.125, 0.11725, 0.0, 0.0, 0.0]], [0.25325, 10.240000000000002, [0.125, 0.12825, 0.0, 0.0, 0.0]], [0.26425, 10.240000000000002, [0.125, 0.13925, 0.0, 0.0, 0.0]], [0.27525, 10.240000000000002, [0.125, 0.15025, 0.0, 0.0, 0.0]], [0.28625, 10.240000000000002, [0.125, 0.16125, 0.0, 0.0, 0.0]], [0.29725, 10.240000000000002, [0.125, 0.17225, 0.0, 0.0, 0.0]], [0.30825, 10.240000000000002, [0.125, 0.18325, 0.0, 0.0, 0.0]], [0.31925, 10.240000000000002, [0.125, 0.19425, 0.0, 0.0, 0.0]], [0.33025, 10.240000000000002, [0.125, 0.20525, 0.0, 0.0, 0.0]], [0.34125, 10.240000000000002, [0.125, 0.21625, 0.0, 0.0, 0.0]], [0.35225, 10.240000000000002, [0.125, 0.22725, 0.0, 0.0, 0.0]], [0.36325, 10.240000000000002, [0.125, 0.23825, 0.0, 0.0, 0.0]], [0.37425, 10.240000000000002, [0.125, 0.24925, 0.0, 0.0, 0.0]], [0.38525, 10.240000000000002, [0.125, 0.26025, 0.0, 0.0, 0.0]], [0.39625, 10.240000000000002, [0.125, 0.27125, 0.0, 0.0, 0.0]], [0.40725, 10.240000000000002, [0.125, 0.28225, 0.0, 0.0, 0.0]], [0.41825, 10.240000000000002, [0.125, 0.29325, 0.0, 0.0, 0.0]], [0.42925, 10.240000000000002, [0.125, 0.30425, 0.0, 0.0, 0.0]], [0.44025, 10.240000000000002, [0.125, 0.31525, 0.0, 0.0, 0.0]], [0.45125, 10.240000000000002, [0.125, 0.32625, 0.0, 0.0, 0.0]], [0.46225, 10.240000000000002, [0.125, 0.33725, 0.0, 0.0, 0.0]], [0.47325, 9.799621928166937, [0.128, 0.34525, 0.0, 0.0, 0.0]], [0.48425, 9.35915387399507, [0.131, 0.35325, 0.0, 0.0, 0.0]], [0.49525, 8.944012577517677, [0.134, 0.36125, 0.0, 0.0, 0.0]], [0.50625, 8.555892369547697, [0.137, 0.36925, 0.0, 0.0, 0.0]], [0.51725, 8.195755882202421, [0.13975, 0.3775, 0.0, 0.0, 0.0]], [0.52825, 7.858908207039778, [0.14275, 0.3855, 0.0, 0.0, 0.0]], [0.53925, 7.542408467104206, [0.14575, 0.3935, 0.0, 0.0, 0.0]], [0.55025, 7.244650187789923, [0.14875, 0.4015, 0.0, 0.0, 0.0]], [0.56125, 6.964182360495097, [0.15175, 0.4095, 0.0, 0.0, 0.0]], [0.57225, 6.699691731755878, [0.15475, 0.4175, 0.0, 0.0, 0.0]], [0.58325, 6.449987402368347, [0.15775, 0.4255, 0.0, 0.0, 0.0]], [0.59425, 6.211119845498386, [0.16075, 0.4335, 0.0, 0.0, 0.0]], [0.60525, 5.985279952117753, [0.16375, 0.4415, 0.0, 0.0, 0.0]], [0.61625, 5.772821364982787, [0.1665, 0.44975, 0.0, 0.0, 0.0]], [0.62725, 5.572695511959704, [0.1695, 0.45775, 0.0, 0.0, 0.0]], [0.63825, 5.38279871844773, [0.1725, 0.46575, 0.0, 0.0, 0.0]], [0.64925, 5.202445559757409, [0.1755, 0.47375, 0.0, 0.0, 0.0]], [0.66025, 5.031007074854229, [0.1785, 0.48175, 0.0, 0.0, 0.0]], [0.67125, 4.867905275338283, [0.1815, 0.48975, 0.0, 0.0, 0.0]], [0.68225, 4.712608267468507, [0.1845, 0.49775, 0.0, 0.0, 0.0]], [0.69325, 4.563271723223304, [0.1875, 0.50575, 0.0, 0.0, 0.0]], [0.70425, 4.420492435950339, [0.1905, 0.51375, 0.0, 0.0, 0.0]], [0.71525, 4.2847214680796295, [0.19325, 0.522, 0.0, 0.0, 0.0]], [0.72625, 4.1562874916962125, [0.19625, 0.53, 0.0, 0.0, 0.0]], [0.73725, 4.033542830132998, [0.19925, 0.538, 0.0, 0.0, 0.0]], [0.74825, 3.916156348278679, [0.20225, 0.546, 0.0, 0.0, 0.0]], [0.75925, 3.8038206564114447, [0.20525, 0.554, 0.0, 0.0, 0.0]], [0.77025, 3.69625009581133, [0.20825, 0.562, 0.0, 0.0, 0.0]], [0.78125, 3.593178920957013, [0.21125, 0.57, 0.0, 0.0, 0.0]], [0.79225, 3.493754913092842, [0.21425, 0.578, 0.0, 0.0, 0.0]], [0.80325, 3.3978211471893607, [0.21725, 0.586, 0.0, 0.0, 0.0]], [0.81425, 3.305785123967362, [0.22, 0.59425, 0.0, 0.0, 0.0]], [0.82525, 3.2185075219924433, [0.223, 0.60225, 0.0, 0.0, 0.0]], [0.83625, 3.1346412254774276, [0.226, 0.61025, 0.0, 0.0, 0.0]], [0.84725, 3.0540107455937626, [0.229, 0.61825, 0.0, 0.0, 0.0]], [0.85825, 2.9764517347328074, [0.232, 0.62625, 0.0, 0.0, 0.0]], [0.86925, 2.9018101483748344, [0.235, 0.63425, 0.0, 0.0, 0.0]], [0.88025, 2.8299414796055844, [0.238, 0.64225, 0.0, 0.0, 0.0]], [0.89125, 2.7604977091103935, [0.241, 0.65025, 0.0, 0.0, 0.0]], [0.90225, 2.692965154503612, [0.244, 0.65825, 0.0, 0.0, 0.0]], [0.91325, 2.6278807886516575, [0.247, 0.66625, 0.0, 0.0, 0.0]], [0.92425, 2.565698384436899, [0.24975, 0.6745, 0.0, 0.0, 0.0]], [0.93525, 2.5058808790835125, [0.25275, 0.6825, 0.0, 0.0, 0.0]], [0.94625, 2.448131152582074, [0.25575, 0.6905, 0.0, 0.0, 0.0]], [0.95725, 2.3923549859768634, [0.25875, 0.6985, 0.0, 0.0, 0.0]], [0.96825, 2.338463466207552, [0.26175, 0.7065, 0.0, 0.0, 0.0]], [0.97925, 2.286372631547549, [0.26475, 0.7145, 0.0, 0.0, 0.0]], [0.99025, 2.2360031443794517, [0.26775, 0.7225, 0.0, 0.0, 0.0]], [1.0, 2.191779792275439, [0.27025, 0.72975, 0.0, 0.0, 0.0]]]}, {"id": "pivot", "title": "Pivot group takes the leftover", "blurb": "", "case_group": 1, "alpha": [5.0, 5.0, 5.0, 5.0, 5.0], "tau": [0.5, 1.8, 3.0, 4.5, 4.8], "gammat": [1.0, 0.4, 0.3, 0.1, 0.1], "xi": [4.5, 3.2, 2.0, 0.5, 0.2], "gb": [0.5, 0.72, 0.9, 0.45, 0.48], "c": [0.1111, 0.225, 0.45, 0.9, 2.4], "skip": [false, false, false, false, false], "w": [0.25, 0.36, 0.39, 0.0, 0.0], "case": 1, "k": 3, "nustar": 4.0, "fobj": 22.272, "fscipy": 22.272, "frames": [[0.00025, 20.25, [0.00025, 0.0, 0.0, 0.0, 0.0]], [0.01125, 20.25, [0.01125, 0.0, 0.0, 0.0, 0.0]], [0.02225, 20.25, [0.02225, 0.0, 0.0, 0.0, 0.0]], [0.03325, 20.25, [0.03325, 0.0, 0.0, 0.0, 0.0]], [0.04425, 20.25, [0.04425, 0.0, 0.0, 0.0, 0.0]], [0.05525, 20.25, [0.05525, 0.0, 0.0, 0.0, 0.0]], [0.06625, 20.25, [0.06625, 0.0, 0.0, 0.0, 0.0]], [0.07725, 20.25, [0.07725, 0.0, 0.0, 0.0, 0.0]], [0.08825, 20.25, [0.08825, 0.0, 0.0, 0.0, 0.0]], [0.09925, 20.25, [0.09925, 0.0, 0.0, 0.0, 0.0]], [0.11025, 20.25, [0.11025, 0.0, 0.0, 0.0, 0.0]], [0.12125, 17.075336384126743, [0.12125, 0.0, 0.0, 0.0, 0.0]], [0.13225, 14.348025711662057, [0.13225, 0.0, 0.0, 0.0, 0.0]], [0.14325, 12.22553670106116, [0.14325, 0.0, 0.0, 0.0, 0.0]], [0.15425, 10.541406645302734, [0.15425, 0.0, 0.0, 0.0, 0.0]], [0.16525, 10.240000000000002, [0.15625, 0.009, 0.0, 0.0, 0.0]], [0.17625, 10.240000000000002, [0.15625, 0.02, 0.0, 0.0, 0.0]], [0.18725, 10.240000000000002, [0.15625, 0.031, 0.0, 0.0, 0.0]], [0.19825, 10.240000000000002, [0.15625, 0.042, 0.0, 0.0, 0.0]], [0.20925, 10.240000000000002, [0.15625, 0.053, 0.0, 0.0, 0.0]], [0.22025, 10.240000000000002, [0.15625, 0.064, 0.0, 0.0, 0.0]], [0.23125, 10.240000000000002, [0.15625, 0.075, 0.0, 0.0, 0.0]], [0.24225, 10.240000000000002, [0.15625, 0.086, 0.0, 0.0, 0.0]], [0.25325, 10.240000000000002, [0.15625, 0.097, 0.0, 0.0, 0.0]], [0.26425, 10.240000000000002, [0.15625, 0.108, 0.0, 0.0, 0.0]], [0.27525, 10.240000000000002, [0.15625, 0.119, 0.0, 0.0, 0.0]], [0.28625, 10.240000000000002, [0.15625, 0.13, 0.0, 0.0, 0.0]], [0.29725, 10.240000000000002, [0.15625, 0.141, 0.0, 0.0, 0.0]], [0.30825, 10.240000000000002, [0.15625, 0.152, 0.0, 0.0, 0.0]], [0.31925, 10.240000000000002, [0.15625, 0.163, 0.0, 0.0, 0.0]], [0.33025, 10.240000000000002, [0.15625, 0.174, 0.0, 0.0, 0.0]], [0.34125, 10.240000000000002, [0.15625, 0.185, 0.0, 0.0, 0.0]], [0.35225, 10.240000000000002, [0.15625, 0.196, 0.0, 0.0, 0.0]], [0.36325, 10.240000000000002, [0.15625, 0.207, 0.0, 0.0, 0.0]], [0.37425, 10.240000000000002, [0.15625, 0.218, 0.0, 0.0, 0.0]], [0.38525, 10.046187346324714, [0.158, 0.22725, 0.0, 0.0, 0.0]], [0.39625, 9.496653616681808, [0.1625, 0.23375, 0.0, 0.0, 0.0]], [0.40725, 8.991006745502798, [0.167, 0.24025, 0.0, 0.0, 0.0]], [0.41825, 8.524694975757887, [0.1715, 0.24675, 0.0, 0.0, 0.0]], [0.42925, 8.0937417165612, [0.176, 0.25325, 0.0, 0.0, 0.0]], [0.44025, 7.6946604827245135, [0.1805, 0.25975, 0.0, 0.0, 0.0]], [0.45125, 7.324384156624619, [0.185, 0.26625, 0.0, 0.0, 0.0]], [0.46225, 6.980205881172456, [0.1895, 0.27275, 0.0, 0.0, 0.0]], [0.47325, 6.659729448491146, [0.194, 0.27925, 0.0, 0.0, 0.0]], [0.48425, 6.359936327026523, [0.1985, 0.28575, 0.0, 0.0, 0.0]], [0.49525, 6.0799399512105445, [0.203, 0.29225, 0.0, 0.0, 0.0]], [0.50625, 5.818034898108836, [0.2075, 0.29875, 0.0, 0.0, 0.0]], [0.51725, 5.572695511959367, [0.212, 0.30525, 0.0, 0.0, 0.0]], [0.52825, 5.342553635518316, [0.2165, 0.31175, 0.0, 0.0, 0.0]], [0.53925, 5.126379494482259, [0.221, 0.31825, 0.0, 0.0, 0.0]], [0.55025, 4.923065234888101, [0.2255, 0.32475, 0.0, 0.0, 0.0]], [0.56125, 4.731610700888341, [0.23, 0.33125, 0.0, 0.0, 0.0]], [0.57225, 4.551111111111368, [0.2345, 0.33775, 0.0, 0.0, 0.0]], [0.58325, 4.3807463493783025, [0.239, 0.34425, 0.0, 0.0, 0.0]], [0.59425, 4.219771632536624, [0.2435, 0.35075, 0.0, 0.0, 0.0]], [0.60525, 4.067509356684115, [0.248, 0.35725, 0.0, 0.0, 0.0]], [0.61625, 4.0, [0.25, 0.36025, 0.006, 0.0, 0.0]], [0.62725, 4.0, [0.25, 0.36025, 0.017, 0.0, 0.0]], [0.63825, 4.0, [0.25, 0.36025, 0.028, 0.0, 0.0]], [0.64925, 4.0, [0.25, 0.36025, 0.039, 0.0, 0.0]], [0.66025, 4.0, [0.25, 0.36025, 0.05, 0.0, 0.0]], [0.67125, 4.0, [0.25, 0.36025, 0.061, 0.0, 0.0]], [0.68225, 4.0, [0.25, 0.36025, 0.072, 0.0, 0.0]], [0.69325, 4.0, [0.25, 0.36025, 0.083, 0.0, 0.0]], [0.70425, 4.0, [0.25, 0.36025, 0.094, 0.0, 0.0]], [0.71525, 4.0, [0.25, 0.36025, 0.105, 0.0, 0.0]], [0.72625, 4.0, [0.25, 0.36025, 0.116, 0.0, 0.0]], [0.73725, 4.0, [0.25, 0.36025, 0.127, 0.0, 0.0]], [0.74825, 4.0, [0.25, 0.36025, 0.138, 0.0, 0.0]], [0.75925, 4.0, [0.25, 0.36025, 0.149, 0.0, 0.0]], [0.77025, 4.0, [0.25, 0.36025, 0.16, 0.0, 0.0]], [0.78125, 4.0, [0.25, 0.36025, 0.171, 0.0, 0.0]], [0.79225, 4.0, [0.25, 0.36025, 0.182, 0.0, 0.0]], [0.80325, 4.0, [0.25, 0.36025, 0.193, 0.0, 0.0]], [0.81425, 4.0, [0.25, 0.36025, 0.204, 0.0, 0.0]], [0.82525, 4.0, [0.25, 0.36025, 0.215, 0.0, 0.0]], [0.83625, 4.0, [0.25, 0.36025, 0.226, 0.0, 0.0]], [0.84725, 4.0, [0.25, 0.36025, 0.237, 0.0, 0.0]], [0.85825, 4.0, [0.25, 0.36025, 0.248, 0.0, 0.0]], [0.86925, 4.0, [0.25, 0.36025, 0.259, 0.0, 0.0]], [0.88025, 4.0, [0.25, 0.36025, 0.27, 0.0, 0.0]], [0.89125, 4.0, [0.25, 0.36025, 0.281, 0.0, 0.0]], [0.90225, 4.0, [0.25, 0.36025, 0.292, 0.0, 0.0]], [0.91325, 4.0, [0.25, 0.36025, 0.303, 0.0, 0.0]], [0.92425, 4.0, [0.25, 0.36025, 0.314, 0.0, 0.0]], [0.93525, 4.0, [0.25, 0.36025, 0.325, 0.0, 0.0]], [0.94625, 4.0, [0.25, 0.36025, 0.336, 0.0, 0.0]], [0.95725, 4.0, [0.25, 0.36025, 0.347, 0.0, 0.0]], [0.96825, 4.0, [0.25, 0.36025, 0.358, 0.0, 0.0]], [0.97925, 4.0, [0.25, 0.36025, 0.369, 0.0, 0.0]], [0.99025, 4.0, [0.25, 0.36025, 0.38, 0.0, 0.0]], [1.0, 4.0, [0.25, 0.36025, 0.38975, 0.0, 0.0]]]}, {"id": "wta_thr", "title": "Winner takes all: \\(\\xi_j < \\tilde\\gamma_j\\tau_j\\) for all \\(j\\) (all \\(p_j\\) linear)", "blurb": "", "case_group": 1, "alpha": [5.0, 5.0, 5.0, 5.0, 5.0], "tau": [4.9, 4.7, 3.6, 4.4, 4.1], "gammat": [0.3, 0.3, 0.5, 0.3, 0.4], "xi": [0.1, 0.3, 1.4, 0.6, 0.9], "gb": [1.47, 1.41, 1.8, 1.32, 1.64], "c": [14.7, 4.7, 1.2857, 2.2, 1.8222], "skip": [false, false, false, false, false], "w": [0.0, 0.0, 1.0, 0.0, 0.0], "case": 1, "k": 1, "nustar": 1.96, "fobj": 74.44, "fscipy": 74.44, "frames": [[0.00025, 1.9599999999999997, [0.0, 0.0, 0.00025, 0.0, 0.0]], [0.01125, 1.9599999999999997, [0.0, 0.0, 0.01125, 0.0, 0.0]], [0.02225, 1.9599999999999997, [0.0, 0.0, 0.02225, 0.0, 0.0]], [0.03325, 1.9599999999999997, [0.0, 0.0, 0.03325, 0.0, 0.0]], [0.04425, 1.9599999999999997, [0.0, 0.0, 0.04425, 0.0, 0.0]], [0.05525, 1.9599999999999997, [0.0, 0.0, 0.05525, 0.0, 0.0]], [0.06625, 1.9599999999999997, [0.0, 0.0, 0.06625, 0.0, 0.0]], [0.07725, 1.9599999999999997, [0.0, 0.0, 0.07725, 0.0, 0.0]], [0.08825, 1.9599999999999997, [0.0, 0.0, 0.08825, 0.0, 0.0]], [0.09925, 1.9599999999999997, [0.0, 0.0, 0.09925, 0.0, 0.0]], [0.11025, 1.9599999999999997, [0.0, 0.0, 0.11025, 0.0, 0.0]], [0.12125, 1.9599999999999997, [0.0, 0.0, 0.12125, 0.0, 0.0]], [0.13225, 1.9599999999999997, [0.0, 0.0, 0.13225, 0.0, 0.0]], [0.14325, 1.9599999999999997, [0.0, 0.0, 0.14325, 0.0, 0.0]], [0.15425, 1.9599999999999997, [0.0, 0.0, 0.15425, 0.0, 0.0]], [0.16525, 1.9599999999999997, [0.0, 0.0, 0.16525, 0.0, 0.0]], [0.17625, 1.9599999999999997, [0.0, 0.0, 0.17625, 0.0, 0.0]], [0.18725, 1.9599999999999997, [0.0, 0.0, 0.18725, 0.0, 0.0]], [0.19825, 1.9599999999999997, [0.0, 0.0, 0.19825, 0.0, 0.0]], [0.20925, 1.9599999999999997, [0.0, 0.0, 0.20925, 0.0, 0.0]], [0.22025, 1.9599999999999997, [0.0, 0.0, 0.22025, 0.0, 0.0]], [0.23125, 1.9599999999999997, [0.0, 0.0, 0.23125, 0.0, 0.0]], [0.24225, 1.9599999999999997, [0.0, 0.0, 0.24225, 0.0, 0.0]], [0.25325, 1.9599999999999997, [0.0, 0.0, 0.25325, 0.0, 0.0]], [0.26425, 1.9599999999999997, [0.0, 0.0, 0.26425, 0.0, 0.0]], [0.27525, 1.9599999999999997, [0.0, 0.0, 0.27525, 0.0, 0.0]], [0.28625, 1.9599999999999997, [0.0, 0.0, 0.28625, 0.0, 0.0]], [0.29725, 1.9599999999999997, [0.0, 0.0, 0.29725, 0.0, 0.0]], [0.30825, 1.9599999999999997, [0.0, 0.0, 0.30825, 0.0, 0.0]], [0.31925, 1.9599999999999997, [0.0, 0.0, 0.31925, 0.0, 0.0]], [0.33025, 1.9599999999999997, [0.0, 0.0, 0.33025, 0.0, 0.0]], [0.34125, 1.9599999999999997, [0.0, 0.0, 0.34125, 0.0, 0.0]], [0.35225, 1.9599999999999997, [0.0, 0.0, 0.35225, 0.0, 0.0]], [0.36325, 1.9599999999999997, [0.0, 0.0, 0.36325, 0.0, 0.0]], [0.37425, 1.9599999999999997, [0.0, 0.0, 0.37425, 0.0, 0.0]], [0.38525, 1.9599999999999997, [0.0, 0.0, 0.38525, 0.0, 0.0]], [0.39625, 1.9599999999999997, [0.0, 0.0, 0.39625, 0.0, 0.0]], [0.40725, 1.9599999999999997, [0.0, 0.0, 0.40725, 0.0, 0.0]], [0.41825, 1.9599999999999997, [0.0, 0.0, 0.41825, 0.0, 0.0]], [0.42925, 1.9599999999999997, [0.0, 0.0, 0.42925, 0.0, 0.0]], [0.44025, 1.9599999999999997, [0.0, 0.0, 0.44025, 0.0, 0.0]], [0.45125, 1.9599999999999997, [0.0, 0.0, 0.45125, 0.0, 0.0]], [0.46225, 1.9599999999999997, [0.0, 0.0, 0.46225, 0.0, 0.0]], [0.47325, 1.9599999999999997, [0.0, 0.0, 0.47325, 0.0, 0.0]], [0.48425, 1.9599999999999997, [0.0, 0.0, 0.48425, 0.0, 0.0]], [0.49525, 1.9599999999999997, [0.0, 0.0, 0.49525, 0.0, 0.0]], [0.50625, 1.9599999999999997, [0.0, 0.0, 0.50625, 0.0, 0.0]], [0.51725, 1.9599999999999997, [0.0, 0.0, 0.51725, 0.0, 0.0]], [0.52825, 1.9599999999999997, [0.0, 0.0, 0.52825, 0.0, 0.0]], [0.53925, 1.9599999999999997, [0.0, 0.0, 0.53925, 0.0, 0.0]], [0.55025, 1.9599999999999997, [0.0, 0.0, 0.55025, 0.0, 0.0]], [0.56125, 1.9599999999999997, [0.0, 0.0, 0.56125, 0.0, 0.0]], [0.57225, 1.9599999999999997, [0.0, 0.0, 0.57225, 0.0, 0.0]], [0.58325, 1.9599999999999997, [0.0, 0.0, 0.58325, 0.0, 0.0]], [0.59425, 1.9599999999999997, [0.0, 0.0, 0.59425, 0.0, 0.0]], [0.60525, 1.9599999999999997, [0.0, 0.0, 0.60525, 0.0, 0.0]], [0.61625, 1.9599999999999997, [0.0, 0.0, 0.61625, 0.0, 0.0]], [0.62725, 1.9599999999999997, [0.0, 0.0, 0.62725, 0.0, 0.0]], [0.63825, 1.9599999999999997, [0.0, 0.0, 0.63825, 0.0, 0.0]], [0.64925, 1.9599999999999997, [0.0, 0.0, 0.64925, 0.0, 0.0]], [0.66025, 1.9599999999999997, [0.0, 0.0, 0.66025, 0.0, 0.0]], [0.67125, 1.9599999999999997, [0.0, 0.0, 0.67125, 0.0, 0.0]], [0.68225, 1.9599999999999997, [0.0, 0.0, 0.68225, 0.0, 0.0]], [0.69325, 1.9599999999999997, [0.0, 0.0, 0.69325, 0.0, 0.0]], [0.70425, 1.9599999999999997, [0.0, 0.0, 0.70425, 0.0, 0.0]], [0.71525, 1.9599999999999997, [0.0, 0.0, 0.71525, 0.0, 0.0]], [0.72625, 1.9599999999999997, [0.0, 0.0, 0.72625, 0.0, 0.0]], [0.73725, 1.9599999999999997, [0.0, 0.0, 0.73725, 0.0, 0.0]], [0.74825, 1.9599999999999997, [0.0, 0.0, 0.74825, 0.0, 0.0]], [0.75925, 1.9599999999999997, [0.0, 0.0, 0.75925, 0.0, 0.0]], [0.77025, 1.9599999999999997, [0.0, 0.0, 0.77025, 0.0, 0.0]], [0.78125, 1.9599999999999997, [0.0, 0.0, 0.78125, 0.0, 0.0]], [0.79225, 1.9599999999999997, [0.0, 0.0, 0.79225, 0.0, 0.0]], [0.80325, 1.9599999999999997, [0.0, 0.0, 0.80325, 0.0, 0.0]], [0.81425, 1.9599999999999997, [0.0, 0.0, 0.81425, 0.0, 0.0]], [0.82525, 1.9599999999999997, [0.0, 0.0, 0.82525, 0.0, 0.0]], [0.83625, 1.9599999999999997, [0.0, 0.0, 0.83625, 0.0, 0.0]], [0.84725, 1.9599999999999997, [0.0, 0.0, 0.84725, 0.0, 0.0]], [0.85825, 1.9599999999999997, [0.0, 0.0, 0.85825, 0.0, 0.0]], [0.86925, 1.9599999999999997, [0.0, 0.0, 0.86925, 0.0, 0.0]], [0.88025, 1.9599999999999997, [0.0, 0.0, 0.88025, 0.0, 0.0]], [0.89125, 1.9599999999999997, [0.0, 0.0, 0.89125, 0.0, 0.0]], [0.90225, 1.9599999999999997, [0.0, 0.0, 0.90225, 0.0, 0.0]], [0.91325, 1.9599999999999997, [0.0, 0.0, 0.91325, 0.0, 0.0]], [0.92425, 1.9599999999999997, [0.0, 0.0, 0.92425, 0.0, 0.0]], [0.93525, 1.9599999999999997, [0.0, 0.0, 0.93525, 0.0, 0.0]], [0.94625, 1.9599999999999997, [0.0, 0.0, 0.94625, 0.0, 0.0]], [0.95725, 1.9599999999999997, [0.0, 0.0, 0.95725, 0.0, 0.0]], [0.96825, 1.9599999999999997, [0.0, 0.0, 0.96825, 0.0, 0.0]], [0.97925, 1.9599999999999997, [0.0, 0.0, 0.97925, 0.0, 0.0]], [0.99025, 1.9599999999999997, [0.0, 0.0, 0.99025, 0.0, 0.0]], [1.0, 1.9599999999999997, [0.0, 0.0, 1.0, 0.0, 0.0]]]}]};
-const SC = DATA.scenarios;
+const DATA = {"scenarios":[{"id":"split3","title":"Three-way proportional split","blurb":"","case_group":2,"alpha":[5,5,5,5,5],"tau":[0.5,1.8,3,4.1,4.7],"gammat":[0.6,0.35,0.25,0.1,0.15],"xi":[4.5,3.2,2,0.9,0.3],"gb":[0.3,0.63,0.75,0.41,0.705],"c":[0.0667,0.1969,0.375,0.4556,2.35],"skip":[false,false,false,false,false],"w":[0.17857,0.375,0.44643,0,0],"case":2,"k":3,"nustar":2.82466,"fobj":21.0404,"fscipy":21.0404,"frames":[[0.00025,20.25,[0.00025,0,0,0,0]],[0.01125,20.25,[0.01125,0,0,0,0]],[0.02225,20.25,[0.02225,0,0,0,0]],[0.03325,20.25,[0.03325,0,0,0,0]],[0.04425,20.25,[0.04425,0,0,0,0]],[0.05525,20.25,[0.05525,0,0,0,0]],[0.06625,20.25,[0.06625,0,0,0,0]],[0.07725,15.179625569235938,[0.07725,0,0,0,0]],[0.08825,11.621900826446264,[0.08825,0,0,0,0]],[0.09925,10.240000000000002,[0.09375,0.0055,0,0,0]],[0.11025,10.240000000000002,[0.09375,0.0165,0,0,0]],[0.12125,10.240000000000002,[0.09375,0.0275,0,0,0]],[0.13225,10.240000000000002,[0.09375,0.0385,0,0,0]],[0.14325,10.240000000000002,[0.09375,0.0495,0,0,0]],[0.15425,10.240000000000002,[0.09375,0.0605,0,0,0]],[0.16525,10.240000000000002,[0.09375,0.0715,0,0,0]],[0.17625,10.240000000000002,[0.09375,0.0825,0,0,0]],[0.18725,10.240000000000002,[0.09375,0.0935,0,0,0]],[0.19825,10.240000000000002,[0.09375,0.1045,0,0,0]],[0.20925,10.240000000000002,[0.09375,0.1155,0,0,0]],[0.22025,10.240000000000002,[0.09375,0.1265,0,0,0]],[0.23125,10.240000000000002,[0.09375,0.1375,0,0,0]],[0.24225,10.240000000000002,[0.09375,0.1485,0,0,0]],[0.25325,10.240000000000002,[0.09375,0.1595,0,0,0]],[0.26425,10.240000000000002,[0.09375,0.1705,0,0,0]],[0.27525,10.240000000000002,[0.09375,0.1815,0,0,0]],[0.28625,10.240000000000002,[0.09375,0.1925,0,0,0]],[0.29725,9.81668700447885,[0.096,0.20125,0,0,0]],[0.30825,9.129962217276525,[0.0995,0.20875,0,0,0]],[0.31925,8.506944444444432,[0.103,0.21625,0,0,0]],[0.33025,7.945588036574918,[0.1065,0.22375,0,0,0]],[0.34125,7.438016528925609,[0.11,0.23125,0,0,0]],[0.35225,6.986357196918229,[0.11375,0.2385,0,0,0]],[0.36325,6.571946902013777,[0.11725,0.246,0,0,0]],[0.37425,6.18845433841795,[0.12075,0.2535,0,0,0]],[0.38525,5.8375748840142805,[0.12425,0.261,0,0,0]],[0.39625,5.51571271113651,[0.12775,0.2685,0,0,0]],[0.40725,5.22448979591836,[0.1315,0.27575,0,0,0]],[0.41825,4.955736742873675,[0.135,0.28325,0,0,0]],[0.42925,4.703149949194508,[0.1385,0.29075,0,0,0]],[0.44025,4.469393270573551,[0.142,0.29825,0,0,0]],[0.45125,4.252640489016321,[0.1455,0.30575,0,0,0]],[0.46225,4.053871447232101,[0.14925,0.313,0,0,0]],[0.47325,4,[0.15,0.31525,0.008,0,0]],[0.48425,4,[0.15,0.31525,0.019,0,0]],[0.49525,4,[0.15,0.31525,0.03,0,0]],[0.50625,4,[0.15,0.31525,0.041,0,0]],[0.51725,4,[0.15,0.31525,0.052,0,0]],[0.52825,4,[0.15,0.31525,0.063,0,0]],[0.53925,4,[0.15,0.31525,0.074,0,0]],[0.55025,4,[0.15,0.31525,0.085,0,0]],[0.56125,4,[0.15,0.31525,0.096,0,0]],[0.57225,4,[0.15,0.31525,0.107,0,0]],[0.58325,4,[0.15,0.31525,0.118,0,0]],[0.59425,4,[0.15,0.31525,0.129,0,0]],[0.60525,4,[0.15,0.31525,0.14,0,0]],[0.61625,4,[0.15,0.31525,0.151,0,0]],[0.62725,4,[0.15,0.31525,0.162,0,0]],[0.63825,4,[0.15,0.31525,0.173,0,0]],[0.64925,4,[0.15,0.31525,0.184,0,0]],[0.66025,4,[0.15,0.31525,0.195,0,0]],[0.67125,4,[0.15,0.31525,0.206,0,0]],[0.68225,4,[0.15,0.31525,0.217,0,0]],[0.69325,4,[0.15,0.31525,0.228,0,0]],[0.70425,4,[0.15,0.31525,0.239,0,0]],[0.71525,4,[0.15,0.31525,0.25,0,0]],[0.72625,4,[0.15,0.31525,0.261,0,0]],[0.73725,4,[0.15,0.31525,0.272,0,0]],[0.74825,4,[0.15,0.31525,0.283,0,0]],[0.75925,4,[0.15,0.31525,0.294,0,0]],[0.77025,4,[0.15,0.31525,0.305,0,0]],[0.78125,4,[0.15,0.31525,0.316,0,0]],[0.79225,4,[0.15,0.31525,0.327,0,0]],[0.80325,4,[0.15,0.31525,0.338,0,0]],[0.81425,4,[0.15,0.31525,0.349,0,0]],[0.82525,4,[0.15,0.31525,0.36,0,0]],[0.83625,4,[0.15,0.31525,0.371,0,0]],[0.84725,3.9367598891411317,[0.15125,0.31775,0.37825,0,0]],[0.85825,3.834643361124846,[0.15325,0.32175,0.38325,0,0]],[0.86925,3.74035006293424,[0.15525,0.326,0.388,0,0]],[0.88025,3.6466168916969828,[0.15725,0.33,0.393,0,0]],[0.89125,3.5578543511780776,[0.15925,0.33425,0.39775,0,0]],[0.90225,3.472088268199524,[0.16125,0.33825,0.40275,0,0]],[0.91325,3.387406375851842,[0.163,0.3425,0.40775,0,0]],[0.92425,3.305785123967226,[0.165,0.3465,0.41275,0,0]],[0.93525,3.230762656160852,[0.167,0.35075,0.4175,0,0]],[0.94625,3.15488265413996,[0.169,0.35475,0.4225,0,0]],[0.95725,3.0838786436646886,[0.171,0.359,0.42725,0,0]],[0.96825,3.014081790123734,[0.173,0.363,0.43225,0,0]],[0.97925,2.946788527645372,[0.175,0.36725,0.437,0,0]],[0.99025,2.8808700227468655,[0.177,0.37125,0.442,0,0]],[1,2.824659275475167,[0.1785,0.375,0.4465,0,0]]]},{"id":"split2","title":"Two-way proportional split","blurb":"","case_group":2,"alpha":[5,5,5,5,5],"tau":[0.5,1.8,4.1,4.5,4.8],"gammat":[0.8,0.6,0.2,0.1,0.1],"xi":[4.5,3.2,0.9,0.5,0.2],"gb":[0.4,1.08,0.82,0.45,0.48],"c":[0.0889,0.3375,0.9111,0.9,2.4],"skip":[false,false,false,false,false],"w":[0.27027,0.72973,0,0,0],"case":2,"k":2,"nustar":2.19178,"fobj":23.9784,"fscipy":23.9784,"frames":[[0.00025,20.25,[0.00025,0,0,0,0]],[0.01125,20.25,[0.01125,0,0,0,0]],[0.02225,20.25,[0.02225,0,0,0,0]],[0.03325,20.25,[0.03325,0,0,0,0]],[0.04425,20.25,[0.04425,0,0,0,0]],[0.05525,20.25,[0.05525,0,0,0,0]],[0.06625,20.25,[0.06625,0,0,0,0]],[0.07725,20.25,[0.07725,0,0,0,0]],[0.08825,20.25,[0.08825,0,0,0,0]],[0.09925,16.324864809713272,[0.09925,0,0,0,0]],[0.11025,13.223140495867751,[0.11025,0,0,0,0]],[0.12125,10.928215285841116,[0.12125,0,0,0,0]],[0.13225,10.240000000000002,[0.125,0.00725,0,0,0]],[0.14325,10.240000000000002,[0.125,0.01825,0,0,0]],[0.15425,10.240000000000002,[0.125,0.02925,0,0,0]],[0.16525,10.240000000000002,[0.125,0.04025,0,0,0]],[0.17625,10.240000000000002,[0.125,0.05125,0,0,0]],[0.18725,10.240000000000002,[0.125,0.06225,0,0,0]],[0.19825,10.240000000000002,[0.125,0.07325,0,0,0]],[0.20925,10.240000000000002,[0.125,0.08425,0,0,0]],[0.22025,10.240000000000002,[0.125,0.09525,0,0,0]],[0.23125,10.240000000000002,[0.125,0.10625,0,0,0]],[0.24225,10.240000000000002,[0.125,0.11725,0,0,0]],[0.25325,10.240000000000002,[0.125,0.12825,0,0,0]],[0.26425,10.240000000000002,[0.125,0.13925,0,0,0]],[0.27525,10.240000000000002,[0.125,0.15025,0,0,0]],[0.28625,10.240000000000002,[0.125,0.16125,0,0,0]],[0.29725,10.240000000000002,[0.125,0.17225,0,0,0]],[0.30825,10.240000000000002,[0.125,0.18325,0,0,0]],[0.31925,10.240000000000002,[0.125,0.19425,0,0,0]],[0.33025,10.240000000000002,[0.125,0.20525,0,0,0]],[0.34125,10.240000000000002,[0.125,0.21625,0,0,0]],[0.35225,10.240000000000002,[0.125,0.22725,0,0,0]],[0.36325,10.240000000000002,[0.125,0.23825,0,0,0]],[0.37425,10.240000000000002,[0.125,0.24925,0,0,0]],[0.38525,10.240000000000002,[0.125,0.26025,0,0,0]],[0.39625,10.240000000000002,[0.125,0.27125,0,0,0]],[0.40725,10.240000000000002,[0.125,0.28225,0,0,0]],[0.41825,10.240000000000002,[0.125,0.29325,0,0,0]],[0.42925,10.240000000000002,[0.125,0.30425,0,0,0]],[0.44025,10.240000000000002,[0.125,0.31525,0,0,0]],[0.45125,10.240000000000002,[0.125,0.32625,0,0,0]],[0.46225,10.240000000000002,[0.125,0.33725,0,0,0]],[0.47325,9.799621928166937,[0.128,0.34525,0,0,0]],[0.48425,9.35915387399507,[0.131,0.35325,0,0,0]],[0.49525,8.944012577517677,[0.134,0.36125,0,0,0]],[0.50625,8.555892369547697,[0.137,0.36925,0,0,0]],[0.51725,8.195755882202421,[0.13975,0.3775,0,0,0]],[0.52825,7.858908207039778,[0.14275,0.3855,0,0,0]],[0.53925,7.542408467104206,[0.14575,0.3935,0,0,0]],[0.55025,7.244650187789923,[0.14875,0.4015,0,0,0]],[0.56125,6.964182360495097,[0.15175,0.4095,0,0,0]],[0.57225,6.699691731755878,[0.15475,0.4175,0,0,0]],[0.58325,6.449987402368347,[0.15775,0.4255,0,0,0]],[0.59425,6.211119845498386,[0.16075,0.4335,0,0,0]],[0.60525,5.985279952117753,[0.16375,0.4415,0,0,0]],[0.61625,5.772821364982787,[0.1665,0.44975,0,0,0]],[0.62725,5.572695511959704,[0.1695,0.45775,0,0,0]],[0.63825,5.38279871844773,[0.1725,0.46575,0,0,0]],[0.64925,5.202445559757409,[0.1755,0.47375,0,0,0]],[0.66025,5.031007074854229,[0.1785,0.48175,0,0,0]],[0.67125,4.867905275338283,[0.1815,0.48975,0,0,0]],[0.68225,4.712608267468507,[0.1845,0.49775,0,0,0]],[0.69325,4.563271723223304,[0.1875,0.50575,0,0,0]],[0.70425,4.420492435950339,[0.1905,0.51375,0,0,0]],[0.71525,4.2847214680796295,[0.19325,0.522,0,0,0]],[0.72625,4.1562874916962125,[0.19625,0.53,0,0,0]],[0.73725,4.033542830132998,[0.19925,0.538,0,0,0]],[0.74825,3.916156348278679,[0.20225,0.546,0,0,0]],[0.75925,3.8038206564114447,[0.20525,0.554,0,0,0]],[0.77025,3.69625009581133,[0.20825,0.562,0,0,0]],[0.78125,3.593178920957013,[0.21125,0.57,0,0,0]],[0.79225,3.493754913092842,[0.21425,0.578,0,0,0]],[0.80325,3.3978211471893607,[0.21725,0.586,0,0,0]],[0.81425,3.305785123967362,[0.22,0.59425,0,0,0]],[0.82525,3.2185075219924433,[0.223,0.60225,0,0,0]],[0.83625,3.1346412254774276,[0.226,0.61025,0,0,0]],[0.84725,3.0540107455937626,[0.229,0.61825,0,0,0]],[0.85825,2.9764517347328074,[0.232,0.62625,0,0,0]],[0.86925,2.9018101483748344,[0.235,0.63425,0,0,0]],[0.88025,2.8299414796055844,[0.238,0.64225,0,0,0]],[0.89125,2.7604977091103935,[0.241,0.65025,0,0,0]],[0.90225,2.692965154503612,[0.244,0.65825,0,0,0]],[0.91325,2.6278807886516575,[0.247,0.66625,0,0,0]],[0.92425,2.565698384436899,[0.24975,0.6745,0,0,0]],[0.93525,2.5058808790835125,[0.25275,0.6825,0,0,0]],[0.94625,2.448131152582074,[0.25575,0.6905,0,0,0]],[0.95725,2.3923549859768634,[0.25875,0.6985,0,0,0]],[0.96825,2.338463466207552,[0.26175,0.7065,0,0,0]],[0.97925,2.286372631547549,[0.26475,0.7145,0,0,0]],[0.99025,2.2360031443794517,[0.26775,0.7225,0,0,0]],[1,2.191779792275439,[0.27025,0.72975,0,0,0]]]},{"id":"pivot","title":"Pivot coordinate takes the leftover","blurb":"","case_group":1,"alpha":[5,5,5,5,5],"tau":[0.5,1.8,3,4.5,4.8],"gammat":[1,0.4,0.3,0.1,0.1],"xi":[4.5,3.2,2,0.5,0.2],"gb":[0.5,0.72,0.9,0.45,0.48],"c":[0.1111,0.225,0.45,0.9,2.4],"skip":[false,false,false,false,false],"w":[0.25,0.36,0.39,0,0],"case":1,"k":3,"nustar":4,"fobj":22.272,"fscipy":22.272,"frames":[[0.00025,20.25,[0.00025,0,0,0,0]],[0.01125,20.25,[0.01125,0,0,0,0]],[0.02225,20.25,[0.02225,0,0,0,0]],[0.03325,20.25,[0.03325,0,0,0,0]],[0.04425,20.25,[0.04425,0,0,0,0]],[0.05525,20.25,[0.05525,0,0,0,0]],[0.06625,20.25,[0.06625,0,0,0,0]],[0.07725,20.25,[0.07725,0,0,0,0]],[0.08825,20.25,[0.08825,0,0,0,0]],[0.09925,20.25,[0.09925,0,0,0,0]],[0.11025,20.25,[0.11025,0,0,0,0]],[0.12125,17.075336384126743,[0.12125,0,0,0,0]],[0.13225,14.348025711662057,[0.13225,0,0,0,0]],[0.14325,12.22553670106116,[0.14325,0,0,0,0]],[0.15425,10.541406645302734,[0.15425,0,0,0,0]],[0.16525,10.240000000000002,[0.15625,0.009,0,0,0]],[0.17625,10.240000000000002,[0.15625,0.02,0,0,0]],[0.18725,10.240000000000002,[0.15625,0.031,0,0,0]],[0.19825,10.240000000000002,[0.15625,0.042,0,0,0]],[0.20925,10.240000000000002,[0.15625,0.053,0,0,0]],[0.22025,10.240000000000002,[0.15625,0.064,0,0,0]],[0.23125,10.240000000000002,[0.15625,0.075,0,0,0]],[0.24225,10.240000000000002,[0.15625,0.086,0,0,0]],[0.25325,10.240000000000002,[0.15625,0.097,0,0,0]],[0.26425,10.240000000000002,[0.15625,0.108,0,0,0]],[0.27525,10.240000000000002,[0.15625,0.119,0,0,0]],[0.28625,10.240000000000002,[0.15625,0.13,0,0,0]],[0.29725,10.240000000000002,[0.15625,0.141,0,0,0]],[0.30825,10.240000000000002,[0.15625,0.152,0,0,0]],[0.31925,10.240000000000002,[0.15625,0.163,0,0,0]],[0.33025,10.240000000000002,[0.15625,0.174,0,0,0]],[0.34125,10.240000000000002,[0.15625,0.185,0,0,0]],[0.35225,10.240000000000002,[0.15625,0.196,0,0,0]],[0.36325,10.240000000000002,[0.15625,0.207,0,0,0]],[0.37425,10.240000000000002,[0.15625,0.218,0,0,0]],[0.38525,10.046187346324714,[0.158,0.22725,0,0,0]],[0.39625,9.496653616681808,[0.1625,0.23375,0,0,0]],[0.40725,8.991006745502798,[0.167,0.24025,0,0,0]],[0.41825,8.524694975757887,[0.1715,0.24675,0,0,0]],[0.42925,8.0937417165612,[0.176,0.25325,0,0,0]],[0.44025,7.6946604827245135,[0.1805,0.25975,0,0,0]],[0.45125,7.324384156624619,[0.185,0.26625,0,0,0]],[0.46225,6.980205881172456,[0.1895,0.27275,0,0,0]],[0.47325,6.659729448491146,[0.194,0.27925,0,0,0]],[0.48425,6.359936327026523,[0.1985,0.28575,0,0,0]],[0.49525,6.0799399512105445,[0.203,0.29225,0,0,0]],[0.50625,5.818034898108836,[0.2075,0.29875,0,0,0]],[0.51725,5.572695511959367,[0.212,0.30525,0,0,0]],[0.52825,5.342553635518316,[0.2165,0.31175,0,0,0]],[0.53925,5.126379494482259,[0.221,0.31825,0,0,0]],[0.55025,4.923065234888101,[0.2255,0.32475,0,0,0]],[0.56125,4.731610700888341,[0.23,0.33125,0,0,0]],[0.57225,4.551111111111368,[0.2345,0.33775,0,0,0]],[0.58325,4.3807463493783025,[0.239,0.34425,0,0,0]],[0.59425,4.219771632536624,[0.2435,0.35075,0,0,0]],[0.60525,4.067509356684115,[0.248,0.35725,0,0,0]],[0.61625,4,[0.25,0.36025,0.006,0,0]],[0.62725,4,[0.25,0.36025,0.017,0,0]],[0.63825,4,[0.25,0.36025,0.028,0,0]],[0.64925,4,[0.25,0.36025,0.039,0,0]],[0.66025,4,[0.25,0.36025,0.05,0,0]],[0.67125,4,[0.25,0.36025,0.061,0,0]],[0.68225,4,[0.25,0.36025,0.072,0,0]],[0.69325,4,[0.25,0.36025,0.083,0,0]],[0.70425,4,[0.25,0.36025,0.094,0,0]],[0.71525,4,[0.25,0.36025,0.105,0,0]],[0.72625,4,[0.25,0.36025,0.116,0,0]],[0.73725,4,[0.25,0.36025,0.127,0,0]],[0.74825,4,[0.25,0.36025,0.138,0,0]],[0.75925,4,[0.25,0.36025,0.149,0,0]],[0.77025,4,[0.25,0.36025,0.16,0,0]],[0.78125,4,[0.25,0.36025,0.171,0,0]],[0.79225,4,[0.25,0.36025,0.182,0,0]],[0.80325,4,[0.25,0.36025,0.193,0,0]],[0.81425,4,[0.25,0.36025,0.204,0,0]],[0.82525,4,[0.25,0.36025,0.215,0,0]],[0.83625,4,[0.25,0.36025,0.226,0,0]],[0.84725,4,[0.25,0.36025,0.237,0,0]],[0.85825,4,[0.25,0.36025,0.248,0,0]],[0.86925,4,[0.25,0.36025,0.259,0,0]],[0.88025,4,[0.25,0.36025,0.27,0,0]],[0.89125,4,[0.25,0.36025,0.281,0,0]],[0.90225,4,[0.25,0.36025,0.292,0,0]],[0.91325,4,[0.25,0.36025,0.303,0,0]],[0.92425,4,[0.25,0.36025,0.314,0,0]],[0.93525,4,[0.25,0.36025,0.325,0,0]],[0.94625,4,[0.25,0.36025,0.336,0,0]],[0.95725,4,[0.25,0.36025,0.347,0,0]],[0.96825,4,[0.25,0.36025,0.358,0,0]],[0.97925,4,[0.25,0.36025,0.369,0,0]],[0.99025,4,[0.25,0.36025,0.38,0,0]],[1,4,[0.25,0.36025,0.38975,0,0]]]}]};
+const WINNER_TAKES_ALL = {
+  id: "winner",
+  title: "One coordinate receives the full budget",
+  blurb: "",
+  case_group: 1,
+  alpha: [5, 5, 5, 5, 5],
+  tau: [4.9, 4.7, 3.6, 4.4, 4.1],
+  gammat: [0.3, 0.3, 0.5, 0.3, 0.4],
+  xi: [0.1, 0.3, 1.4, 0.6, 0.9],
+  gb: [1.47, 1.41, 1.8, 1.32, 1.64],
+  c: [14.7, 4.7, 1.2857, 2.2, 1.8222],
+  skip: [false, false, false, false, false],
+  w: [0, 0, 1, 0, 0],
+  case: 1,
+  k: 1,
+  nustar: 1.96,
+  fobj: 74.44,
+  fscipy: 74.44,
+  frames: Array.from({length: 92}, (_, i) => {
+    const budget = i === 91 ? 1 : 0.00025 + 0.011 * i;
+    return [budget, 1.96, [0, 0, budget, 0, 0]];
+  })
+};
+const SC = [...DATA.scenarios, WINNER_TAKES_ALL];
+const REGIME_LABELS = {
+  1: "Boundary threshold",
+  2: "Interior common slope"
+};
+const REGIME_HEADINGS = {
+  1: "Boundary threshold — one flat segment closes the budget",
+  2: "Interior common slope — all funded coordinates are past their knots"
+};
+const EXAMPLE_LABELS = {
+  pivot: "Residual assigned at the boundary",
+  winner: "Winner takes all",
+  split3: "Three funded coordinates",
+  split2: "Two funded coordinates"
+};
 const COLORS = ["#7dabf8", "#f87171", "#34d399", "#fbbf24", "#b795f5", "#22d3ee"];
 
-let cur = 0, frameIdx = 0, playing = false, lastT = 0;
+let cur = 0, frameIdx = 0, playing = false, lastT = 0, autoTimer = 0;
 
 const cvM = document.getElementById("cvM"), ctxM = cvM.getContext("2d");
 const cvP = document.getElementById("cvP"), ctxP = cvP.getContext("2d");
-const cvV = document.getElementById("cvV"), ctxV = cvV.getContext("2d");
 const cvB = document.getElementById("cvB"), ctxB = cvB.getContext("2d");
 
 function fmt(x, d=3) {
@@ -830,122 +927,7 @@ function axes(ctx, W, H, mL, mR, mT, mB, xlab, ylab) {
   ctx.fillText(ylab, 0, 0); ctx.restore();
 }
 
-/* ---------- (a) vessels: width = negative gradient, height = weight ----------
-   Each vessel is a bottle standing on the ground: constant width xi_j^2 up to the
-   knot bar at height c_j, then narrowing as (gb_j/h)^2 above it. Water pours
-   bottom-up into the currently WIDEST vessel; funded surfaces narrow until they
-   all share the common width nu. The fill height is w_j; poured volume equals
-   the decrease of the bound. */
-function drawV(sc, w, level) {
-  const W = cvV.width, H = cvV.height, mL = 46, mR = 16, mT = 24, mB = 30;
-  ctxV.clearRect(0,0,W,H);
-  const J = sc.tau.length;
-  const xis = sc.xi.map(x => x*x);
-  const vmax = Math.max(...xis.map((v,j) => sc.skip[j] ? 0 : v), 1e-12) * 1.06;
-  const plotH = H - mT - mB;
-  const Yh = h => H - mB - h*plotH;                    // height h in [0,1] (weight)
-  const gap = (W - mL - mR)/J;
-  const halfMax = gap*0.46;
-  const halfw = v => halfMax * Math.sqrt(Math.max(v,0)/vmax);   // width scale (√)
-  const cxj = j => mL + gap*j + gap/2;
-
-  // axes: height = weight
-  ctxV.strokeStyle = "#57503f"; ctxV.lineWidth = 1;
-  ctxV.beginPath(); ctxV.moveTo(mL-6, mT-6); ctxV.lineTo(mL-6, H-mB);
-  ctxV.lineTo(W-mR, H-mB); ctxV.stroke();
-  ctxV.fillStyle = "#a49a8c"; ctxV.font = "10.5px sans-serif"; ctxV.textAlign = "right";
-  for (let h = 0; h <= 1.001; h += 0.25) {
-    ctxV.fillText(h.toFixed(2), mL-10, Yh(h)+3.5);
-    ctxV.strokeStyle = "#2b2620";
-    ctxV.beginPath(); ctxV.moveTo(mL-6, Yh(h)); ctxV.lineTo(W-mR, Yh(h)); ctxV.stroke();
-  }
-
-  for (let j = 0; j < J; j++) {
-    if (sc.skip[j]) continue;
-    const cx = cxj(j);
-    const c = sc.c[j];
-    const hasKnot = (c !== null && c > 0 && c <= 1);
-
-    // vessel outline: symmetric bottle, width = -p'_j(h) at fill height h
-    ctxV.strokeStyle = COLORS[j]; ctxV.lineWidth = 1.5;
-    for (const side of [-1, 1]) {
-      ctxV.beginPath();
-      for (let k = 0; k <= 120; k++) {
-        const h = Math.max(0.012, k/120);
-        const x = cx + side*halfw(mpj(sc, j, h));
-        const y = Yh(h);
-        if (k === 0) ctxV.moveTo(x, y); else ctxV.lineTo(x, y);
-      }
-      ctxV.stroke();
-    }
-    // base
-    ctxV.beginPath();
-    ctxV.moveTo(cx - halfw(xis[j]), Yh(0)); ctxV.lineTo(cx + halfw(xis[j]), Yh(0));
-    ctxV.lineWidth = 2.2; ctxV.stroke();
-
-    // knot bar: horizontal bar at height c_j, after which the vessel narrows
-    if (hasKnot) {
-      ctxV.strokeStyle = "#e3ddd3"; ctxV.lineWidth = 2.2;
-      ctxV.beginPath();
-      ctxV.moveTo(cx - halfw(xis[j]) - 3, Yh(c));
-      ctxV.lineTo(cx + halfw(xis[j]) + 3, Yh(c));
-      ctxV.stroke();
-      ctxV.fillStyle = "#e3ddd3"; ctxV.font = "9.5px sans-serif"; ctxV.textAlign = "left";
-      ctxV.fillText("c=" + fmt(c,2), cx + halfw(xis[j]) + 5, Yh(c)+3);
-    }
-
-    // water: fill from the bottom up to height w_j, following the profile
-    if (w[j] > 1e-9) {
-      ctxV.fillStyle = COLORS[j] + "55";
-      ctxV.beginPath();
-      const hTop = Math.min(w[j], 1);
-      ctxV.moveTo(cx - halfw(mpj(sc, j, 0.012)), Yh(0));
-      for (let k = 0; k <= 60; k++) {                       // up the left wall
-        const h = Math.max(0.012, hTop*k/60);
-        ctxV.lineTo(cx - halfw(mpj(sc, j, h)), Yh(h));
-      }
-      for (let k = 60; k >= 0; k--) {                       // down the right wall
-        const h = Math.max(0.012, hTop*k/60);
-        ctxV.lineTo(cx + halfw(mpj(sc, j, h)), Yh(h));
-      }
-      ctxV.closePath(); ctxV.fill();
-      // surface line: its width is the current marginal; funded surfaces match
-      const sw = halfw(mpj(sc, j, Math.max(w[j], 0.012)));
-      ctxV.strokeStyle = COLORS[j]; ctxV.lineWidth = 2.4;
-      ctxV.beginPath();
-      ctxV.moveTo(cx - sw, Yh(hTop)); ctxV.lineTo(cx + sw, Yh(hTop));
-      ctxV.stroke();
-    }
-
-  }
-
-  // nu reference ruler (top-left): a bar of the current common surface width
-  if (level !== null) {
-    const rw = 2*halfw(Math.min(level, vmax));
-    ctxV.strokeStyle = "#7dabf8"; ctxV.lineWidth = 3;
-    ctxV.beginPath(); ctxV.moveTo(mL+2, mT-12); ctxV.lineTo(mL+2+rw, mT-12); ctxV.stroke();
-  }
-}
-
-/* group labels under the vessels — KaTeX overlays, rebuilt per scenario */
-function buildVesselLabels(sc) {
-  const W = cvV.width, H = cvV.height, mL = 46, mR = 16, mB = 30;
-  const J = sc.tau.length;
-  const gap = (W - mL - mR)/J;
-  const holder = document.getElementById("vGroupLabs");
-  let html = "";
-  for (let j = 0; j < J; j++) {
-    const cx = mL + gap*j + gap/2;
-    const xis = sc.xi[j]*sc.xi[j];
-    html += `<div class="vglab" style="left:${(cx-65).toFixed(0)}px; ` +
-      `top:${H-mB+6}px; color:${COLORS[j]}">` +
-      `group ${j+1}: \\(\\xi_{${j+1}}^2 = ${fmtv(xis)}\\)</div>`;
-  }
-  holder.innerHTML = html;
-  tex(holder);
-}
-
-/* ---------- (b) marginals ---------- */
+/* ---------- (a) marginal values ---------- */
 function drawM(sc, w, level) {
   const W = cvM.width, H = cvM.height, mL = 52, mR = 12, mT = 14, mB = 30;
   ctxM.clearRect(0,0,W,H);
@@ -995,7 +977,7 @@ function drawM(sc, w, level) {
   }
 }
 
-/* ---------- (c) p_j curves ---------- */
+/* ---------- (b) coordinate costs ---------- */
 function drawP(sc, w, level) {
   const W = cvP.width, H = cvP.height, mL = 52, mR = 12, mT = 12, mB = 30;
   ctxP.clearRect(0,0,W,H);
@@ -1064,9 +1046,8 @@ function drawP(sc, w, level) {
 function drawSide(sc, w, level, budget) {
   const nuTxt = fmt(level, level !== null && level < 1 ? 3 : 2);
   document.getElementById("nuVal").textContent = nuTxt;
-  document.getElementById("nuValV").textContent = nuTxt;
   document.getElementById("nuValM").textContent = nuTxt;
-  // move the nu label in panel (b) along with the level line
+  // Move the nu label in panel (a) along with the multiplier line.
   if (level !== null) {
     const H = cvM.height, mT = 14, mB = 30;
     const xis = sc.xi.map(x => x*x);
@@ -1081,10 +1062,10 @@ function drawSide(sc, w, level, budget) {
     let st;
     if (sc.skip[j]) st = "inactive";
     else if (w[j] < 1e-9) st = "waiting (ξ² = " + fmtv(xis) + ")";
-    else if (level !== null && level >= xis*(1-1e-9)) st = "base section (below knot)";
-    else st = "filling past knot";
+    else if (level !== null && level >= xis*(1-1e-9)) st = "flat branch (before knot)";
+    else st = "curved branch (past knot)";
     html += `<div class="wrow"><span class="chip" style="background:${COLORS[j]}"></span>` +
-      `<span>group ${j+1}<br><span class="st">${st}</span></span>` +
+      `<span>coordinate ${j+1}<br><span class="st">${st}</span></span>` +
       `<b>w = ${fmt(w[j], 3)}</b></div>`;
   }
   document.getElementById("wlist").innerHTML = html;
@@ -1109,14 +1090,14 @@ function drawWform(sc) {
   for (let j = 0; j < J; j++) {
     let f_;
     if (sc.skip[j]) {
-      f_ = `\\(\\widehat w_{${j+1}} = 0\\) — inactive group, removed up front`;
+      f_ = `\\(\\widehat w_{${j+1}} = 0\\) — zero coefficient, removed up front`;
     } else if (sc.w[j] < 1e-9) {
       f_ = `\\(\\widehat w_{${j+1}} = 0\\) — not funded: \\(\\xi_{${j+1}}^2 = ` +
            `${fmt(sc.xi[j]*sc.xi[j],2)} \\le \\nu^*\\)`;
     } else if (sc.case === 1 && Math.abs(sc.xi[j]*sc.xi[j] - nu) < 1e-6*Math.max(1,nu)) {
       f_ = `\\(\\widehat w_{${j+1}} = 1 - \\sum_{i \\ne ${j+1}} \\widehat w_i = ` +
-           `${fmt(sc.w[j])}\\) — pivot group: takes the leftover in its base section at ` +
-           `\\(\\nu^* = \\xi_{${j+1}}^2\\)`;
+           `${fmt(sc.w[j])}\\) — boundary coordinate: receives the residual budget on its ` +
+           `flat marginal segment at \\(\\nu^* = \\xi_{${j+1}}^2\\)`;
     } else {
       f_ = `\\(\\widehat w_{${j+1}} = \\dfrac{\\tilde\\gamma_{${j+1}}\\tau_{${j+1}}}` +
            `{\\sqrt{\\nu^*}} = \\dfrac{${fmt(sc.gb[j],2)}}{${fmt(Math.sqrt(nu),3)}} = ` +
@@ -1127,7 +1108,7 @@ function drawWform(sc) {
             `${f_}</div>`;
   }
   const el = document.getElementById("wform");
-  el.innerHTML = `<h2>The formulas the weights take here &nbsp;` +
+  el.innerHTML = `<h2>Optimal weights in this example &nbsp;` +
     `(\\(\\nu^* = ${fmt(nu,3)}\\))</h2>` + rows;
   tex(el);
 }
@@ -1136,13 +1117,12 @@ function drawWform(sc) {
 function render(typeset) {
   const sc = SC[cur];
   const fr = sc.frames[Math.min(frameIdx, sc.frames.length-1)];
-  drawV(sc, fr[2], fr[1]);
   drawM(sc, fr[2], fr[1]);
   drawP(sc, fr[2], fr[1]);
   drawSide(sc, fr[2], fr[1], fr[0]);
   if (typeset) { drawWform(sc); }
   document.getElementById("status").innerHTML =
-    `Case ${sc.case}, k = ${sc.k} · ν* = ${fmt(sc.nustar,3)}`;
+    `${REGIME_LABELS[sc.case]} · ${sc.k} funded · ν* = ${fmt(sc.nustar,3)}`;
 }
 
 function setPlayBtn() {
@@ -1157,17 +1137,21 @@ function tick(t) {
     lastT = t;
     frameIdx++;
     const sc = SC[cur];
-    if (frameIdx >= sc.frames.length + 20) { playing = false; setPlayBtn(); }
+    if (frameIdx >= sc.frames.length + 20) {
+      playing = false; setPlayBtn();
+      // Rotate to the next example after a short hold on the final state.
+      autoTimer = setTimeout(() => start((cur + 1) % SC.length, true), 2400);
+    }
     render(false);
   }
   if (playing) requestAnimationFrame(tick);
 }
 
 function start(i, typeset) {
+  clearTimeout(autoTimer);
   cur = i; frameIdx = 0; playing = true; lastT = 0;
   btnRefs.forEach((b, j) => b.classList.toggle("active", j === i));
   setPlayBtn();
-  if (typeset) buildVesselLabels(SC[i]);
   render(typeset);
   requestAnimationFrame(tick);
 }
@@ -1178,8 +1162,7 @@ for (const cg of [1, 2]) {
   const div = document.createElement("div");
   div.className = "casegroup cg" + cg;
   const h = document.createElement("h4");
-  h.textContent = cg === 1 ? "Case 1 — level lands on a base width"
-                           : "Case 2 — level rests between base widths";
+  h.textContent = REGIME_HEADINGS[cg];
   div.appendChild(h);
   const btns = document.createElement("div");
   btns.className = "btns";
@@ -1190,13 +1173,14 @@ for (const cg of [1, 2]) {
 const btnRefs = [];
 SC.forEach((sc, i) => {
   const b = document.createElement("button");
-  b.innerHTML = sc.title;          // titles may contain KaTeX delimiters
+  b.textContent = EXAMPLE_LABELS[sc.id] || sc.title;
   b.onclick = () => start(i, true);
   groups[sc.case_group || sc.case].appendChild(b);
   btnRefs[i] = b;
 });
 
 document.getElementById("btnPlay").onclick = () => {
+  clearTimeout(autoTimer);
   const sc = SC[cur];
   if (playing) { playing = false; }
   else {
@@ -1224,57 +1208,24 @@ window.addEventListener("DOMContentLoaded", () => {
 
 <div class="container">
 
-  <h2>Does the allocation matter?</h2>
-
-  <p>
-    The water-filling weights cost a sort per iteration — do they buy anything? A small
-    experiment: a synthetic group lasso with $J = 12$ groups of $5$ correlated predictors,
-    $n = 300$, three groups active at the solution, $\lambda$ at $45\%$ of $\lambda_{\max}$.
-    Same MM algorithm, five allocation policies: the <em>optimal</em> water-filling weights,
-    <em>uniform</em> $w_j = 1/J$, <em>random</em> (fresh Dirichlet draw each iteration),
-    <em>round-robin</em> (whole budget on one group, cycling), and <em>greedy</em>
-    winner-takes-all (whole budget on the largest $\xi_j^2$).
-  </p>
-
-  <canvas id="racechart" width="720" height="380"></canvas>
-  <p class="demo-caption">
-    Optimality gap $g(\v\gamma^{(t)}) - g^*$ per iteration (log scale), one representative
-    instance. Across 20 replications the median iterations to a $10^{-6}$ gap: optimal
-    <b>8</b>, round-robin <b>14</b>, uniform <b>19</b>, random <b>20</b>, greedy —
-    <b>never converged</b> (all 20 runs).
-  </p>
-
-  <p>
-    Two of the failures are instructive. <em>Uniform</em> weights descend every step but give
-    each group only $1/J$ of a unit of shrinkage power, so switching a group off takes many
-    iterations — the gap decays geometrically but slowly. <em>Greedy</em> winner-takes-all looks
-    like a plausible heuristic ($\xi_j^2$ is, after all, the marginal value of weight), yet it
-    stalls completely: it happily pours the whole budget into a group with a large gap that is
-    already inactive and already satisfies its KKT condition — a weight that buys exactly
-    nothing, since $[\,w(\tau_j/\alpha_j - 1)\,]_+ = 0$ when $\tau_j \le \alpha_j$. Meanwhile
-    every other group is stuck with $w_j = 0$, the multiplicative update, and no way to change
-    activation status. The water-filling rule never falls into this trap precisely because the
-    weight problem's KKT conditions exclude satisfied inactive groups from funding — the
-    optimal allocation is greedy <em>plus the right notion of who is fundable</em>.
-  </p>
-
   <h2>Closing the loop</h2>
 
   <p>
-    Assembling the pieces: the auxiliary reparameterisation (Part 3) turns group lasso into a
-    convex problem over $\bb{R}_+^J$; the matrix bound (Part 4) gives a separable surrogate with
-    a closed-form concurrent update; and the water-filling weight allocation (this part) aims
-    each iteration at the groups furthest from optimality, at a negligible $\c{O}(J\ln J)$
-    overhead. The resulting MM algorithm converges globally to the group-lasso KKT point and,
-    across simulations and real data, computes regularization paths up to an order of magnitude
-    faster than block coordinate descent — with the largest gains where BCD struggles most:
-    poorly conditioned features and many activated groups. Full theory, algorithms and
-    experiments are in the
+    The lasso KKT conditions identify which coefficients are active and which zero coefficients
+    already satisfy optimality. The auxiliary scales turn those conditions into a convex
+    problem over $\bb{R}_+^p$. The matrix bound supplies a concurrent closed-form MM update,
+    and the optimal-weight procedure selects the member of that surrogate family with the
+    smallest one-step upper bound in $\c O(p\log p)$ time.
+  </p>
+
+  <p>
+    With exact linear solves and a unique auxiliary minimizer, the theory gives global
+    convergence to the lasso KKT point. The full theory, implementation and experiments are in the
     <a href="../assets/papers/MM_Algorithms_Group_Lasso.pdf" target="_blank" rel="noopener">paper</a>.
   </p>
 
   <div class="pager">
-    <a class="btn ghost" href="mm-lasso-part-4.html">← Part 4: An Interesting Bound</a>
+    <a class="btn ghost" href="mm-lasso-part-4.html">← Part 4: A Separable Bound</a>
     <a class="btn" href="../blog.html">Back to blog →</a>
   </div>
 
@@ -1284,563 +1235,763 @@ window.addEventListener("DOMContentLoaded", () => {
 
 <script>
 (function () {
-  const cv = document.getElementById('wfdemo');
+  const cv = document.getElementById('phidemo');
+  if (!cv) return;
   const ctx = cv.getContext('2d');
   const css = getComputedStyle(document.documentElement);
   const C = {
-    accent: css.getPropertyValue('--accent').trim() || '#e8825e',
-    accent2: css.getPropertyValue('--accent-2').trim() || '#f0a380',
-    dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
-    text: css.getPropertyValue('--text').trim() || '#e3ddd3',
-    grid: css.getPropertyValue('--border').trim() || '#3a332a'
-  };
-  const J = 9;
-  let alpha0 = [], tau = [], gtil = [];
-
-  function randomize() {
-    alpha0 = []; tau = []; gtil = [];
-    for (let j = 0; j < J; j++) {
-      tau.push(0.4 + 2.6 * Math.random());
-      alpha0.push(0.5 + 2.2 * Math.random());
-      // ~ half the groups currently activated
-      gtil.push(Math.random() < 0.55 ? 0.15 + 1.2 * Math.random() : 0);
-    }
-  }
-
-  // Faithful implementation of Algorithm getWeights (supplementary of the paper)
-  function getWeights(alpha, tau, gtil) {
-    const n = alpha.length;
-    const xi = alpha.map((a, j) => (a - tau[j]) ** 2);
-    let idx = [...Array(n).keys()].sort((a, b) => xi[b] - xi[a]);
-    // remove groups that remain unactivated regardless of w_j
-    idx = idx.filter(j => !(alpha[j] - tau[j] >= 0 && gtil[j] === 0));
-    const w = new Array(n).fill(0);
-    const d = idx.length;
-    if (d === 0) return { w, nu: 0, xi };
-    for (let k = 0; k < d; k++) {
-      const uk = idx[k];
-      let nu = xi[uk];
-      let s = 0;
-      for (let j = 0; j < k; j++) {
-        w[idx[j]] = gtil[idx[j]] * tau[idx[j]] / Math.sqrt(nu);
-        s += w[idx[j]];
-      }
-      w[uk] = 1 - s;
-      const denom = alpha[uk] - tau[uk];
-      const ck = denom !== 0 ? gtil[uk] * tau[uk] / denom : Infinity;
-      const ckIn01 = ck > 0 && ck <= 1;
-      if (w[uk] >= 0 && (w[uk] < ck || !ckIn01)) {          // Case 1
-        for (let j = k + 1; j < d; j++) w[idx[j]] = 0;
-        return { w, nu, xi };
-      }
-      let sum = 0;                                          // Case 2
-      for (let j = 0; j <= k; j++) sum += gtil[idx[j]] * tau[idx[j]];
-      const nu2 = sum * sum;
-      const nextXi = k + 1 < d ? xi[idx[k + 1]] : -Infinity;
-      if (xi[uk] > nu2 && nu2 > nextXi) {
-        for (let j = 0; j <= k; j++) w[idx[j]] = gtil[idx[j]] * tau[idx[j]] / Math.sqrt(nu2);
-        for (let j = k + 1; j < d; j++) w[idx[j]] = 0;
-        return { w, nu: nu2, xi };
-      }
-    }
-    return { w, nu: xi[idx[d - 1]], xi };
-  }
-
-  function draw() {
-    const scale = parseFloat(document.getElementById('wf-lambda').value);
-    const alpha = alpha0.map(a => a * scale);
-    const { w, nu, xi } = getWeights(alpha, tau, gtil);
-
-    const order = [...Array(J).keys()].sort((a, b) => xi[b] - xi[a]);
-    const maxXi = Math.max(...xi, nu, 0.01) * 1.18;
-    const L = 50, R = 15, T = 20, Bm = 48;
-    const plotW = cv.width - L - R, plotH = cv.height - T - Bm;
-    const bw = plotW / J;
-
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    const yOf = v => T + plotH - (v / maxXi) * plotH;
-
-    // water (region below the level nu*)
-    if (nu > 0) {
-      ctx.fillStyle = 'rgba(125, 170, 220, 0.10)';
-      ctx.fillRect(L, yOf(nu), plotW, T + plotH - yOf(nu));
-    }
-
-    // bars
-    order.forEach((j, pos) => {
-      const x = L + pos * bw + bw * 0.14, wid = bw * 0.72;
-      const excluded = (alpha[j] - tau[j] >= 0 && gtil[j] === 0);
-      const y = yOf(xi[j]);
-      ctx.fillStyle = excluded ? 'rgba(164,154,140,0.22)'
-                    : w[j] > 1e-9 ? C.accent : 'rgba(240,163,128,0.38)';
-      ctx.fillRect(x, y, wid, T + plotH - y);
-
-      // weight label
-      if (w[j] > 1e-9) {
-        ctx.fillStyle = C.text; ctx.font = '12px Inter, sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('w=' + w[j].toFixed(2), x + wid / 2, y - 6);
-      }
-      // group label + status
-      ctx.fillStyle = C.dim; ctx.font = '11.5px Inter, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('j=' + (j + 1), x + wid / 2, T + plotH + 16);
-      ctx.fillText(excluded ? 'stays out' : gtil[j] === 0 ? 'switch on' : 'active',
-                   x + wid / 2, T + plotH + 32);
-    });
-
-    // water level line
-    if (nu > 0) {
-      ctx.strokeStyle = 'rgba(125, 170, 220, 0.85)';
-      ctx.setLineDash([7, 5]); ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(L, yOf(nu)); ctx.lineTo(L + plotW, yOf(nu)); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = 'rgba(150, 190, 235, 0.95)';
-      ctx.font = '12.5px Inter, sans-serif'; ctx.textAlign = 'left';
-      ctx.fillText('ν* = ' + nu.toFixed(3), L + 6, yOf(nu) - 7);
-    }
-
-    // axis
-    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(L, T); ctx.lineTo(L, T + plotH); ctx.lineTo(L + plotW, T + plotH);
-    ctx.stroke();
-    ctx.save();
-    ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif';
-    ctx.translate(16, T + plotH / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center';
-    ctx.fillText('ξⱼ² = (αⱼ − τⱼ)²', 0, 0);
-    ctx.restore();
-    ctx.textAlign = 'left';
-
-    const total = w.reduce((a, b) => a + b, 0);
-    const nPos = w.filter(x => x > 1e-9).length;
-    document.getElementById('wf-legend').textContent =
-      nPos + ' of ' + J + ' groups receive positive weight · Σⱼ wⱼ = ' + total.toFixed(3) +
-      ' · groups sorted by squared KKT gap ξⱼ² (bars above the water line ν* get weight; "stays out" groups are excluded because γ̃ⱼ = 0 and αⱼ ≥ τⱼ).';
-  }
-
-  document.getElementById('wf-random').onclick = () => { randomize(); draw(); };
-  document.getElementById('wf-lambda').oninput = draw;
-  randomize(); draw();
-})();
-</script>
-
-
-<script>
-(function () {
-  const cv = document.getElementById('famdemo');
-  const ctx = cv.getContext('2d');
-  const css = getComputedStyle(document.documentElement);
-  const C = {
-    g: css.getPropertyValue('--accent').trim() || '#e8825e',
-    h: css.getPropertyValue('--accent-2').trim() || '#f0a380',
     dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
     text: css.getPropertyValue('--text').trim() || '#e3ddd3',
     grid: css.getPropertyValue('--border').trim() || '#3a332a',
-    blue: '#7dabf8'
+    blue: '#8fb8ff'
   };
+  const alpha = 5;
+  const nu = 2.82466;
+  const rows = [
+    { gamma: 0.60, tau: 0.50, w: 0.17857, color: '#e8825e' },
+    { gamma: 0.35, tau: 1.80, w: 0.37500, color: '#7dabf8' },
+    { gamma: 0.25, tau: 3.00, w: 0.44643, color: '#4fc596' },
+    { gamma: 0.10, tau: 4.10, w: 0.00000, color: '#b795f5' }
+  ].map((row, index) => {
+    const xi = alpha - row.tau;
+    return { ...row, index, xi, xi2: xi * xi, knot: row.gamma * row.tau / xi };
+  });
 
-  // scenarios: slice objective g(x) = s/(1+x) + a^2 x
-  const SCEN = {
-    A: { s: 9, a: 1.2, x0: 4.0, XMAX: 6,   YMIN: 5,   YMAX: 10.8 },
-    B: { s: 4, a: 2.2, x0: 1.0, XMAX: 2.2, YMIN: 3.5, YMAX: 11.5 }
-  };
-  let sc = SCEN.A, xt = sc.x0, iter = 0;
+  const M = { L: 72, R: 252, T: 42, B: 52 };
+  const plotW = cv.width - M.L - M.R;
+  const plotH = cv.height - M.T - M.B;
+  const yMin = 0, yMax = 8.2;
+  const X = w => M.L + w * plotW;
+  const Y = value => M.T + (yMax - value) / (yMax - yMin) * plotH;
 
-  const g    = x => sc.s / (1 + x) + sc.a * sc.a * x;
-  const tau  = x => Math.sqrt(sc.s) / (1 + x);
-  const hw   = (w, x) => sc.s / ((1 + xt) ** 2) * ((xt + w) ** 2 / (x + w) + 1 - w) + sc.a * sc.a * x;
-  const step = w => Math.max((xt + w) * tau(xt) / sc.a - w, 0);
+  function phi(row, w) {
+    if (row.knot <= 1 && w >= row.knot) {
+      const gt = row.gamma * row.tau;
+      return gt * gt / Math.max(w, 1e-12) + 2 * row.gamma * row.tau * row.tau;
+    }
+    return 2 * row.gamma * alpha * row.tau - w * row.xi2;
+  }
 
-  // layout: main plot + progress strip
-  const M = { L: 48, R: 14, T: 18, B: 292 };          // main plot bottom y
-  const P = { T: 330, B: 440 };                        // progress strip
-  const sx = x => M.L + x / sc.XMAX * (cv.width - M.L - M.R);
-  const sy = y => M.B - (y - sc.YMIN) / (sc.YMAX - sc.YMIN) * (M.B - M.T);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.font = '12px Inter, sans-serif';
 
-  function drawCurve(f, color, width, dash, alpha) {
-    ctx.save();
-    ctx.globalAlpha = alpha == null ? 1 : alpha;
-    ctx.setLineDash(dash || []);
-    ctx.lineWidth = width; ctx.strokeStyle = color;
+  for (let value = 0; value <= 8; value += 2) {
+    const y = Y(value);
+    ctx.strokeStyle = 'rgba(58,51,42,0.85)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(M.L, y); ctx.lineTo(M.L + plotW, y); ctx.stroke();
+    ctx.fillStyle = C.dim; ctx.textAlign = 'right';
+    ctx.fillText(String(value), M.L - 9, y + 4);
+  }
+  for (let w = 0; w <= 1.001; w += 0.25) {
+    const x = X(w);
+    ctx.strokeStyle = 'rgba(58,51,42,0.45)';
+    ctx.beginPath(); ctx.moveTo(x, M.T); ctx.lineTo(x, M.T + plotH); ctx.stroke();
+    ctx.fillStyle = C.dim; ctx.textAlign = 'center';
+    ctx.fillText(w.toFixed(2), x, M.T + plotH + 19);
+  }
+  ctx.strokeStyle = '#57503f'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(M.L, M.T); ctx.lineTo(M.L, M.T + plotH);
+  ctx.lineTo(M.L + plotW, M.T + plotH); ctx.stroke();
+
+  rows.forEach(row => {
+    ctx.strokeStyle = row.color; ctx.lineWidth = 2.6; ctx.setLineDash([]);
     ctx.beginPath();
-    let started = false;
-    for (let x = 0; x <= sc.XMAX + 1e-9; x += sc.XMAX / 400) {
-      const y = f(x);
-      if (y < sc.YMIN - 0.4 || y > sc.YMAX + 0.6) { started = false; continue; }
-      if (!started) { ctx.moveTo(sx(x), sy(y)); started = true; }
-      else ctx.lineTo(sx(x), sy(y));
+    for (let step = 0; step <= 400; step++) {
+      const w = step / 400;
+      const x = X(w), y = Y(phi(row, w));
+      if (step === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
-    ctx.restore();
-  }
 
-  function draw() {
-    const w = parseFloat(document.getElementById('fam-w').value);
-    ctx.clearRect(0, 0, cv.width, cv.height);
-
-    // ---- main plot ----
-    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(M.L, M.T); ctx.lineTo(M.L, M.B); ctx.lineTo(cv.width - M.R, M.B);
-    ctx.stroke();
-
-    // family bundle
-    for (const wf of [0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0]) {
-      drawCurve(x => hw(wf, x), C.h, 1, [], 0.28);
+    if (row.knot <= 1) {
+      ctx.fillStyle = '#262119'; ctx.strokeStyle = row.color; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(X(row.knot), Y(phi(row, row.knot)), 4, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
     }
-    // highlighted surrogate
-    drawCurve(x => hw(w, x), C.h, 2.2, [7, 5]);
-    // objective
-    drawCurve(g, C.g, 2.6);
 
-    // minimizer of highlighted surrogate + descent arrow
-    const xn = step(w);
-    ctx.fillStyle = C.blue;
-    ctx.beginPath(); ctx.arc(sx(xn), sy(hw(w, xn)), 4.5, 0, 7); ctx.fill();
-    ctx.strokeStyle = C.blue; ctx.setLineDash([3, 4]); ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.moveTo(sx(xn), sy(hw(w, xn))); ctx.lineTo(sx(xn), sy(g(xn))); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.beginPath(); ctx.arc(sx(xn), sy(g(xn)), 4.5, 0, 7);
-    ctx.fillStyle = 'rgba(125,171,248,0.35)'; ctx.fill(); ctx.stroke();
+    const yOpt = phi(row, row.w);
+    ctx.fillStyle = row.w > 0 ? row.color : '#262119';
+    ctx.strokeStyle = row.color; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.arc(X(row.w), Y(yOpt), 5.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-    // current iterate
-    ctx.fillStyle = C.text;
-    ctx.beginPath(); ctx.arc(sx(xt), sy(g(xt)), 5.5, 0, 7); ctx.fill();
-
-    // labels
-    ctx.font = '13px Inter, sans-serif'; ctx.textAlign = 'left';
-    ctx.fillStyle = C.g; ctx.fillText('g(γ)', cv.width - 150, M.T + 14);
-    ctx.fillStyle = C.h; ctx.fillText('h_w family (w↑ = tighter)', cv.width - 190, M.T + 33);
-    ctx.fillStyle = C.dim;
-    const dg = g(xt) - g(step(w));
-    ctx.fillText('iter ' + iter + '   γ̃ = ' + xt.toFixed(3) + '   w = ' + w.toFixed(2) +
-                 '   γ⁺ = ' + xn.toFixed(3) + (xn === 0 ? ' (switched off)' : '') +
-                 '   Δg = ' + Math.max(dg, 0).toFixed(3), M.L + 8, M.T + 14);
-
-    // ---- progress strip: descent vs w ----
-    const n = 49, ds = [];
-    let dmax = 1e-9, best = 0;
-    for (let i = 0; i < n; i++) {
-      const wi = 0.02 + i * 0.02;
-      const d = Math.max(g(xt) - g(step(wi)), 0);
-      ds.push([wi, d]);
-      if (d > dmax) { dmax = d; best = i; }
+    if (row.w > 0) {
+      const left = Math.max(0, row.w - 0.10);
+      const right = Math.min(1, row.w + 0.10);
+      const tangent = w => yOpt - nu * (w - row.w);
+      ctx.strokeStyle = row.color; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(X(left), Y(tangent(left)));
+      ctx.lineTo(X(right), Y(tangent(right))); ctx.stroke(); ctx.setLineDash([]);
     }
-    const px = wv => M.L + wv * (cv.width - M.L - M.R);
-    const py = d => P.B - d / (dmax * 1.12) * (P.B - P.T);
-    ctx.strokeStyle = C.grid;
-    ctx.beginPath(); ctx.moveTo(M.L, P.T - 6); ctx.lineTo(M.L, P.B); ctx.lineTo(cv.width - M.R, P.B); ctx.stroke();
-    ds.forEach(([wi, d], i) => {
-      ctx.fillStyle = i === best ? C.g : 'rgba(240,163,128,0.35)';
-      const bx = px(wi), bw = (cv.width - M.L - M.R) / n * 0.7;
-      ctx.fillRect(bx - bw / 2, py(d), bw, P.B - py(d));
-    });
-    // slider marker
-    ctx.strokeStyle = C.text; ctx.setLineDash([2, 3]);
-    ctx.beginPath(); ctx.moveTo(px(w), P.T - 4); ctx.lineTo(px(w), P.B); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif';
-    ctx.fillText('descent per MM step vs w   (orange bar = best w this step)', M.L + 8, P.T - 10);
-    ctx.textAlign = 'center';
-    for (const t of [0, 0.25, 0.5, 0.75, 1]) ctx.fillText(t.toFixed(2), px(t), P.B + 16);
-    ctx.textAlign = 'left';
-  }
+  });
 
-  document.getElementById('fam-w').oninput = draw;
-  document.getElementById('fam-step').onclick = () => {
-    const w = parseFloat(document.getElementById('fam-w').value);
-    xt = step(w); iter += 1; draw();
-  };
-  document.getElementById('fam-reset').onclick = () => { xt = sc.x0; iter = 0; draw(); };
-  function setScen(key, btnOn, btnOff) {
-    sc = SCEN[key]; xt = sc.x0; iter = 0;
-    document.getElementById(btnOn).classList.add('fam-active');
-    document.getElementById(btnOff).classList.remove('fam-active');
-    draw();
-  }
-  document.getElementById('fam-scA').onclick = () => setScen('A', 'fam-scA', 'fam-scB');
-  document.getElementById('fam-scB').onclick = () => setScen('B', 'fam-scB', 'fam-scA');
-  draw();
+  ctx.fillStyle = C.text; ctx.font = '600 13px Inter, sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('actual MM coordinate costs, α = 5', M.L + 8, M.T + 18);
+  ctx.fillStyle = C.blue; ctx.font = '12px Inter, sans-serif';
+  ctx.fillText('dashed tangents: common slope −ν* = −2.825', M.L + 8, M.T + 37);
+
+  ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('weight allocated to coordinate j,  wⱼ', M.L + plotW / 2, cv.height - 8);
+  ctx.save(); ctx.translate(17, M.T + plotH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('actual cost  φⱼ(wⱼ)', 0, 0); ctx.restore();
+
+  const subscripts = ['₁', '₂', '₃', '₄'];
+  const legendX = cv.width - M.R + 24;
+  ctx.textAlign = 'left';
+  rows.forEach((row, index) => {
+    const y = M.T + 22 + index * 82;
+    ctx.strokeStyle = row.color; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(legendX, y); ctx.lineTo(legendX + 28, y); ctx.stroke();
+    ctx.fillStyle = C.text; ctx.font = '600 12.5px Inter, sans-serif';
+    ctx.fillText('φ' + subscripts[index] + '(w)', legendX + 38, y + 4);
+    ctx.fillStyle = C.dim; ctx.font = '11.5px Inter, sans-serif';
+    ctx.fillText('γ̃=' + row.gamma.toFixed(2) + ',  τ=' + row.tau.toFixed(2), legendX, y + 24);
+    ctx.fillText('ξ²=' + row.xi2.toFixed(2) + ',  ŵ=' + row.w.toFixed(3), legendX, y + 42);
+    ctx.fillText(row.w > 0 ? 'funded: slope = −ν*' : 'unfunded: ξ² < ν*', legendX, y + 60);
+  });
 })();
 </script>
+
 <script>
-/* ---------- ternary simplex demo: every allocation at once ---------- */
 (function () {
-  const cv = document.getElementById('simdemo');
+  const cv = document.getElementById('wfexplore');
   if (!cv) return;
   const ctx = cv.getContext('2d');
-  const GCOL = ['#7dabf8', '#f87171', '#34d399'];   // group colors (match wf-full)
+  const playBtn = document.getElementById('wf-play');
+  const restartBtn = document.getElementById('wf-restart');
+  const speedSelect = document.getElementById('wf-speed');
+  const status = document.getElementById('wf-status');
+  const colors = ['#7dabf8', '#f87171', '#34d399', '#fbbf24', '#b795f5'];
+  const subscripts = ['₁', '₂', '₃', '₄', '₅'];
 
-  // slice model per group: g_j(x) = s/(1+x) + a^2 x, groups mutually orthogonal
-  const SCEN = {
-    A: { name: 'three-way split', s: [9.0, 6.5, 4.6], a: [3.4, 3.2, 3.1], gt0: [0.28, 0.18, 0.12] },
-    B: { name: 'lopsided split',  s: [12.0, 7.0, 5.5], a: [3.0, 2.9, 3.4], gt0: [0.55, 0.30, 0.05] },
-    C: { name: 'winner takes all', s: [16.0, 12.0, 9.0], a: [3.55, 3.3, 2.95], gt0: [0.5, 0.45, 0.55] }
-  };
-  let scKey = 'A', sc = SCEN.A, gt = sc.gt0.slice(), iter = 0;
-  let mode = 'bound';                                // 'bound' | 'true'
-  let probe = [1 / 3, 1 / 3, 1 / 3];
+  // Same first scenario as the expanded animation below.
+  const xi2 = [20.25, 10.24, 4.00, 0.81, 0.09];
+  const gammaTau = [0.30, 0.63, 0.75, 0.41, 0.705];
+  const knots = [0.0667, 0.1969, 0.3750, 0.4556, 2.35];
+  const finalLevel = 2.82466;
+  const steps = 360;
 
-  const tauF = j => Math.sqrt(sc.s[j]) / (1 + gt[j]);
-  const gJ = (j, x) => sc.s[j] / (1 + x) + sc.a[j] * sc.a[j] * x;
-  const stepJ = (j, w) => Math.max((gt[j] + w) * tauF(j) / sc.a[j] - w, 0);
-  function hJ(j, w, x) {                             // surrogate slice value
-    if (w === 0 && gt[j] === 0) return gJ(j, 0);
-    return sc.s[j] / ((1 + gt[j]) ** 2) * ((gt[j] + w) ** 2 / (x + w) + 1 - w)
-           + sc.a[j] * sc.a[j] * x;
-  }
-  function descents(w) {                             // [boundDescent, trueDescent]
-    let Db = 0, Dt = 0;
-    for (let j = 0; j < 3; j++) {
-      const x = stepJ(j, w[j]);
-      Db += gJ(j, gt[j]) - hJ(j, w[j], x);
-      Dt += gJ(j, gt[j]) - gJ(j, x);
+  function marginal(j, height) {
+    const c = knots[j];
+    if (c > 0 && c <= 1 && height >= c) {
+      return gammaTau[j] * gammaTau[j] / Math.max(height * height, 1e-12);
     }
-    return [Db, Dt];
+    return xi2[j];
   }
 
-  // water-filling solution (compact getWeights, J small)
-  function optW() {
-    const alpha = sc.a, tau = [0, 1, 2].map(tauF);
-    const xi = alpha.map((a, j) => a - tau[j]);
-    const gb = [0, 1, 2].map(j => gt[j] * tau[j]);
-    let idx = [0, 1, 2].filter(j => !(xi[j] >= 0 && gt[j] === 0));
-    idx.sort((p, q) => xi[q] * xi[q] - xi[p] * xi[p]);
-    const w = [0, 0, 0], d = idx.length;
-    for (let k = 0; k < d; k++) {
-      let nu = xi[idx[k]] * xi[idx[k]], ssum = 0;
-      for (let j = 0; j < k; j++) { w[idx[j]] = gb[idx[j]] / Math.sqrt(nu); ssum += w[idx[j]]; }
-      w[idx[k]] = 1 - ssum;
-      const c = xi[idx[k]] !== 0 ? gb[idx[k]] / xi[idx[k]] : Infinity;
-      if (w[idx[k]] > 0 && (w[idx[k]] < c || xi[idx[k]] <= 0)) {
-        for (let j = k + 1; j < d; j++) w[idx[j]] = 0;
-        return w;
+  // Pour small equal increments into the vessel with the widest current surface.
+  const frames = [];
+  const weights = new Array(xi2.length).fill(0);
+  frames.push({ weights: weights.slice(), level: Math.max(...xi2), budget: 0 });
+  for (let step = 1; step <= steps; step++) {
+    let widest = 0;
+    for (let j = 1; j < weights.length; j++) {
+      if (marginal(j, weights[j]) > marginal(widest, weights[widest])) widest = j;
+    }
+    weights[widest] += 1 / steps;
+    frames.push({
+      weights: weights.slice(),
+      level: Math.max(...weights.map((w, j) => marginal(j, w))),
+      budget: step / steps
+    });
+  }
+
+  const M = { L: 76, R: 28, T: 82, B: 96 };
+  const plotW = cv.width - M.L - M.R;
+  const plotH = cv.height - M.T - M.B;
+  const gap = plotW / xi2.length;
+  const vmax = Math.max(...xi2);
+  const halfMax = gap * 0.42;
+  const X = j => M.L + gap * (j + 0.5);
+  const Y = height => M.T + plotH * (1 - height);
+  const halfWidth = value => halfMax * Math.sqrt(Math.max(value, 0) / vmax);
+
+  function drawVessel(j, fillHeight) {
+    const cx = X(j);
+    ctx.strokeStyle = colors[j]; ctx.lineWidth = 1.7;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      for (let k = 0; k <= 140; k++) {
+        const height = Math.max(0.006, k / 140);
+        const x = cx + side * halfWidth(marginal(j, height));
+        if (k === 0) ctx.moveTo(x, Y(height)); else ctx.lineTo(x, Y(height));
       }
-      let t = 0;
-      for (let j = 0; j <= k; j++) t += gb[idx[j]];
-      const nu2 = t * t;
-      const next = k + 1 < d ? xi[idx[k + 1]] * xi[idx[k + 1]] : -Infinity;
-      if (nu >= nu2 && (nu2 >= next || k === d - 1)) {
-        for (let j = 0; j <= k; j++) w[idx[j]] = gb[idx[j]] / Math.sqrt(nu2);
-        for (let j = k + 1; j < d; j++) w[idx[j]] = 0;
-        return w;
-      }
+      ctx.stroke();
     }
-    return w;
-  }
 
-  // triangle geometry: w1 top, w2 bottom-left, w3 bottom-right
-  const A = [360, 74], B = [70, 542], Cv = [650, 542];
-  const bary2xy = w => [w[0] * A[0] + w[1] * B[0] + w[2] * Cv[0],
-                        w[0] * A[1] + w[1] * B[1] + w[2] * Cv[1]];
-  const det = (B[1] - Cv[1]) * (A[0] - Cv[0]) + (Cv[0] - B[0]) * (A[1] - Cv[1]);
-  function xy2bary(x, y) {
-    const l1 = ((B[1] - Cv[1]) * (x - Cv[0]) + (Cv[0] - B[0]) * (y - Cv[1])) / det;
-    const l2 = ((Cv[1] - A[1]) * (x - Cv[0]) + (A[0] - Cv[0]) * (y - Cv[1])) / det;
-    return [l1, l2, 1 - l1 - l2];
-  }
-
-  // colormap: dark -> ember -> peach -> pale gold, with quantized bands
-  const STOPS = [[0, [33, 29, 24]], [0.35, [107, 61, 32]], [0.72, [232, 130, 94]], [1, [255, 223, 174]]];
-  function cmap(t) {
-    t = Math.max(0, Math.min(1, t));
-    t = Math.floor(t * 14) / 14;                      // contour bands
-    for (let i = 1; i < STOPS.length; i++) {
-      if (t <= STOPS[i][0]) {
-        const [t0, c0] = STOPS[i - 1], [t1, c1] = STOPS[i];
-        const u = (t - t0) / (t1 - t0);
-        return c0.map((v, k) => Math.round(v + u * (c1[k] - v)));
-      }
-    }
-    return STOPS[STOPS.length - 1][1];
-  }
-
-  const off = document.createElement('canvas');
-  off.width = cv.width / 2; off.height = cv.height / 2;
-  const offCtx = off.getContext('2d');
-  let dmax = 1, wOpt = [1, 0, 0], wTrueBest = [1, 0, 0];
-
-  function computeHeatmap() {
-    wOpt = optW();
-    const img = offCtx.createImageData(off.width, off.height);
-    const vals = new Float32Array(off.width * off.height).fill(-1);
-    dmax = 1e-12;
-    let dmin = Infinity;
-    for (let py = 0; py < off.height; py++) {
-      for (let px = 0; px < off.width; px++) {
-        const wb = xy2bary(px * 2, py * 2);
-        if (wb[0] < -0.002 || wb[1] < -0.002 || wb[2] < -0.002) continue;
-        const w = wb.map(v => Math.max(v, 0));
-        const norm = w[0] + w[1] + w[2];
-        const d = descents([w[0] / norm, w[1] / norm, w[2] / norm]);
-        const v = Math.max(mode === 'bound' ? d[0] : d[1], 0);
-        vals[py * off.width + px] = v;
-        if (v > dmax) dmax = v;
-        if (v < dmin) dmin = v;
-      }
-    }
-    const span = Math.max(dmax - dmin, 1e-12);   // color relative to surface range
-    for (let i = 0; i < vals.length; i++) {
-      if (vals[i] < 0) continue;
-      const c = cmap((vals[i] - dmin) / span);
-      img.data[4 * i] = c[0]; img.data[4 * i + 1] = c[1];
-      img.data[4 * i + 2] = c[2]; img.data[4 * i + 3] = 255;
-    }
-    offCtx.putImageData(img, 0, 0);
-    // true-descent argmax on a coarse simplex grid
-    let best = -1;
-    const R = 100;
-    for (let i = 0; i <= R; i++) {
-      for (let k = 0; k <= R - i; k++) {
-        const w = [i / R, k / R, (R - i - k) / R];
-        const v = descents(w)[1];
-        if (v > best) { best = v; wTrueBest = w; }
-      }
-    }
-  }
-
-  function star(x, y, r, color) {
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    for (let i = 0; i < 10; i++) {
-      const rad = i % 2 === 0 ? r : r * 0.45;
-      const a = -Math.PI / 2 + i * Math.PI / 5;
-      const px = x + rad * Math.cos(a), py = y + rad * Math.sin(a);
-      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    ctx.moveTo(cx - halfWidth(xi2[j]), Y(0));
+    ctx.lineTo(cx + halfWidth(xi2[j]), Y(0));
+    ctx.stroke();
+
+    if (knots[j] <= 1) {
+      ctx.strokeStyle = '#e3ddd3'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - halfWidth(xi2[j]) - 3, Y(knots[j]));
+      ctx.lineTo(cx + halfWidth(xi2[j]) + 3, Y(knots[j]));
+      ctx.stroke();
+      ctx.fillStyle = '#e3ddd3'; ctx.font = '10.5px Inter, sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText('c=' + knots[j].toFixed(2), cx + halfWidth(xi2[j]) + 6, Y(knots[j]) + 4);
     }
-    ctx.closePath();
-    ctx.fillStyle = color; ctx.fill();
-    ctx.strokeStyle = '#1a1713'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    if (fillHeight > 1e-9) {
+      ctx.fillStyle = colors[j] + '55';
+      ctx.beginPath();
+      ctx.moveTo(cx - halfWidth(xi2[j]), Y(0));
+      for (let k = 0; k <= 80; k++) {
+        const height = Math.max(0.006, fillHeight * k / 80);
+        ctx.lineTo(cx - halfWidth(marginal(j, height)), Y(height));
+      }
+      for (let k = 80; k >= 0; k--) {
+        const height = Math.max(0.006, fillHeight * k / 80);
+        ctx.lineTo(cx + halfWidth(marginal(j, height)), Y(height));
+      }
+      ctx.closePath(); ctx.fill();
+
+      const rim = halfWidth(marginal(j, Math.max(fillHeight, 0.006)));
+      ctx.strokeStyle = colors[j]; ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx - rim, Y(fillHeight)); ctx.lineTo(cx + rim, Y(fillHeight));
+      ctx.stroke();
+      ctx.fillStyle = '#e3ddd3'; ctx.font = '600 11px Inter, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('w=' + fillHeight.toFixed(3), cx, Y(fillHeight) - 8);
+    }
+
+    ctx.fillStyle = colors[j]; ctx.font = '600 12px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('coordinate ' + (j + 1), cx, M.T + plotH + 24);
+    ctx.fillStyle = '#a49a8c'; ctx.font = '11.5px Inter, sans-serif';
+    ctx.fillText('base width ξ' + subscripts[j] + '² = ' + xi2[j].toFixed(2),
+                 cx, M.T + plotH + 43);
   }
 
-  function fmtW(w) { return '(' + w.map(v => v.toFixed(2)).join(', ') + ')'; }
-
-  function draw() {
+  function draw(frame) {
     ctx.clearRect(0, 0, cv.width, cv.height);
-    ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(off, 0, 0, cv.width, cv.height);
+    ctx.strokeStyle = '#57503f'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(M.L - 12, M.T - 5); ctx.lineTo(M.L - 12, M.T + plotH);
+    ctx.lineTo(cv.width - M.R, M.T + plotH); ctx.stroke();
 
-    // triangle outline
-    ctx.strokeStyle = 'rgba(227,221,211,0.5)'; ctx.lineWidth = 1.4;
-    ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]);
-    ctx.lineTo(Cv[0], Cv[1]); ctx.closePath(); ctx.stroke();
-
-    // corner labels with group colors
-    ctx.font = '600 12.5px Inter, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillStyle = GCOL[0]; ctx.fillText('all on group 1 — w = (1, 0, 0)', A[0], A[1] - 14);
-    ctx.textAlign = 'right'; ctx.fillStyle = GCOL[1];
-    ctx.fillText('all on group 2', B[0] + 30, B[1] + 22);
-    ctx.fillText('w = (0, 1, 0)', B[0] + 30, B[1] + 38);
-    ctx.textAlign = 'left'; ctx.fillStyle = GCOL[2];
-    ctx.fillText('all on group 3', Cv[0] - 30, Cv[1] + 22);
-    ctx.fillText('w = (0, 0, 1)', Cv[0] - 30, Cv[1] + 38);
-
-    // uniform marker
-    const u = bary2xy([1 / 3, 1 / 3, 1 / 3]);
-    ctx.beginPath(); ctx.arc(u[0], u[1], 5.5, 0, 7);
-    ctx.strokeStyle = 'rgba(227,221,211,0.85)'; ctx.lineWidth = 1.8; ctx.stroke();
-
-    // true-descent argmax (diamond), only in true mode
-    if (mode === 'true') {
-      const p = bary2xy(wTrueBest);
-      ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(Math.PI / 4);
-      ctx.fillStyle = '#34d399'; ctx.fillRect(-4.6, -4.6, 9.2, 9.2);
-      ctx.strokeStyle = '#1a1713'; ctx.lineWidth = 1.4;
-      ctx.strokeRect(-4.6, -4.6, 9.2, 9.2); ctx.restore();
+    ctx.fillStyle = '#a49a8c'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'right';
+    for (let height = 0; height <= 1.001; height += 0.25) {
+      const y = Y(height);
+      ctx.fillText(height.toFixed(2), M.L - 18, y + 4);
+      ctx.strokeStyle = 'rgba(58,51,42,0.72)';
+      ctx.beginPath(); ctx.moveTo(M.L - 12, y); ctx.lineTo(cv.width - M.R, y); ctx.stroke();
     }
 
-    // optimal allocation star
-    const o = bary2xy(wOpt);
-    star(o[0], o[1], 10, '#7dabf8');
+    ctx.save(); ctx.translate(18, M.T + plotH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = '#a49a8c'; ctx.font = '12px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('allocated weight wⱼ  (fill height)', 0, 0); ctx.restore();
 
-    // probe
-    const p = bary2xy(probe);
-    ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, 7);
-    ctx.fillStyle = '#fff'; ctx.fill();
-    ctx.strokeStyle = '#1a1713'; ctx.lineWidth = 1.6; ctx.stroke();
+    frame.weights.forEach((weight, j) => drawVessel(j, weight));
 
-    // header line
-    ctx.fillStyle = 'rgba(227,221,211,0.75)'; ctx.font = '12.5px Inter, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText((mode === 'bound' ? 'bound descent' : 'true descent') +
-                 '  ·  iter ' + iter + '  ·  γ̃ = ' + fmtW(gt), 16, 24);
-    ctx.textAlign = 'right';
-    ctx.fillText('best available descent ' + dmax.toFixed(3), cv.width - 16, 24);
-    ctx.textAlign = 'left';
+    const ruler = 2 * halfWidth(Math.min(frame.level, vmax));
+    ctx.strokeStyle = '#8fb8ff'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(M.L, 35); ctx.lineTo(M.L + ruler, 35); ctx.stroke();
+    ctx.fillStyle = '#8fb8ff'; ctx.font = '600 12px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('current surface width ν = ' + frame.level.toFixed(3), M.L, 23);
+    ctx.fillStyle = '#a49a8c'; ctx.font = '11.5px Inter, sans-serif';
+    ctx.fillText('surface width = marginal value −φⱼ′(wⱼ)', M.L + 250, 39);
 
-    readout();
+    const barX = M.L, barY = cv.height - 25, barW = plotW;
+    ctx.strokeStyle = '#57503f'; ctx.lineWidth = 1.2; ctx.strokeRect(barX, barY, barW, 10);
+    ctx.fillStyle = '#7dabf8aa'; ctx.fillRect(barX + 1, barY + 1, (barW - 2) * frame.budget, 8);
+    ctx.fillStyle = '#a49a8c'; ctx.font = '11.5px Inter, sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('budget used  Σⱼwⱼ = ' + frame.budget.toFixed(3) + ' / 1',
+                 barX + barW, barY - 7);
+
+    const final = frame.budget >= 1 - 1e-9;
+    status.textContent = 'Σw=' + frame.budget.toFixed(3) +
+      ' · ' + (final ? 'ν*=' + finalLevel.toFixed(3) : 'ν=' + frame.level.toFixed(3));
   }
 
-  function readout() {
-    const dP = descents(probe), dO = descents(wOpt), dU = descents([1 / 3, 1 / 3, 1 / 3]);
-    const row = (dot, name, w, d) =>
-      '<div class="cell"><span class="sim-dot" style="background:' + dot + '"></span>' +
-      '<b>' + name + '</b><br>w = ' + fmtW(w) +
-      '<br>Δbound = ' + d[0].toFixed(3) + '<br>Δg = ' + d[1].toFixed(3) + '</div>';
-    document.getElementById('sim-readout').innerHTML =
-      row('#fff', 'probe', probe, dP) +
-      row('#7dabf8', 'optimal ŵ', wOpt, dO) +
-      row('transparent;border:1.5px solid #e3ddd3', 'uniform', [1 / 3, 1 / 3, 1 / 3], dU);
+  let frameIndex = 0, playing = false, started = false, lastTime = 0;
+  function setButton() { playBtn.textContent = playing ? 'Pause' : 'Play'; }
+  function startFromBeginning() {
+    frameIndex = 0; playing = true; started = true; lastTime = 0; setButton(); draw(frames[0]);
+    requestAnimationFrame(tick);
+  }
+  function tick(time) {
+    if (!playing) return;
+    const speed = parseFloat(speedSelect.value);
+    if (!lastTime || time - lastTime >= 25 / speed) {
+      lastTime = time; frameIndex += 1;
+      if (frameIndex >= frames.length - 1) {
+        frameIndex = frames.length - 1; playing = false; setButton();
+      }
+      draw(frames[frameIndex]);
+    }
+    if (playing) requestAnimationFrame(tick);
   }
 
-  function refresh() { computeHeatmap(); draw(); }
-
-  // dragging
-  let dragging = false;
-  function setProbe(ev) {
-    const r = cv.getBoundingClientRect();
-    const x = (ev.clientX - r.left) * cv.width / r.width;
-    const y = (ev.clientY - r.top) * cv.height / r.height;
-    let w = xy2bary(x, y).map(v => Math.max(v, 0));
-    const s = w[0] + w[1] + w[2];
-    probe = w.map(v => v / s);
-    draw();
-  }
-  cv.addEventListener('pointerdown', ev => { dragging = true; cv.setPointerCapture(ev.pointerId); setProbe(ev); });
-  cv.addEventListener('pointermove', ev => { if (dragging) setProbe(ev); });
-  cv.addEventListener('pointerup', () => { dragging = false; });
-
-  // controls
-  function setScen(key) {
-    scKey = key; sc = SCEN[key]; gt = sc.gt0.slice(); iter = 0;
-    probe = [1 / 3, 1 / 3, 1 / 3];
-    for (const k of ['A', 'B', 'C'])
-      document.getElementById('sim-sc' + k).classList.toggle('fam-active', k === key);
-    refresh();
-  }
-  document.getElementById('sim-scA').onclick = () => setScen('A');
-  document.getElementById('sim-scB').onclick = () => setScen('B');
-  document.getElementById('sim-scC').onclick = () => setScen('C');
-  document.getElementById('sim-mode').onclick = function () {
-    mode = mode === 'bound' ? 'true' : 'bound';
-    this.textContent = mode === 'bound' ? 'show true descent' : 'show bound descent';
-    refresh();
+  playBtn.onclick = () => {
+    if (playing) { playing = false; setButton(); return; }
+    if (frameIndex >= frames.length - 1) frameIndex = 0;
+    playing = true; started = true; lastTime = 0; setButton(); requestAnimationFrame(tick);
   };
-  function mmStep(w) {
-    gt = [0, 1, 2].map(j => stepJ(j, w[j]));
-    iter += 1; refresh();
-  }
-  document.getElementById('sim-stepOpt').onclick = () => mmStep(wOpt);
-  document.getElementById('sim-stepProbe').onclick = () => mmStep(probe);
-  document.getElementById('sim-reset').onclick = () => setScen(scKey);
+  restartBtn.onclick = startFromBeginning;
 
-  refresh();
+  draw(frames[0]); setButton();
+  const observer = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting) && !started) startFromBeginning();
+  }, { threshold: 0.35 });
+  observer.observe(cv);
 })();
 </script>
 
 <script>
-/* ---------- convergence race chart ---------- */
+/* ---------- R3 weight simplex linked to a convex affine slice ---------- */
 (function () {
+  const cv = document.getElementById('fam-plot');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const playBtn = document.getElementById('fam-play');
+  const resetBtn = document.getElementById('fam-reset');
+  const status = document.getElementById('fam-status');
+  const readout = document.getElementById('fam-readout');
+  const css = getComputedStyle(document.documentElement);
+  const C = {
+    objective: css.getPropertyValue('--accent').trim() || '#e8825e',
+    family: css.getPropertyValue('--accent-2').trim() || '#f0a380',
+    dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
+    text: css.getPropertyValue('--text').trim() || '#e3ddd3',
+    heading: css.getPropertyValue('--heading').trim() || '#f5f0e8',
+    grid: css.getPropertyValue('--border').trim() || '#3a332a',
+    optimal: '#7dabf8', selected: '#f7eee7'
+  };
+
+  const W = 1020, H = 620, canvasScale = cv.width / W;
+  const P = { L: 58, R: 690, T: 86, B: 468 };
+  const A = [850, 120], B = [730, 350], D = [980, 350];
+  const tMin = -0.15, tMax = 2.10, curveTMax = 2.10;
+  const s = [51.84, 45.5625, 37.3321];
+  const alpha = [5, 5, 5];
+  const gamma0 = [0.80, 0.50, 0.30];
+  const initialProbe = [0.10, 0.20, 0.70];
+  const uniform = [1 / 3, 1 / 3, 1 / 3];
+  const familyWeights = [
+    [0.70, 0.15, 0.15], [0.15, 0.70, 0.15], [0.15, 0.15, 0.70],
+    [0.50, 0.40, 0.10], [0.50, 0.10, 0.40], [0.10, 0.45, 0.45], uniform
+  ];
+  const gamma = gamma0.slice();
+  let probe = initialProbe.slice();
+  let wOpt = uniform.slice();
+  let gammaOpt = gamma0.slice();
+  let heatCells = [], heatMin = 0, heatMax = 1;
+  let dragging = false, touring = false, tourClock = 0, tourFrameId = 0;
+  let lastTourDraw = 0;
+
+  const tau = j => Math.sqrt(s[j]) / (1 + gamma[j]);
+  const gJ = (j, x) => s[j] / (1 + x) + alpha[j] * alpha[j] * x;
+  const objective = values => values.reduce((sum, x, j) => sum + gJ(j, x), 0);
+  const stepJ = (j, w) => Math.max((gamma[j] + w) * tau(j) / alpha[j] - w, 0);
+  const gammaPlus = w => [0, 1, 2].map(j => stepJ(j, w[j]));
+  function hJ(j, w, x) {
+    const denominator = x + w;
+    if (denominator <= 1e-12) {
+      return gamma[j] + w <= 1e-12 ? gJ(j, 0) : Infinity;
+    }
+    return s[j] / ((1 + gamma[j]) ** 2) *
+      ((gamma[j] + w) ** 2 / denominator + 1 - w) + alpha[j] * alpha[j] * x;
+  }
+  function surrogate(w, values) {
+    return values.reduce((sum, x, j) => sum + hJ(j, w[j], x), 0);
+  }
+  function descents(w) {
+    const next = gammaPlus(w);
+    let guarantee = 0;
+    for (let j = 0; j < 3; j++) {
+      guarantee += gJ(j, gamma[j]) - hJ(j, w[j], next[j]);
+    }
+    return [Math.max(guarantee, 0), Math.max(objective(gamma) - objective(next), 0)];
+  }
+  function normalize(w) {
+    const clipped = w.map(value => Math.max(value, 0));
+    const total = clipped[0] + clipped[1] + clipped[2];
+    return total > 1e-12 ? clipped.map(value => value / total) : uniform.slice();
+  }
+  function optimizeWeights() {
+    let best = { value: -Infinity, w: uniform.slice() };
+    const N = 50;
+    for (let i = 0; i <= N; i++) {
+      for (let j = 0; j <= N - i; j++) {
+        const w = [i / N, j / N, (N - i - j) / N];
+        const value = descents(w)[0];
+        if (value > best.value) best = { value, w };
+      }
+    }
+    for (const step of [0.01, 0.005, 0.002, 0.001, 0.0005]) {
+      let improved = true;
+      while (improved) {
+        improved = false;
+        for (let di = -2; di <= 2; di++) {
+          for (let dj = -2; dj <= 2; dj++) {
+            const w = [best.w[0] + di * step, best.w[1] + dj * step, 0];
+            w[2] = 1 - w[0] - w[1];
+            if (Math.min(...w) < 0) continue;
+            const value = descents(w)[0];
+            if (value > best.value + 1e-11) {
+              best = { value, w }; improved = true;
+            }
+          }
+        }
+      }
+    }
+    return best.value < 1e-10 ? uniform.slice() : normalize(best.w);
+  }
+
+  const fmtW = w => '(' + w.map(value => value.toFixed(2)).join(', ') + ')';
+  const sameWeights = (a, b) => a.every((value, j) => Math.abs(value - b[j]) < 0.008);
+  const pathGamma = t => gamma.map((value, j) => value + t * (gammaOpt[j] - value));
+  const pathObjective = t => objective(pathGamma(t));
+  const pathSurrogate = (w, t) => surrogate(w, pathGamma(t));
+  const px = t => P.L + (t - tMin) / (tMax - tMin) * (P.R - P.L);
+  function sliceMinimum(w) {
+    let left = tMin, right = curveTMax;
+    for (let k = 0; k < 60; k++) {
+      const first = left + (right - left) / 3;
+      const second = right - (right - left) / 3;
+      if (pathSurrogate(w, first) <= pathSurrogate(w, second)) right = second;
+      else left = first;
+    }
+    return (left + right) / 2;
+  }
+
+  function baryToXY(w) {
+    return [w[0] * A[0] + w[1] * B[0] + w[2] * D[0],
+      w[0] * A[1] + w[1] * B[1] + w[2] * D[1]];
+  }
+  const baryDet = (B[1] - D[1]) * (A[0] - D[0]) +
+    (D[0] - B[0]) * (A[1] - D[1]);
+  function xyToBary(x, y) {
+    const w1 = ((B[1] - D[1]) * (x - D[0]) + (D[0] - B[0]) * (y - D[1])) /
+      baryDet;
+    const w2 = ((D[1] - A[1]) * (x - D[0]) + (A[0] - D[0]) * (y - D[1])) /
+      baryDet;
+    return [w1, w2, 1 - w1 - w2];
+  }
+  function mixColor(a, b, amount) {
+    return a.map((value, index) => Math.round(value + (b[index] - value) * amount));
+  }
+  function heatColor(value) {
+    const stops = [[38, 33, 26], [108, 65, 45], [232, 130, 94], [249, 207, 137]];
+    const span = Math.max(heatMax - heatMin, 1e-12);
+    const scaled = Math.max(0, Math.min(1, (value - heatMin) / span));
+    const position = scaled * (stops.length - 1);
+    const index = Math.min(Math.floor(position), stops.length - 2);
+    const color = mixColor(stops[index], stops[index + 1], position - index);
+    return `rgb(${color[0]},${color[1]},${color[2]})`;
+  }
+  function addHeatTriangle(raw, weights) {
+    const centroid = normalize([
+      (weights[0][0] + weights[1][0] + weights[2][0]) / 3,
+      (weights[0][1] + weights[1][1] + weights[2][1]) / 3,
+      (weights[0][2] + weights[1][2] + weights[2][2]) / 3
+    ]);
+    raw.push({ points: weights.map(baryToXY), value: descents(centroid)[0] });
+  }
+  function buildHeatmap() {
+    const raw = [], N = 34;
+    const weight = (i, j) => [i / N, j / N, (N - i - j) / N];
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N - i; j++) {
+        const p00 = weight(i, j), p10 = weight(i + 1, j), p01 = weight(i, j + 1);
+        addHeatTriangle(raw, [p00, p10, p01]);
+        if (i + j <= N - 2) addHeatTriangle(raw, [p10, weight(i + 1, j + 1), p01]);
+      }
+    }
+    heatMin = Math.min(...raw.map(cell => cell.value));
+    heatMax = Math.max(...raw.map(cell => cell.value));
+    heatCells = raw;
+  }
+  function refreshModel() {
+    wOpt = optimizeWeights(); gammaOpt = gammaPlus(wOpt); buildHeatmap();
+  }
+
+  function plotDomain() {
+    const values = []; let pathLow = Infinity;
+    for (let k = 0; k <= 220; k++) {
+      const t = tMin + (curveTMax - tMin) * k / 220;
+      const gv = pathObjective(t), hv = pathSurrogate(wOpt, t);
+      pathLow = Math.min(pathLow, gv, hv); values.push(gv, hv, pathSurrogate(probe, t));
+      familyWeights.forEach(w => values.push(pathSurrogate(w, t)));
+    }
+    const current = objective(gamma), baseSpan = Math.max(current - pathLow, 4);
+    const cap = current + 0.95 * baseSpan;
+    const visible = values.filter(value => Number.isFinite(value) && value <= cap);
+    return [Math.min(...visible, pathLow) - 0.08 * baseSpan, cap + 0.06 * baseSpan];
+  }
+  function lineLegend(x, y, color, dash, label, width) {
+    ctx.strokeStyle = color; ctx.lineWidth = width || 2.2; ctx.setLineDash(dash || []);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 24, y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = C.dim; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(label, x + 31, y + 4);
+  }
+  function drawFamilyPlot() {
+    const [yMin, yMax] = plotDomain();
+    const py = value => P.B - (value - yMin) / (yMax - yMin) * (P.B - P.T);
+    const selectedSliceT = sliceMinimum(probe);
+    function stepGuide(t, color, label, labelOffset, dash) {
+      const x = px(t);
+      ctx.save();
+      ctx.globalAlpha = 0.82; ctx.strokeStyle = color; ctx.lineWidth = 1.4;
+      ctx.setLineDash(dash || [7, 5]);
+      ctx.beginPath(); ctx.moveTo(x, P.T); ctx.lineTo(x, P.B); ctx.stroke();
+      ctx.setLineDash([]); ctx.fillStyle = color; ctx.font = '600 10.5px Inter, sans-serif';
+      ctx.textAlign = 'left'; ctx.fillText(label, x + 7, P.T + (labelOffset || 15));
+      ctx.restore();
+    }
+    ctx.fillStyle = C.heading; ctx.font = '600 13px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Convex surrogates on one affine slice', P.L, 28);
+    ctx.fillStyle = C.dim; ctx.font = '11px Inter, sans-serif';
+    ctx.fillText('fixed current γ̃=' + fmtW(gamma), P.L, 49);
+    lineLegend(350, 27, C.objective, [], 'objective g', 2.8);
+    lineLegend(500, 27, C.family, [], 'surrogate family', 1.2);
+    lineLegend(350, 49, C.optimal, [], 'optimal-weight Hŵ', 3);
+    lineLegend(500, 49, C.selected, [7, 5], 'selected Hw', 2.2);
+
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(P.L, P.T); ctx.lineTo(P.L, P.B); ctx.lineTo(P.R, P.B); ctx.stroke();
+    ctx.fillStyle = C.dim; ctx.font = '10.5px Inter, sans-serif';
+    for (let k = 0; k <= 4; k++) {
+      const value = yMin + (yMax - yMin) * k / 4, y = py(value);
+      ctx.textAlign = 'right'; ctx.fillText(value.toFixed(0), P.L - 8, y + 4);
+      ctx.strokeStyle = 'rgba(58,51,42,0.72)';
+      ctx.beginPath(); ctx.moveTo(P.L, y); ctx.lineTo(P.R, y); ctx.stroke();
+    }
+    for (const t of [0, 0.5, 1, 1.5, 2]) {
+      const x = px(t); ctx.textAlign = 'center'; ctx.fillStyle = C.dim;
+      ctx.fillText(t.toFixed(Number.isInteger(t) ? 0 : 1), x, P.B + 18);
+      ctx.strokeStyle = 'rgba(58,51,42,0.62)';
+      ctx.beginPath(); ctx.moveTo(x, P.T); ctx.lineTo(x, P.B); ctx.stroke();
+    }
+    stepGuide(0, C.dim, 'current γ̃', 15, [3, 5]);
+    stepGuide(1, C.optimal, 'MM update γ⁺(ŵ)');
+    if (!sameWeights(probe, wOpt)) {
+      const closeToFixedGuide = Math.min(Math.abs(selectedSliceT), Math.abs(selectedSliceT - 1)) < 0.18;
+      stepGuide(selectedSliceT, C.selected, 'selected Hw minimum', closeToFixedGuide ? 31 : 15);
+    }
+    ctx.fillStyle = C.dim; ctx.font = '11.5px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('affine slice: γ(t) = (1 − t)γ̃ + tγ⁺(ŵ)', (P.L + P.R) / 2, P.B + 39);
+    ctx.save(); ctx.translate(17, (P.T + P.B) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('objective / surrogate value', 0, 0); ctx.restore();
+
+    function curve(fn, color, width, dash, opacity) {
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width;
+      ctx.globalAlpha = opacity == null ? 1 : opacity; ctx.setLineDash(dash || []);
+      ctx.beginPath(); let open = false;
+      for (let k = 0; k <= 320; k++) {
+        const t = tMin + (curveTMax - tMin) * k / 320, value = fn(t);
+        if (!Number.isFinite(value) || value < yMin - 1 || value > yMax + 1) {
+          open = false; continue;
+        }
+        if (!open) { ctx.moveTo(px(t), py(value)); open = true; } else ctx.lineTo(px(t), py(value));
+      }
+      ctx.stroke(); ctx.restore();
+    }
+    familyWeights.forEach(w => curve(t => pathSurrogate(w, t), C.family, 1.15, [], 0.28));
+    curve(t => pathSurrogate(wOpt, t), C.optimal, 3, [], 1);
+    if (!sameWeights(probe, wOpt)) {
+      curve(t => pathSurrogate(probe, t), C.selected, 2.2, [7, 5], 0.96);
+      ctx.fillStyle = C.selected; ctx.beginPath();
+      ctx.arc(px(selectedSliceT), py(pathSurrogate(probe, selectedSliceT)), 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    curve(pathObjective, C.objective, 3, [], 1);
+    const touchX = px(0), touchY = py(objective(gamma));
+    ctx.fillStyle = C.text; ctx.beginPath(); ctx.arc(touchX, touchY, 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '600 11px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('all surrogates touch g here', touchX + 9, touchY - 10);
+    const optH = pathSurrogate(wOpt, 1), nextG = pathObjective(1);
+    ctx.fillStyle = C.optimal; ctx.beginPath(); ctx.arc(px(1), py(optH), 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = C.objective; ctx.beginPath(); ctx.arc(px(1), py(nextG), 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = C.optimal; ctx.textAlign = 'right';
+    ctx.fillText('true one-step minimum', px(1) - 9, py(optH) - 16);
+    ctx.fillStyle = C.dim; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('At t=1, blue reaches its full-space minimum at γ⁺(ŵ).', P.L, 535);
+  }
+
+  function star(x, y, radius) {
+    ctx.beginPath();
+    for (let k = 0; k < 10; k++) {
+      const r = k % 2 === 0 ? radius : radius * 0.44;
+      const angle = -Math.PI / 2 + k * Math.PI / 5;
+      const point = [x + r * Math.cos(angle), y + r * Math.sin(angle)];
+      if (k === 0) ctx.moveTo(point[0], point[1]); else ctx.lineTo(point[0], point[1]);
+    }
+    ctx.closePath(); ctx.fillStyle = C.optimal; ctx.fill();
+    ctx.strokeStyle = '#17130f'; ctx.lineWidth = 1.2; ctx.stroke();
+  }
+  function simplexGuide(component, value) {
+    const ends = [];
+    for (let zero = 0; zero < 3; zero++) {
+      if (zero === component) continue;
+      const w = [0, 0, 0]; w[component] = value; w[zero] = 0;
+      w[3 - component - zero] = 1 - value; ends.push(baryToXY(w));
+    }
+    ctx.beginPath(); ctx.moveTo(ends[0][0], ends[0][1]); ctx.lineTo(ends[1][0], ends[1][1]); ctx.stroke();
+  }
+  function drawSimplex() {
+    ctx.fillStyle = C.heading; ctx.font = '600 13px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Choose the MM weights', 720, 28);
+    ctx.fillStyle = C.dim; ctx.font = '11px Inter, sans-serif';
+    ctx.fillText('selected w = ' + fmtW(probe), 720, 49);
+    for (const cell of heatCells) {
+      ctx.fillStyle = heatColor(cell.value); ctx.beginPath();
+      ctx.moveTo(cell.points[0][0], cell.points[0][1]);
+      ctx.lineTo(cell.points[1][0], cell.points[1][1]);
+      ctx.lineTo(cell.points[2][0], cell.points[2][1]); ctx.closePath(); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(227,221,211,0.14)'; ctx.lineWidth = 1;
+    for (const value of [0.25, 0.5, 0.75]) {
+      for (let component = 0; component < 3; component++) simplexGuide(component, value);
+    }
+    ctx.strokeStyle = 'rgba(227,221,211,0.72)'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]);
+    ctx.lineTo(D[0], D[1]); ctx.closePath(); ctx.stroke();
+    ctx.fillStyle = C.text; ctx.font = '600 11.5px Inter, sans-serif';
+    ctx.textAlign = 'center'; ctx.fillText('w₁ = 1', A[0], A[1] - 20);
+    ctx.textAlign = 'left'; ctx.fillText('w₂ = 1', B[0], B[1] + 20);
+    ctx.textAlign = 'right'; ctx.fillText('w₃ = 1', D[0], D[1] + 20);
+    const uniformPoint = baryToXY(uniform);
+    ctx.strokeStyle = C.text; ctx.lineWidth = 1.7; ctx.beginPath();
+    ctx.arc(uniformPoint[0], uniformPoint[1], 5.2, 0, Math.PI * 2); ctx.stroke();
+    const bestPoint = baryToXY(wOpt); star(bestPoint[0], bestPoint[1], 9.5);
+    const selectedPoint = baryToXY(probe);
+    ctx.fillStyle = '#fff'; ctx.beginPath();
+    ctx.arc(selectedPoint[0], selectedPoint[1], 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#17130f'; ctx.lineWidth = 1.5; ctx.stroke();
+    const scaleX = 852, scaleY = 68, scaleW = 126;
+    ctx.fillStyle = C.dim; ctx.font = '10.5px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('guaranteed decrease', 720, scaleY + 8);
+    for (let k = 0; k < scaleW; k++) {
+      ctx.fillStyle = heatColor(heatMin + (heatMax - heatMin) * k / (scaleW - 1));
+      ctx.fillRect(scaleX + k, scaleY, 1, 8);
+    }
+    ctx.strokeStyle = 'rgba(227,221,211,0.35)'; ctx.strokeRect(scaleX, scaleY, scaleW, 8);
+    ctx.fillStyle = C.dim; ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'left'; ctx.fillText(heatMin.toFixed(1), scaleX, scaleY + 20);
+    ctx.textAlign = 'right'; ctx.fillText(heatMax.toFixed(1), scaleX + scaleW, scaleY + 20);
+
+    const selected = descents(probe), optimal = descents(wOpt);
+    const maxValue = Math.max(...selected, ...optimal, 1e-9);
+    ctx.fillStyle = C.heading; ctx.font = '600 12px Inter, sans-serif';
+    ctx.textAlign = 'left'; ctx.fillText('One-step decrease', 720, 425);
+    function barRow(y, label, selectedValue, optimalValue) {
+      ctx.fillStyle = C.dim; ctx.font = '10.5px Inter, sans-serif'; ctx.fillText(label, 720, y + 8);
+      ctx.fillStyle = 'rgba(125,171,248,0.30)'; ctx.fillRect(790, y, 130 * optimalValue / maxValue, 8);
+      ctx.fillStyle = C.selected; ctx.fillRect(790, y + 13, 130 * selectedValue / maxValue, 8);
+      ctx.textAlign = 'right'; ctx.fillStyle = C.optimal; ctx.fillText(optimalValue.toFixed(2), 978, y + 8);
+      ctx.fillStyle = C.text; ctx.fillText(selectedValue.toFixed(2), 978, y + 21); ctx.textAlign = 'left';
+    }
+    barRow(446, 'bound', selected[0], optimal[0]);
+    barRow(501, 'actual', selected[1], optimal[1]);
+    ctx.font = '10px Inter, sans-serif'; ctx.fillStyle = C.optimal;
+    ctx.fillText('blue = optimal weights', 790, 547); ctx.fillStyle = C.text; ctx.fillText('white = selected', 900, 547);
+  }
+
+  function updateReadout() {
+    const selected = descents(probe), optimal = descents(wOpt), baseline = descents(uniform);
+    const row = (style, name, w, values) =>
+      '<div class="cell"><span class="sim-dot" style="' + style + '"></span>' +
+      '<b>' + name + '</b><br>w = ' + fmtW(w) +
+      '<br>guarantee = ' + values[0].toFixed(3) +
+      '<br>actual Δg = ' + values[1].toFixed(3) + '</div>';
+    readout.innerHTML =
+      row('background:#fff;border:1px solid #17130f', 'selected', probe, selected) +
+      row('background:#7dabf8', 'optimal ŵ (best bound)', wOpt, optimal) +
+      row('background:transparent;border:1.5px solid ' + C.text, 'uniform', uniform, baseline);
+  }
+  function draw() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0);
+    drawFamilyPlot(); drawSimplex(); updateReadout();
+    const chosen = descents(probe), best = descents(wOpt);
+    status.textContent = 'w=' + fmtW(probe) + ' · guarantee=' + chosen[0].toFixed(3) +
+      ' · best bound=' + best[0].toFixed(3);
+  }
+
+  function eventPosition(event) {
+    const rect = cv.getBoundingClientRect();
+    return [(event.clientX - rect.left) * W / rect.width, (event.clientY - rect.top) * H / rect.height];
+  }
+  function setProbeFromEvent(event) {
+    const point = eventPosition(event); probe = normalize(xyToBary(point[0], point[1])); draw();
+  }
+  cv.addEventListener('pointerdown', event => {
+    const point = eventPosition(event), raw = xyToBary(point[0], point[1]);
+    if (Math.min(...raw) < -0.06) return;
+    stopTour(); dragging = true; cv.setPointerCapture(event.pointerId); setProbeFromEvent(event);
+  });
+  cv.addEventListener('pointermove', event => { if (dragging) setProbeFromEvent(event); });
+  cv.addEventListener('pointerup', event => {
+    dragging = false; if (cv.hasPointerCapture(event.pointerId)) cv.releasePointerCapture(event.pointerId);
+  });
+  cv.addEventListener('pointercancel', () => { dragging = false; });
+
+  function setTourButton() {
+    playBtn.textContent = touring ? '❚❚ Pause' : '▶ Play';
+    playBtn.title = touring ? 'Pause the weight path' : 'Play the weight path';
+    playBtn.setAttribute('aria-label', touring ? 'Pause weight path' : 'Play weight path');
+    playBtn.classList.toggle('fam-active', touring);
+  }
+  function stopTour() {
+    touring = false; if (tourFrameId) cancelAnimationFrame(tourFrameId);
+    tourFrameId = 0; setTourButton();
+  }
+  let activeTourPoints = [];
+  function randomTourPoint(highFirstWeight) {
+    const w1 = highFirstWeight ? 0.58 + 0.24 * Math.random() : 0.04 + 0.20 * Math.random();
+    const split = 0.10 + 0.80 * Math.random();
+    return [w1, (1 - w1) * split, (1 - w1) * (1 - split)];
+  }
+  function buildTourPoints() {
+    const points = [initialProbe.slice()];
+    for (let k = 0; k < 6; k++) points.push(randomTourPoint(k % 2 === 0));
+    points.push(wOpt.slice());
+    return points;
+  }
+  function animateTour(time) {
+    if (!touring) return;
+    if (!tourClock) tourClock = time;
+    const points = activeTourPoints, segmentLength = 900;
+    const elapsed = time - tourClock, segment = Math.floor(elapsed / segmentLength);
+    if (segment >= points.length - 1) {
+      probe = wOpt.slice(); touring = false; tourFrameId = 0; setTourButton(); draw(); return;
+    }
+    const raw = (elapsed - segment * segmentLength) / segmentLength;
+    const eased = raw * raw * (3 - 2 * raw);
+    probe = points[segment].map((value, j) => value + (points[segment + 1][j] - value) * eased);
+    if (!lastTourDraw || time - lastTourDraw > 35) { lastTourDraw = time; draw(); }
+    tourFrameId = requestAnimationFrame(animateTour);
+  }
+  function startTour() {
+    stopTour(); touring = true; tourClock = 0; lastTourDraw = 0;
+    probe = initialProbe.slice(); activeTourPoints = buildTourPoints();
+    setTourButton(); tourFrameId = requestAnimationFrame(animateTour);
+  }
+  playBtn.onclick = () => touring ? stopTour() : startTour();
+  resetBtn.onclick = () => {
+    stopTour(); probe = initialProbe.slice(); draw();
+  };
+
+  refreshModel(); draw(); setTourButton();
+})();
+</script>
+<script>
+/* ---------- convergence race chart ---------- */
+(async function () {
   const cv = document.getElementById('racechart');
   if (!cv) return;
   const ctx = cv.getContext('2d');
-  const RACE = {"waterfill":[4.811,0.3531,0.03104,0.0003508,1.809e-05,4.439e-06,7.231e-08,4.901e-09,9.603e-10,1.27e-11,1.066e-12,1.954e-13],"uniform":[4.811,3.678,2.224,1.0,0.362,0.1324,0.05849,0.03002,0.01619,0.008747,0.004685,0.002497,0.001336,0.0007183,0.0003882,0.0002106,0.0001147,6.256e-05,3.42e-05,1.873e-05,1.027e-05,5.633e-06,3.092e-06,1.698e-06,9.329e-07,5.126e-07,2.817e-07,1.548e-07,8.509e-08,4.677e-08,2.571e-08,1.413e-08,7.768e-09,4.27e-09,2.347e-09,1.29e-09,7.092e-10,3.899e-10,2.143e-10,1.178e-10,6.476e-11],"random":[4.811,4.248,2.12,0.8533,0.3285,0.1937,0.1341,0.08799,0.05742,0.03891,0.02651,0.01651,0.01216,0.005973,0.003952,0.002355,0.00181,0.0009344,0.0004965,0.0003605,0.0002031,0.0001292,0.0001279,7.343e-05,4.294e-05,2.437e-05,1.535e-05,9.545e-06,7.797e-06,5.549e-06,2.916e-06,1.652e-06,9.263e-07,6.359e-07,4.798e-07,2.615e-07,1.618e-07,1.108e-07,6.612e-08,4.615e-08,2.457e-08],"roundrobin":[4.811,0.3531,0.03104,0.03088,0.0002967,0.0001319,6.93e-05,3.954e-05,2.352e-05,1.439e-05,9.049e-06,5.858e-06,3.905e-06,2.674e-06,1.848e-06,1.276e-06,8.827e-07,6.109e-07,4.229e-07,2.928e-07,2.027e-07,1.404e-07,9.72e-08,6.73e-08,4.66e-08,3.227e-08,2.234e-08,1.547e-08,1.071e-08,7.417e-09,5.136e-09,3.556e-09,2.462e-09,1.705e-09,1.181e-09,8.175e-10,5.66e-10,3.919e-10,2.714e-10,1.879e-10,1.301e-10],"wta":[4.811,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531,0.3531]};
+  const response = await fetch("../assets/data/lasso_weight_results.json");
+  const RACE = (await response.json()).traces;
   const SERIES = [
-    ['waterfill',  'optimal (water-filling)', '#e8825e'],
+    ['waterfill',  'optimal weights',         '#e8825e'],
     ['roundrobin', 'round-robin',             '#fbbf24'],
-    ['uniform',    'uniform 1/J',             '#7dabf8'],
-    ['random',     'random (Dirichlet)',      '#b795f5'],
-    ['wta',        'greedy winner-takes-all', '#f87171']
+    ['uniform',    'uniform 1/p',             '#7dabf8'],
+    ['random',     'random (Dirichlet)',      '#b795f5']
   ];
-  const T = 40, LO = 1e-13, HI = 10;
+  const T = 60, LO = 1e-13, HI = 2;
   const mL = 62, mR = 16, mT = 18, mB = 42;
   const X = t => mL + t / T * (cv.width - mL - mR);
   const Y = v => {
@@ -1858,8 +2009,13 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillStyle = '#a49a8c';
     ctx.fillText(e === 0 ? '1' : '10⁻' + (-e < 10 ? '' : '') + String(-e).split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]).join(''), mL - 8, y + 4);
   }
+  const toleranceY = Y(1e-6);
+  ctx.strokeStyle = 'rgba(79,197,150,0.8)'; ctx.setLineDash([6,5]); ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(mL, toleranceY); ctx.lineTo(cv.width - mR, toleranceY); ctx.stroke();
+  ctx.setLineDash([]); ctx.fillStyle = '#4fc596'; ctx.textAlign = 'left';
+  ctx.fillText('target 10⁻⁶', mL + 7, toleranceY - 6);
   ctx.textAlign = 'center';
-  for (let t = 0; t <= T; t += 10) {
+  for (let t = 0; t <= T; t += 15) {
     ctx.fillText(String(t), X(t), cv.height - mB + 18);
   }
   ctx.fillText('iteration', (mL + cv.width - mR) / 2, cv.height - 6);
@@ -1888,7 +2044,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // legend
   ctx.fillStyle = 'rgba(38,33,25,0.92)';
   ctx.strokeStyle = 'rgba(58,51,42,1)';
-  ctx.beginPath(); ctx.roundRect(cv.width - 262, mT + 12 - 14, 246, 5 * 20 + 10, 8);
+  ctx.beginPath(); ctx.roundRect(cv.width - 262, mT + 12 - 14, 246, SERIES.length * 20 + 10, 8);
   ctx.fill(); ctx.stroke();
   let ly = mT + 12;
   ctx.font = '12.5px Inter, sans-serif'; ctx.textAlign = 'left';

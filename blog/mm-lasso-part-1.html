@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Part 1: MM Algorithms — Anant Mathur</title>
+  <title>Part 1: The Lasso and Coordinate Descent - Anant Mathur</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/dark.css">
+  <link rel="stylesheet" href="../assets/css/dark.css?v=4">
   <script>
     window.MathJax = {
       tex: {
@@ -28,23 +28,31 @@
     mjx-container { color: var(--text); }
     mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 0.3rem 0; }
     .series-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.6rem; }
-    .series-nav a {
-      font-family: var(--mono); font-size: 0.78rem; padding: 0.25rem 0.7rem;
-      border: 1px solid var(--border); border-radius: 999px; color: var(--text-dim);
-    }
+    .series-nav a { font-family: var(--mono); font-size: 0.78rem; padding: 0.25rem 0.7rem;
+      border: 1px solid var(--border); border-radius: 999px; color: var(--text-dim); }
     .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
     .series-nav a.here { color: var(--accent); border-color: var(--accent); }
     .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
-    #mmdemo { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
-              width: 100%; display: block; }
-    .demo-controls { display: flex; gap: 0.6rem; margin-top: 0.7rem; flex-wrap: wrap; }
-    .demo-controls button {
-      font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer;
-      padding: 0.4rem 1rem; border-radius: 8px;
-      border: 1px solid var(--accent); background: transparent; color: var(--accent);
+    .kkt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.4rem 0 2rem; }
+    .kkt-case { border-top: 3px solid #4fc596; padding: 1rem 0.2rem 0; }
+    .kkt-case.zero { border-top-color: #7dabf8; }
+    .kkt-case h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+    .kkt-case p { color: var(--text-dim); font-size: 0.9rem; }
+    .cd-demo-scroll { overflow-x: auto; margin-top: 1.2rem; overscroll-behavior-inline: contain; }
+    #cd-demo { width: 100%; display: block; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--card); }
+    .cd-controls { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.75rem;
+      flex-wrap: wrap; }
+    .cd-controls button { min-width: 76px; padding: 0.42rem 1rem; border: 1px solid var(--accent);
+      border-radius: 8px; background: transparent; color: var(--accent); font: inherit;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+    .cd-controls button:hover { background: var(--accent); color: #2a160d; }
+    .cd-status { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem; }
+    .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.65rem; }
+    @media (max-width: 640px) {
+      .kkt-grid { grid-template-columns: 1fr; }
+      #cd-demo { width: 900px; max-width: none; }
     }
-    .demo-controls button:hover { background: var(--accent); color: #2a160d; }
-    .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.6rem; }
   </style>
 </head>
 <body>
@@ -60,250 +68,484 @@
 </nav>
 
 <div class="container">
-
-  <h1>Part 1: MM Algorithms</h1>
-  <p class="post-meta">MM Algorithms and the Lasso · Anant Mathur · July 2026</p>
+  <span class="chapter-kicker">The Lasso and MM Algorithms - 1 of 5</span>
+  <h1>Part 1: The Lasso and Coordinate Descent</h1>
+  <p class="post-meta">Anant Mathur · July 2026</p>
 
   <div class="series-nav">
-    <a class="here" href="mm-lasso-part-1.html">1 · MM Algorithms</a>
-    <a href="mm-lasso-part-2.html">2 · The Lasso</a>
-    <a href="mm-lasso-part-3.html">3 · Auxiliary KKT</a>
-    <a href="mm-lasso-part-4.html">4 · An Interesting Bound</a>
-    <a href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
+    <a class="here" href="mm-lasso-part-1.html">1 · Lasso + CD</a>
+    <a href="mm-lasso-part-2.html">2 · Auxiliary KKT</a>
+    <a href="mm-lasso-part-3.html">3 · MM Algorithms</a>
+    <a href="mm-lasso-part-4.html">4 · A Separable Bound</a>
+    <a href="mm-lasso-part-5.html">5 · Optimal Weights</a>
   </div>
 
-  <div class="card">
-    This series is based on the paper <em>A Fast MM Algorithm for Group Lasso</em> by
-    <strong>Anant Mathur, Sarat Moka and Zdravko Botev</strong> (School of Mathematics and
-    Statistics, UNSW Sydney).
+  <p class="chapter-intro">
+    The lasso is one of the most familiar tools in sparse regression, and cyclic coordinate
+    descent is the engine behind widely used implementations such as
+    <a href="https://www.jstatsoft.org/article/view/v033i01" target="_blank"
+       rel="noopener"><em>glmnet</em></a>. The reason is simple: once every other coefficient is
+    fixed, the remaining one-dimensional lasso problem has an exact soft-thresholding solution.
+    Its KKT conditions then say precisely which coefficients should be zero and when the
+    algorithm has reached the optimum.
+  </p>
+
+  <div class="reference-note">
+    <strong>Series.</strong> This series develops the scalar-predictor specialization of the MM
+    framework introduced in our source paper with Sarat Moka and Zdravko Botev. Throughout, we
+    work with the ordinary lasso: one standardized predictor per coefficient.
     <a href="../assets/papers/MM_Algorithms_Group_Lasso.pdf" target="_blank" rel="noopener">[PDF]</a>
   </div>
 
-  <h2>The idea</h2>
+  <h2>The model</h2>
 
   <p>
-    A <em>majorize–minimize</em> (MM) algorithm turns a hard minimization problem into a sequence
-    of easy ones. The principle traces back to the optimization-transfer ideas surveyed and
-    popularised in the seminal work of Kenneth Lange and collaborators — see
-    Lange, Hunter &amp; Yang (2000), the widely read tutorial by
-    <a href="https://doi.org/10.1198/0003130042836" target="_blank" rel="noopener">Hunter &amp; Lange (2004)</a>,
-    Lange's monograph <em>MM Optimization Algorithms</em> (SIAM, 2016), and
-    <a href="https://deleeuwworkshop.stat.ucla.edu/KennethLange.pdf" target="_blank" rel="noopener">Lange's
-    lecture slides</a> from the Jan de Leeuw workshop at UCLA — de Leeuw being one of the earliest
-    practitioners of majorization methods.
-  </p>
-
-  <p>
-    Suppose we want to minimize an objective $g(\v\gamma)$. Instead of attacking $g$ directly, at
-    each iteration we build a <em>surrogate</em> function $h(\v\gamma, \widetilde{\v\gamma})$
-    around the current iterate $\widetilde{\v\gamma}$ satisfying the two majorization conditions
+    Let $\v y \in \bb{R}^n$ be a centred response and
+    $\m X = [\v x_1,\ldots,\v x_p] \in \bb{R}^{n\times p}$ a centred design matrix.
+    Following the standard lasso setup, scale every column so that
+    $\|\v x_j\|_2=1$. The linear model is
   </p>
 
   $$
-  g(\widetilde{\v\gamma}) = h(\widetilde{\v\gamma}, \widetilde{\v\gamma}),
+  \v y = \m X\v\beta + \v\epsilon,
+  \qquad \v\epsilon \sim \c N(\v 0,\sigma^2\m I_n).
+  $$
+
+  <p>
+    The least-squares estimate uses every predictor. The lasso of
+    <a href="https://doi.org/10.1111/j.2517-6161.1996.tb02080.x" target="_blank" rel="noopener">Tibshirani (1996)</a>
+    adds an $\ell_1$ penalty:
+  </p>
+
+  $$
+  \begin{aligned}
+  \widehat{\v\beta}
+  &= \argmin_{\v\beta\in\bb{R}^p} f(\v\beta),\\
+  f(\v\beta)
+  &:= \frac{1}{2n}\|\v y-\m X\v\beta\|_2^2
+       + \lambda\|\v\beta\|_1.
+  \end{aligned}
+  $$
+
+  <h2>Soft-thresholding</h2>
+
+  <p>
+    Write $\alpha:=n\lambda$ and define the soft-thresholding operator
+  </p>
+
+  $$
+  S_\alpha(z) := \operatorname{sign}(z)(|z|-\alpha)_+.
+  $$
+
+  <p>
+    This operator is the exact solution of the scalar lasso problem
+  </p>
+
+  $$
+  \argmin_{u\in\bb R}
+  \left\{\frac12(z-u)^2+\alpha|u|\right\}
+  =S_\alpha(z).
+  $$
+
+  <div class="result-note">
+    <strong>The threshold performs selection.</strong> If $|z|\le\alpha$, the solution is zero.
+    Otherwise $z$ is shrunk toward zero by exactly $\alpha$.
+  </div>
+
+  <h2>The lasso KKT conditions</h2>
+
+  <p>
+    For the full lasso with correlated predictors, $\v x_j^\top\v y$ does not tell the whole
+    story. Whether coefficient $j$ should be zero depends on the residual left by all the other coefficients.
+    Let $\v r(\v\beta):=\v y-\m X\v\beta$. Since the absolute value is not differentiable at
+    zero, its coordinate-wise subgradient is
+  </p>
+
+  $$
+  \partial |\beta_j| =
+  \begin{cases}
+    \{\operatorname{sign}(\beta_j)\}, & \beta_j\ne0,\\[0.3em]
+    [-1,1], & \beta_j=0.
+  \end{cases}
+  $$
+
+  <p>
+    Setting the subgradient of the convex lasso objective to zero gives the necessary and
+    sufficient optimality certificate
+  </p>
+
+  $$
+  \v x_j^\top \v r(\widehat{\v\beta})
+  \in \alpha\,\partial|\widehat\beta_j|,
+  \qquad j=1,\ldots,p.
+  $$
+
+  <div class="kkt-grid">
+    <div class="kkt-case">
+      <h3>Active coefficient</h3>
+      $$\widehat\beta_j\ne0
+      \quad\Longrightarrow\quad
+      \v x_j^\top\widehat{\v r}
+      =\alpha\operatorname{sign}(\widehat\beta_j).$$
+      <p>The residual correlation sits exactly on a threshold boundary.</p>
+    </div>
+    <div class="kkt-case zero">
+      <h3>Zero coefficient</h3>
+      $$\widehat\beta_j=0
+      \quad\Longrightarrow\quad
+      |\v x_j^\top\widehat{\v r}|\le\alpha.$$
+      <p>The residual correlation may lie anywhere inside the threshold interval.</p>
+    </div>
+  </div>
+
+  <h2 id="coordinate-descent">Coordinate descent: one coordinate at a time</h2>
+
+  <p>
+    Coordinate descent is a general strategy for minimizing a multivariable objective
+    $F:\bb R^p\to\bb R$. At the current point $\v\beta$, choose a coordinate $j$, keep every
+    other coordinate fixed, and minimize only along the $j$th axis:
+  </p>
+
+  $$
+  u_j^\star
+  \in\argmin_{u\in\bb R}
+  F(\beta_1,\ldots,\beta_{j-1},u,\beta_{j+1},\ldots,\beta_p),
   \qquad
-  g(\v\gamma) \le h(\v\gamma, \widetilde{\v\gamma}) \quad \text{for all } \v\gamma .
+  \beta_j\leftarrow u_j^\star.
   $$
 
   <p>
-    That is, $h(\cdot, \widetilde{\v\gamma})$ lies above $g$ everywhere and touches it at
-    $\v\gamma = \widetilde{\v\gamma}$. Defining the MM map
-    $M(\cdot) := \argmin_{\v\gamma} h(\v\gamma, \cdot)$, the update
-    $\v\gamma^{(t+1)} \leftarrow M(\v\gamma^{(t)})$ enjoys the <em>descent property</em>:
+    The new point differs from the old one in just one entry, so the path consists of
+    axis-aligned moves. A <em>cyclic</em> scheme visits $1,\ldots,p$ in order; randomized and
+    greedy rules choose the next coordinate differently. One pass through all coordinates is
+    called a sweep, and sweeps are repeated until the updates or an optimality measure are small.
+  </p>
+
+  <h3>For the lasso, the one-dimensional solution is explicit</h3>
+
+  <p>
+    Return now to the standardized lasso and write $\alpha=n\lambda$. When coordinate $j$ is
+    selected, all other coefficients are fixed. Their contribution is removed from the response
+    to form the partial residual
   </p>
 
   $$
-  g(\v\gamma^{(t+1)}) \;\le\; h(\v\gamma^{(t+1)}, \v\gamma^{(t)})
-  \;\le\; h(\v\gamma^{(t)}, \v\gamma^{(t)}) \;=\; g(\v\gamma^{(t)}).
+  \v r_{\neg j}
+  :=\v y-\sum_{k\ne j}\v x_k\beta_k
+  =\v r+\v x_j\beta_j.
   $$
 
   <p>
-    The first inequality is majorization, the second holds because $\v\gamma^{(t+1)}$ minimizes
-    the surrogate, and the equality is tangency. Every iteration drives the objective downhill —
-    no step sizes, no line searches. The art lies in choosing a surrogate tight enough to make
-    fast progress yet simple enough to minimize in closed form.
-  </p>
-
-  <h2>Watch it work</h2>
-
-  <p>
-    A concrete example — and a preview of Part 2. Take the one-dimensional lasso objective
+    The remaining one-dimensional lasso problem has the soft-thresholded solution
   </p>
 
   $$
-  g(\gamma) = \tfrac{1}{2}(\gamma - b)^2 + \lambda|\gamma|,
-  \qquad b = 2.2,\; \lambda = 1.8,
+  \begin{aligned}
+  \beta_j^{\mathrm{new}}
+  &=\argmin_{u\in\bb R}
+    \left\{\frac12\|\v r_{\neg j}-\v x_j u\|_2^2+\alpha|u|\right\}\\
+  &=S_\alpha(\v x_j^\top\v r_{\neg j})
+  =S_\alpha(\v x_j^\top\v r+\beta_j),
+  \qquad \|\v x_j\|_2=1.
+  \end{aligned}
   $$
 
   <p>
-    whose minimizer is the soft-thresholded value $\widehat\gamma = b - \lambda = 0.4$. The
-    absolute value is non-smooth, but it admits the classical quadratic majorizer of Hunter &amp;
-    Lange,
-    $|\gamma| \le \frac{\gamma^2}{2|\widetilde\gamma|} + \frac{|\widetilde\gamma|}{2}$,
-    with equality at $\gamma = \widetilde\gamma$. Each surrogate (peach parabola) is minimized in
-    closed form, giving the update
-    $\gamma^{(t+1)} = b\,|\widetilde\gamma| \,/\, (|\widetilde\gamma| + \lambda)$.
+    Only one coefficient changes, so the residual is updated without recomputing
+    $\m X\v\beta$:
   </p>
 
-  <canvas id="mmdemo" width="720" height="420"></canvas>
-  <div class="demo-controls">
-    <button id="btn-step">Step</button>
-    <button id="btn-play">Play</button>
-    <button id="btn-reset">Reset</button>
+  $$
+  \v r\leftarrow\v r-\v x_j
+  (\beta_j^{\mathrm{new}}-\beta_j^{\mathrm{old}}).
+  $$
+
+  <p>
+    Thus the general coordinate-descent step becomes especially cheap for the lasso: compute one
+    residual correlation, soft-threshold it, and update the residual. Cycling these exact scalar
+    solutions drives the full objective downward.
+  </p>
+
+  <h3>Watch the fixed-coordinate updates</h3>
+  <p>
+    The example below follows coordinate descent with two correlated predictors. Each move
+    minimizes one scalar subproblem exactly while the other coefficient stays fixed.
+  </p>
+
+  <div class="cd-demo-scroll">
+    <canvas id="cd-demo" width="1000" height="540"
+      aria-label="Coordinate descent path and one-dimensional lasso subproblem"></canvas>
+  </div>
+  <div class="cd-controls">
+    <button id="cd-step" title="Minimize the highlighted coordinate">Step</button>
+    <button id="cd-play" title="Play or pause cyclic coordinate descent">Play</button>
+    <button id="cd-reset" title="Return to the initial coefficients">Reset</button>
+    <span class="cd-status" id="cd-status"></span>
   </div>
   <p class="demo-caption">
-    The dots on the curve mark past iterates. Convergence is <em>linear with rate</em>
-    $\lambda/b \approx 0.82$: each step only closes about 18% of the remaining gap, so the
-    iterates crawl toward $\widehat\gamma = 0.4$ — dozens of iterations to converge. This is MM's
-    trade-off in miniature: guaranteed monotone descent with closed-form steps, but speed that
-    depends entirely on how tightly the surrogate hugs the objective. That trade-off is what the
-    adaptive weights of Parts 4–5 attack.
+    Left: coordinate descent traces an axis-aligned path because only one coefficient moves at
+    a time; orange segments update $\beta_1$ and green segments update $\beta_2$. Right: the
+    corresponding scalar objective is shown with the other coefficient fixed. The open point
+    is the exact soft-thresholded minimizer used for the next update. The status line reports the
+    largest remaining lasso KKT discrepancy.
   </p>
 
-  <h2>Classical examples</h2>
-
-  <p>
-    Many workhorse algorithms in statistics are MM algorithms in disguise. The
-    <strong>EM algorithm</strong> of
-    <a href="https://doi.org/10.1111/j.2517-6161.1977.tb01600.x" target="_blank" rel="noopener">Dempster,
-    Laird &amp; Rubin (1977)</a> is the canonical special case: the E-step constructs a minorizer
-    of the log-likelihood via Jensen's inequality, and the M-step maximizes it.
-    In <strong>multidimensional scaling</strong>,
-    <a href="https://doi.org/10.1007/978-3-642-51565-1_15" target="_blank" rel="noopener">de Leeuw's
-    (1977)</a> SMACOF algorithm majorizes the stress function — one of the earliest systematic
-    uses of majorization. For <strong>logistic regression</strong>,
-    <a href="https://doi.org/10.1007/BF00049423" target="_blank" rel="noopener">Böhning &amp;
-    Lindsay (1988)</a> bound the Hessian by a fixed matrix to obtain a monotonic quadratic-bound
-    algorithm. And <strong>quantile regression</strong> admits an elegant MM treatment via
-    perturbed absolute-value majorizers
-    (<a href="https://doi.org/10.1198/106186000000000105" target="_blank" rel="noopener">Hunter &amp;
-    Lange, 2000</a>).
-  </p>
+  <h2>Why look beyond coordinate descent?</h2>
 
   <p>
-    In the rest of this series we build an MM algorithm for a modern problem: the (group) lasso.
-    Part 2 sets up the lasso and its optimality conditions.
+    Cyclic coordinate descent is reliable and often very fast. But a sweep moves one
+    coefficient at a time. With strongly correlated predictors, information can pass slowly
+    between coordinates, and many sweeps may be required before every KKT condition is tight.
   </p>
+
+  <div class="math-note">
+    <strong>The next move.</strong> Part 2 replaces $\v\beta$ by one nonnegative auxiliary
+    scale $\gamma_j$ per coefficient. The resulting KKT system is equivalent to the lasso
+    certificate above, but it opens the door to concurrent MM updates.
+  </div>
 
   <div class="pager">
     <a class="btn ghost" href="../blog.html">← Back to blog</a>
-    <a class="btn" href="mm-lasso-part-2.html">Part 2: The Lasso →</a>
+    <a class="btn" href="mm-lasso-part-2.html">Part 2: Auxiliary KKT Conditions →</a>
   </div>
-
 </div>
 
 <footer>© 2026 Anant Mathur</footer>
 
 <script>
 (function () {
-  const cv = document.getElementById('mmdemo');
+  const cv = document.getElementById('cd-demo');
   const ctx = cv.getContext('2d');
   const css = getComputedStyle(document.documentElement);
   const C = {
-    g: css.getPropertyValue('--accent').trim() || '#e8825e',
-    h: css.getPropertyValue('--accent-2').trim() || '#f0a380',
-    dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
+    bg: css.getPropertyValue('--card').trim() || '#262119',
+    grid: css.getPropertyValue('--border').trim() || '#3a332a',
     text: css.getPropertyValue('--text').trim() || '#e3ddd3',
-    grid: css.getPropertyValue('--border').trim() || '#3a332a'
+    dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
+    heading: css.getPropertyValue('--heading').trim() || '#f6f2ec',
+    beta1: css.getPropertyValue('--accent').trim() || '#e8825e',
+    beta2: '#4fc596',
+    contour: '#7dabf8'
   };
 
-  // 1-D lasso: g(x) = 0.5 (x - b)^2 + lam |x|,  minimizer xhat = b - lam
-  const B = 2.2, LAM = 1.8, XHAT = B - LAM; // 0.4
-  const g = x => 0.5 * (x - B) ** 2 + LAM * Math.abs(x);
-  // quadratic majorizer of |x| at xt:  |x| <= x^2/(2|xt|) + |xt|/2
-  const surrogate = xt => x => 0.5 * (x - B) ** 2 + LAM * (x * x / (2 * Math.abs(xt)) + Math.abs(xt) / 2);
-  // closed-form minimizer of the surrogate
-  const mmStep = xt => B * Math.abs(xt) / (Math.abs(xt) + LAM);
+  const RHO = 0.65, ALPHA = 0.7, CORR = [2.3, 1.9];
+  const DET = 1 - RHO * RHO;
+  const BETA_HAT = [
+    (CORR[0] - ALPHA - RHO * (CORR[1] - ALPHA)) / DET,
+    (CORR[1] - ALPHA - RHO * (CORR[0] - ALPHA)) / DET
+  ];
+  const BETA0 = [-0.6, 1.4];
+  const TOL = 1e-3;
 
-  const X0 = 4.6, XMIN = -0.8, XMAX = 5, YMIN = 0, YMAX = 12;
-  let xt = X0, iter = 0, timer = null, trail = [X0];
+  const P = {L: 58, R: 558, T: 72, B: 478};
+  const Q = {L: 635, R: 970, T: 142, B: 478};
+  const B1MIN = -0.9, B1MAX = 2.05, B2MIN = -0.2, B2MAX = 1.65;
+  const UMIN = -1, UMAX = 2.2, QMIN = -0.5, QMAX = 3;
 
-  function sx(x) { return (x - XMIN) / (XMAX - XMIN) * (cv.width - 60) + 45; }
-  function sy(y) { return cv.height - 35 - (y - YMIN) / (YMAX - YMIN) * (cv.height - 60); }
+  let beta = BETA0.slice(), trail = [{beta: BETA0.slice(), coordinate: null}];
+  let steps = 0, timer = null;
 
-  function drawCurve(f, color, width, dash) {
-    ctx.beginPath();
-    ctx.setLineDash(dash || []);
-    ctx.lineWidth = width; ctx.strokeStyle = color;
-    let started = false;
-    for (let px = XMIN; px <= XMAX; px += 0.01) {
-      const y = f(px);
-      if (y < YMIN - 1 || y > YMAX + 1) { started = false; continue; }
-      if (!started) { ctx.moveTo(sx(px), sy(y)); started = true; }
-      else ctx.lineTo(sx(px), sy(y));
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
+  const softThreshold = z => Math.sign(z) * Math.max(Math.abs(z) - ALPHA, 0);
+  const objective = b => 0.5 * (b[0] * b[0] + 2 * RHO * b[0] * b[1] + b[1] * b[1])
+    - CORR[0] * b[0] - CORR[1] * b[1] + ALPHA * (Math.abs(b[0]) + Math.abs(b[1]));
+  const coordinateScore = (b, j) => CORR[j] - RHO * b[1 - j];
+  const coordinateTarget = (b, j) => softThreshold(coordinateScore(b, j));
+  const scalarObjective = (u, z) => 0.5 * u * u - z * u + ALPHA * Math.abs(u);
+  const kktGap = b => Math.max(...b.map((value, j) => {
+    const residualCorrelation = CORR[j] - value - RHO * b[1 - j];
+    return Math.abs(value) > 1e-10
+      ? Math.abs(residualCorrelation - ALPHA * Math.sign(value))
+      : Math.max(Math.abs(residualCorrelation) - ALPHA, 0);
+  }));
+
+  const px = value => P.L + (value - B1MIN) / (B1MAX - B1MIN) * (P.R - P.L);
+  const py = value => P.B - (value - B2MIN) / (B2MAX - B2MIN) * (P.B - P.T);
+  const qx = value => Q.L + (value - UMIN) / (UMAX - UMIN) * (Q.R - Q.L);
+  const qy = value => Q.B - (value - QMIN) / (QMAX - QMIN) * (Q.B - Q.T);
+
+  function line(x1, y1, x2, y2, color, width, dash) {
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width || 1;
+    ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.stroke(); ctx.restore();
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    // axes
-    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(45, sy(YMIN)); ctx.lineTo(cv.width - 15, sy(YMIN));
-    ctx.moveTo(45, sy(YMIN)); ctx.lineTo(45, 15);
-    ctx.stroke();
+  function drawContours() {
+    const minimum = objective(BETA_HAT);
+    const levels = [0.025, 0.08, 0.18, 0.35, 0.65, 1.1, 1.8, 2.8, 4].map(x => x + minimum);
+    const nx = 62, ny = 48;
+    const values = Array.from({length: ny + 1}, (_, iy) =>
+      Array.from({length: nx + 1}, (_, ix) => objective([
+        B1MIN + (B1MAX - B1MIN) * ix / nx,
+        B2MIN + (B2MAX - B2MIN) * iy / ny
+      ])));
 
-    // minimizer reference line
-    ctx.strokeStyle = C.grid; ctx.setLineDash([3, 5]);
-    ctx.beginPath(); ctx.moveTo(sx(XHAT), sy(YMIN)); ctx.lineTo(sx(XHAT), 20); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif';
-    ctx.fillText('γ̂ = ' + XHAT.toFixed(1), sx(XHAT) - 22, sy(YMIN) + 16);
+    levels.forEach((level, levelIndex) => {
+      ctx.save(); ctx.strokeStyle = C.contour;
+      ctx.globalAlpha = 0.25 + 0.055 * levelIndex; ctx.lineWidth = levelIndex < 4 ? 1.35 : 1;
+      ctx.beginPath();
+      for (let iy = 0; iy < ny; iy++) {
+        for (let ix = 0; ix < nx; ix++) {
+          const corners = [
+            {x: ix, y: iy, v: values[iy][ix]},
+            {x: ix + 1, y: iy, v: values[iy][ix + 1]},
+            {x: ix + 1, y: iy + 1, v: values[iy + 1][ix + 1]},
+            {x: ix, y: iy + 1, v: values[iy + 1][ix]}
+          ];
+          const intersections = [];
+          for (const [a, b] of [[0, 1], [1, 2], [2, 3], [3, 0]]) {
+            const va = corners[a].v - level, vb = corners[b].v - level;
+            if ((va < 0) === (vb < 0) || Math.abs(va - vb) < 1e-12) continue;
+            const t = va / (va - vb);
+            intersections.push({
+              x: corners[a].x + t * (corners[b].x - corners[a].x),
+              y: corners[a].y + t * (corners[b].y - corners[a].y)
+            });
+          }
+          for (let k = 0; k + 1 < intersections.length; k += 2) {
+            const a = intersections[k], b = intersections[k + 1];
+            const ax = px(B1MIN + (B1MAX - B1MIN) * a.x / nx);
+            const ay = py(B2MIN + (B2MAX - B2MIN) * a.y / ny);
+            const bx = px(B1MIN + (B1MAX - B1MIN) * b.x / nx);
+            const by = py(B2MIN + (B2MAX - B2MIN) * b.y / ny);
+            ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+          }
+        }
+      }
+      ctx.stroke(); ctx.restore();
+    });
+  }
 
-    // surrogate at current iterate
-    const h = surrogate(xt);
-    drawCurve(h, C.h, 1.6, [6, 5]);
-    // objective
-    drawCurve(g, C.g, 2.4);
+  function drawAxes() {
+    ctx.fillStyle = C.heading; ctx.font = '600 17px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Full lasso objective', P.L, 31);
+    ctx.fillStyle = C.dim; ctx.font = '13px Inter, sans-serif';
+    ctx.fillText('axis-aligned path: one coefficient moves at a time', P.L, 52);
 
-    // trail of past iterates on g
+    for (const value of [-0.5, 0, 0.5, 1, 1.5, 2]) {
+      const x = px(value); line(x, P.T, x, P.B, C.grid, 1);
+      ctx.textAlign = 'center'; ctx.fillStyle = C.dim; ctx.fillText(value.toFixed(1), x, P.B + 20);
+    }
+    for (const value of [0, 0.5, 1, 1.5]) {
+      const y = py(value); line(P.L, y, P.R, y, C.grid, 1);
+      ctx.textAlign = 'right'; ctx.fillStyle = C.dim; ctx.fillText(value.toFixed(1), P.L - 9, y + 4);
+    }
+    line(P.L, P.B, P.R, P.B, C.dim, 1.2); line(P.L, P.T, P.L, P.B, C.dim, 1.2);
+    ctx.textAlign = 'center'; ctx.fillStyle = C.text; ctx.font = '14px Inter, sans-serif';
+    ctx.fillText('β₁', (P.L + P.R) / 2, P.B + 43);
+    ctx.save(); ctx.translate(P.L - 42, (P.T + P.B) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('β₂', 0, 0); ctx.restore();
+  }
+
+  function drawPath(activeCoordinate) {
+    for (let i = 1; i < trail.length; i++) {
+      const previous = trail[i - 1].beta, current = trail[i].beta;
+      line(px(previous[0]), py(previous[1]), px(current[0]), py(current[1]),
+        trail[i].coordinate === 0 ? C.beta1 : C.beta2, 3.2);
+    }
     for (let i = 0; i < trail.length - 1; i++) {
-      const a = 0.15 + 0.55 * (i / Math.max(trail.length - 1, 1));
-      ctx.globalAlpha = a;
-      ctx.fillStyle = C.text;
-      ctx.beginPath(); ctx.arc(sx(trail[i]), sy(g(trail[i])), 3, 0, 7); ctx.fill();
+      ctx.fillStyle = C.dim; ctx.globalAlpha = 0.25 + 0.55 * i / Math.max(trail.length - 1, 1);
+      ctx.beginPath(); ctx.arc(px(trail[i].beta[0]), py(trail[i].beta[1]), 3.2, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // next iterate marker (minimum of surrogate)
-    const xNext = mmStep(xt);
-    ctx.fillStyle = C.dim;
-    ctx.beginPath(); ctx.arc(sx(xNext), sy(h(xNext)), 4, 0, 7); ctx.fill();
+    const target = beta.slice(); target[activeCoordinate] = coordinateTarget(beta, activeCoordinate);
+    line(px(beta[0]), py(beta[1]), px(target[0]), py(target[1]),
+      activeCoordinate === 0 ? C.beta1 : C.beta2, 1.6, [7, 5]);
 
-    // current iterate on g
-    ctx.fillStyle = C.text;
-    ctx.beginPath(); ctx.arc(sx(xt), sy(g(xt)), 5.5, 0, 7); ctx.fill();
+    ctx.fillStyle = C.text; ctx.beginPath();
+    ctx.arc(px(beta[0]), py(beta[1]), 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = C.contour; ctx.lineWidth = 2.2; ctx.beginPath();
+    const ox = px(BETA_HAT[0]), oy = py(BETA_HAT[1]);
+    for (let k = 0; k < 5; k++) {
+      const a = -Math.PI / 2 + k * 4 * Math.PI / 5;
+      const b = a + 2 * Math.PI / 5;
+      ctx.lineTo(ox + 8 * Math.cos(a), oy + 8 * Math.sin(a));
+      ctx.lineTo(ox + 3.5 * Math.cos(b), oy + 3.5 * Math.sin(b));
+    }
+    ctx.closePath(); ctx.stroke();
+    ctx.fillStyle = C.contour; ctx.font = '12px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('β̂ = (' + BETA_HAT.map(x => x.toFixed(3)).join(', ') + ')', ox + 12, oy - 10);
 
-    // labels
-    ctx.font = '13px Inter, sans-serif';
-    ctx.fillStyle = C.g;  ctx.fillText('g(γ) = ½(γ−b)² + λ|γ|', cv.width - 190, 32);
-    ctx.fillStyle = C.h;  ctx.fillText('h(γ, γᵗ)  (surrogate)', cv.width - 190, 52);
-    ctx.fillStyle = C.dim;
-    ctx.fillText('iteration ' + iter + '    γᵗ = ' + xt.toFixed(4) +
-                 '    gap to γ̂: ' + Math.abs(xt - XHAT).toFixed(4), 55, 30);
+    ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.beta1; ctx.fillText('orange: update β₁', P.L, P.T + 16);
+    ctx.fillStyle = C.beta2; ctx.fillText('green: update β₂', P.L + 145, P.T + 16);
   }
 
+  function drawSubproblem(j, converged) {
+    const color = j === 0 ? C.beta1 : C.beta2;
+    const z = coordinateScore(beta, j), target = coordinateTarget(beta, j);
+    ctx.fillStyle = C.heading; ctx.font = '600 17px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(converged ? 'KKT conditions satisfied' : 'One-coordinate subproblem', Q.L, 31);
+    ctx.fillStyle = C.dim; ctx.font = '13px Inter, sans-serif';
+    ctx.fillText('hold β' + (2 - j) + ' = ' + beta[1 - j].toFixed(3) + ' fixed; vary u = β' + (j + 1), Q.L, 52);
+    ctx.fillStyle = color; ctx.font = '600 14px Inter, sans-serif';
+    ctx.fillText('q' + (j + 1) + '(u) = ½u² − z' + (j + 1) + 'u + α|u|', Q.L, 82);
+    ctx.fillStyle = C.dim; ctx.font = '13px Inter, sans-serif';
+    ctx.fillText('z' + (j + 1) + ' = c' + (j + 1) + ' − ρβ' + (2 - j) + ' = ' + z.toFixed(3), Q.L, 105);
+    ctx.fillText('u* = Sα(z' + (j + 1) + ') = ' + target.toFixed(3), Q.L, 126);
+
+    for (const value of [-1, 0, 1, 2]) {
+      const x = qx(value); line(x, Q.T, x, Q.B, C.grid, 1);
+      ctx.textAlign = 'center'; ctx.fillStyle = C.dim; ctx.fillText(String(value), x, Q.B + 20);
+    }
+    for (const value of [0, 1, 2, 3]) {
+      const y = qy(value); line(Q.L, y, Q.R, y, C.grid, 1);
+      ctx.textAlign = 'right'; ctx.fillStyle = C.dim; ctx.fillText(String(value), Q.L - 8, y + 4);
+    }
+    line(Q.L, Q.B, Q.R, Q.B, C.dim, 1.2); line(Q.L, Q.T, Q.L, Q.B, C.dim, 1.2);
+    line(qx(0), Q.T, qx(0), Q.B, C.dim, 1, [4, 5]);
+    ctx.fillStyle = C.text; ctx.textAlign = 'center'; ctx.fillText('u = β' + (j + 1), (Q.L + Q.R) / 2, Q.B + 43);
+
+    ctx.save(); ctx.beginPath(); ctx.rect(Q.L, Q.T, Q.R - Q.L, Q.B - Q.T); ctx.clip();
+    ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.6;
+    let first = true;
+    for (let i = 0; i <= 320; i++) {
+      const u = UMIN + (UMAX - UMIN) * i / 320;
+      const x = qx(u), y = qy(scalarObjective(u, z));
+      if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = C.text; ctx.beginPath();
+    ctx.arc(qx(beta[j]), qy(scalarObjective(beta[j], z)), 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.arc(qx(target), qy(scalarObjective(target, z)), 6.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height); ctx.fillStyle = C.bg; ctx.fillRect(0, 0, cv.width, cv.height);
+    const gap = kktGap(beta), converged = gap < TOL, activeCoordinate = steps % 2;
+    drawAxes(); drawContours(); drawPath(activeCoordinate); drawSubproblem(activeCoordinate, converged);
+    document.getElementById('cd-status').textContent = converged
+      ? 'converged · β=(' + beta.map(x => x.toFixed(3)).join(', ') + ') · KKT gap=' + gap.toExponential(1)
+      : 'step ' + steps + ' · next β' + (activeCoordinate + 1) + ' · β=(' +
+        beta.map(x => x.toFixed(3)).join(', ') + ') · KKT gap=' + gap.toFixed(3);
+  }
+
+  function stop() {
+    clearInterval(timer); timer = null; document.getElementById('cd-play').textContent = 'Play';
+  }
   function step() {
-    xt = mmStep(xt);
-    iter += 1;
-    trail.push(xt);
-    if (trail.length > 60) trail.shift();
-    draw();
-    if (Math.abs(xt - XHAT) < 5e-4 && timer) stop();
+    if (kktGap(beta) < TOL) { stop(); return; }
+    const j = steps % 2;
+    beta[j] = coordinateTarget(beta, j); steps += 1;
+    trail.push({beta: beta.slice(), coordinate: j}); draw();
+    if (kktGap(beta) < TOL) stop();
   }
-  function stop() { clearInterval(timer); timer = null; document.getElementById('btn-play').textContent = 'Play'; }
+  function reset() {
+    stop(); beta = BETA0.slice(); trail = [{beta: BETA0.slice(), coordinate: null}]; steps = 0; draw();
+  }
 
-  document.getElementById('btn-step').onclick = () => { if (timer) stop(); step(); };
-  document.getElementById('btn-play').onclick = function () {
-    if (timer) { stop(); } else { timer = setInterval(step, 450); this.textContent = 'Pause'; }
+  document.getElementById('cd-step').onclick = () => { if (timer) stop(); step(); };
+  document.getElementById('cd-play').onclick = function () {
+    if (timer) { stop(); return; }
+    if (kktGap(beta) < TOL) reset();
+    timer = setInterval(step, 420); this.textContent = 'Pause';
   };
-  document.getElementById('btn-reset').onclick = () => { stop(); xt = X0; iter = 0; trail = [X0]; draw(); };
+  document.getElementById('cd-reset').onclick = reset;
 
   draw();
 })();
 </script>
-
 </body>
 </html>

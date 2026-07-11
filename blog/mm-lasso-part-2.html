@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Part 2: The Lasso — Anant Mathur</title>
+  <title>Part 2: Auxiliary KKT Conditions - Anant Mathur</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/dark.css">
+  <link rel="stylesheet" href="../assets/css/dark.css?v=4">
   <script>
     window.MathJax = {
       tex: {
@@ -28,13 +28,17 @@
     mjx-container { color: var(--text); }
     mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 0.3rem 0; }
     .series-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.6rem; }
-    .series-nav a {
-      font-family: var(--mono); font-size: 0.78rem; padding: 0.25rem 0.7rem;
-      border: 1px solid var(--border); border-radius: 999px; color: var(--text-dim);
-    }
+    .series-nav a { font-family: var(--mono); font-size: 0.78rem; padding: 0.25rem 0.7rem;
+      border: 1px solid var(--border); border-radius: 999px; color: var(--text-dim); }
     .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
     .series-nav a.here { color: var(--accent); border-color: var(--accent); }
     .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
+    .kkt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.4rem 0 2rem; }
+    .kkt-case { border-top: 3px solid #4fc596; padding: 1rem 0.2rem 0; }
+    .kkt-case.zero { border-top-color: #7dabf8; }
+    .kkt-case h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+    .kkt-case p { color: var(--text-dim); font-size: 0.9rem; }
+    @media (max-width: 640px) { .kkt-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -50,147 +54,165 @@
 </nav>
 
 <div class="container">
-
-  <h1>Part 2: The Lasso</h1>
-  <p class="post-meta">MM Algorithms and the Lasso · Anant Mathur · July 2026</p>
+  <span class="chapter-kicker">The Lasso and MM Algorithms - 2 of 5</span>
+  <h1>Part 2: Auxiliary KKT Conditions</h1>
+  <p class="post-meta">Anant Mathur · July 2026</p>
 
   <div class="series-nav">
-    <a href="mm-lasso-part-1.html">1 · MM Algorithms</a>
-    <a class="here" href="mm-lasso-part-2.html">2 · The Lasso</a>
-    <a href="mm-lasso-part-3.html">3 · Auxiliary KKT</a>
-    <a href="mm-lasso-part-4.html">4 · An Interesting Bound</a>
-    <a href="mm-lasso-part-5.html">5 · Water-Filling Demo</a>
+    <a href="mm-lasso-part-1.html">1 · Lasso + CD</a>
+    <a class="here" href="mm-lasso-part-2.html">2 · Auxiliary KKT</a>
+    <a href="mm-lasso-part-3.html">3 · MM Algorithms</a>
+    <a href="mm-lasso-part-4.html">4 · A Separable Bound</a>
+    <a href="mm-lasso-part-5.html">5 · Optimal Weights</a>
   </div>
 
-  <h2>From lasso to group lasso</h2>
-
-  <p>
-    The lasso of
-    <a href="https://doi.org/10.1111/j.2517-6161.1996.tb02080.x" target="_blank" rel="noopener">Tibshirani
-    (1996)</a> performs estimation and variable selection simultaneously by penalising the
-    $\ell_1$-norm of the regression coefficients: the non-smoothness of $|\cdot|$ at zero sets
-    some coefficients exactly to zero. Often, however, predictors carry a natural group
-    structure. In genomics, genes within the same pathway exhibit similar functions, and
-    incorporating group structure has proven effective for biomarker identification — the use
-    case that motivated the <em>group lasso</em> of
-    <a href="https://doi.org/10.1111/j.1467-9868.2005.00532.x" target="_blank" rel="noopener">Yuan &amp;
-    Lin (2006)</a>: select or discard entire groups of predictors at once.
+  <p class="chapter-intro">
+    The lasso KKT conditions from Part 1 can be reproduced in a different variable: one
+    nonnegative scale $\gamma_j$ per coefficient. This auxiliary system separates activation
+    from sign and gives the MM construction its natural coordinates.
   </p>
 
+  <h2>From coefficients to nonnegative scales</h2>
+
   <p>
-    Suppose we are given a dataset $(\v y, \m X)$ with response $\v y \in \bb{R}^n$ and feature
-    matrix $\m X \in \bb{R}^{n \times p}$, decomposed into $J$ groups
-    $\m X = [\m X_1, \ldots, \m X_J]$, $\m X_j \in \bb{R}^{n \times p_j}$,
-    $p_1 + \cdots + p_J = p$. The linear model is
+    Introduce $\v\gamma=(\gamma_1,\ldots,\gamma_p)^\top\in\bb{R}_+^p$ and define
   </p>
 
   $$
-  \m Y = \beta_0 \m 1 + \m X_1 \v\beta_1 + \cdots + \m X_J \v\beta_J + \v\epsilon,
-  \qquad \v\epsilon \sim \c{N}(\v 0, \sigma^2 \m I_n),
+  \m\Gamma:=\operatorname{diag}(\sqrt{\gamma_1},\ldots,\sqrt{\gamma_p}),
   $$
-
-  <p>
-    with predictors and response centred so the intercept can be dropped. Following the
-    <em>standardized group lasso</em> of
-    <a href="https://doi.org/10.1080/10618600.2012.681250" target="_blank" rel="noopener">Simon &amp;
-    Tibshirani (2012)</a>, each block is <em>sphered</em> via its QR decomposition
-    $\m X_j = \m Z_j \m R_j$, so that $\m Z_j^\top \m Z_j = \m I_{p_j}$. Writing
-    $\v\theta_j := \m R_j \v\beta_j$, we minimize
-  </p>
-
-  $$
-  f(\v\theta) \;:=\; \frac{1}{2n}\Big\|\v y - \sum_{j=1}^{J} \m Z_j \v\theta_j\Big\|_2^2
-  \;+\; \lambda \sum_{j=1}^{J} \sqrt{p_j}\,\|\v\theta_j\|_2 .
-  $$
-
-  <p>
-    The penalty $\sum_j \sqrt{p_j}\|\v\theta_j\|_2$ is non-smooth exactly where a whole group
-    vanishes, so for each $j$ either $\widehat{\v\theta}_j = \v 0$ or every element of
-    $\widehat{\v\theta}_j$ is non-zero. Larger $\lambda$ shrinks more groups to zero. With
-    singleton groups ($p_j = 1$) this is precisely Tibshirani's lasso.
-  </p>
-
-  <h2>The KKT conditions</h2>
-
-  <p>
-    Set $\alpha_j := n\lambda\sqrt{p_j}$. The first-order (Karush–Kuhn–Tucker) condition for
-    minimizing $f$ block-wise is
-  </p>
-
-  $$
-  \m Z_j^\top (\v r_{\neg j} - \m Z_j \v\theta_j) = \alpha_j\, \v g(\v\theta_j),
-  \qquad
-  \v r_{\neg j} := \v y - \sum_{i \ne j} \m Z_i \v\theta_i,
-  $$
-
-  <p>where $\v g$ is the subgradient of $\|\cdot\|_2$:</p>
-
-  $$
-  \v g(\v\eta) =
-  \begin{cases}
-    \dfrac{\v\eta}{\|\v\eta\|_2}, & \v\eta \ne \v 0, \\[0.6em]
-    \{\v s : \|\v s\|_2 \le 1\}, & \v\eta = \v 0 .
-  \end{cases}
-  $$
-
-  <p>
-    Writing $\c{A} := \{j : \widehat{\v\theta}_j \ne \v 0\}$ for the set of <em>activated</em>
-    groups and $\m Z = [\m Z_1, \ldots, \m Z_J]$, the KKT conditions take the form we will use
-    for the rest of the series:
-  </p>
 
   $$
   \begin{aligned}
-    \m Z_j^\top (\v y - \m Z\widehat{\v\theta})
-      &= \frac{\widehat{\v\theta}_j}{\|\widehat{\v\theta}_j\|_2}\,\alpha_j,
-      && \forall\, j \in \c{A}, \\[0.3em]
-    \big\|\m Z_j^\top (\v y - \m Z\widehat{\v\theta})\big\|_2
-      &\le \alpha_j,
-      && \forall\, j \notin \c{A}.
+  \m G(\v\gamma)
+  &:=(\m I+\m X\m\Gamma^2\m X^\top)^{-1}\\
+  &=\left(\m I+\sum_{j=1}^p\gamma_j\v x_j\v x_j^\top\right)^{-1}.
   \end{aligned}
   $$
 
   <p>
-    An activated group's correlation with the residual sits exactly on the boundary $\alpha_j$;
-    an unactivated group's sits inside it.
-  </p>
-
-  <h2>Block coordinate descent — and its limits</h2>
-
-  <p>
-    Because $\m Z_j^\top \m Z_j = \m I_{p_j}$, solving the KKT condition one block at a time has
-    a closed form built from the <em>lasso shrinkage operator</em>
+    Recover a coefficient vector from $\v\gamma$ by
   </p>
 
   $$
-  S_{\alpha_j}(\v x) := \v x\,\big[1 - \alpha_j/\|\v x\|_2\big]_+,
-  \qquad
-  \v\theta_j \leftarrow S_{\alpha_j}\!\big(\m Z_j^\top \v r + \v\theta_j\big),
+  \begin{aligned}
+  \v\beta(\v\gamma)
+  &:=\m\Gamma^2\m X^\top\m G(\v\gamma)\v y,\\
+  \beta_j(\v\gamma)
+  &=\gamma_j\v x_j^\top\m G(\v\gamma)\v y.
+  \end{aligned}
   $$
 
   <p>
-    cycling $j = 1, \ldots, J$ — the block coordinate descent (BCD) algorithm of
-    <a href="https://doi.org/10.1007/s11222-013-9424-2" target="_blank" rel="noopener">Breheny &amp;
-    Huang (2015)</a>, implemented in the R package <code>grpreg</code>. One cycle costs
-    $\c{O}(np)$, which is cheap; the problem is the <em>number</em> of cycles. When $\lambda$ is
-    small (many activated groups) or the feature matrix is poorly conditioned, BCD's iteration
-    count can grow prohibitively.
+    The identity $(\m I+\m X\m\Gamma^2\m X^\top)\m G=\m I$ then gives
   </p>
+
+  $$
+  \v r(\v\gamma)
+  :=\v y-\m X\v\beta(\v\gamma)
+  =\m G(\v\gamma)\v y.
+  $$
 
   <p>
-    In Part 3 we take a different route: a reparameterisation of the problem whose first-order
-    conditions match the KKT conditions above, but which lives in $\bb{R}_+^J$ instead of
-    $\bb{R}^p$ — the foundation of the MM algorithm.
+    Thus the same quantity controls both the coefficient and its residual correlation. Write
   </p>
 
-  <div class="pager">
-    <a class="btn ghost" href="mm-lasso-part-1.html">← Part 1: MM Algorithms</a>
-    <a class="btn" href="mm-lasso-part-3.html">Part 3: Auxiliary KKT →</a>
+  $$
+  \tau_j(\v\gamma):=
+  |\v x_j^\top\m G(\v\gamma)\v y|
+  =|\v x_j^\top\v r(\v\gamma)|.
+  $$
+
+  <h2>The auxiliary objective</h2>
+
+  <p>
+    Consider the convex objective on the nonnegative orthant
+  </p>
+
+  $$
+  \begin{aligned}
+  g(\v\gamma)
+  &:=\v y^\top\m G(\v\gamma)\v y
+    +\alpha^2\v 1^\top\v\gamma,\\
+  &\hspace{6em}\v\gamma\in\bb{R}_+^p.
+  \end{aligned}
+  $$
+
+  <p>
+    Because
+    $\partial\m G/\partial\gamma_j=-\m G\v x_j\v x_j^\top\m G$, its coordinate
+    derivative has the particularly simple form
+  </p>
+
+  $$
+  \begin{aligned}
+  \frac{\partial g}{\partial\gamma_j}
+  &=\alpha^2-(\v x_j^\top\m G(\v\gamma)\v y)^2\\
+  &=\alpha^2-\tau_j(\v\gamma)^2.
+  \end{aligned}
+  $$
+
+  <h2>The auxiliary KKT conditions</h2>
+
+  <p>
+    The constraint $\gamma_j\ge0$ requires a zero derivative in the interior and a
+    nonnegative one at the boundary. Since $\alpha$ and $\tau_j$ are nonnegative, the KKT
+    conditions reduce to
+  </p>
+
+  <div class="kkt-grid">
+    <div class="kkt-case">
+      <h3>Positive scale</h3>
+      $$\widehat\gamma_j>0
+      \quad\Longrightarrow\quad
+      \tau_j(\widehat{\v\gamma})=\alpha.$$
+      <p>An active scale sits exactly on the auxiliary KKT boundary.</p>
+    </div>
+    <div class="kkt-case zero">
+      <h3>Zero scale</h3>
+      $$\widehat\gamma_j=0
+      \quad\Longrightarrow\quad
+      \tau_j(\widehat{\v\gamma})\le\alpha.$$
+      <p>An excluded scale may lie anywhere below the boundary.</p>
+    </div>
   </div>
 
+  <p>
+    It is useful to name the signed auxiliary KKT gap
+    $\xi_j(\v\gamma):=\alpha-\tau_j(\v\gamma)$. A positive scale requires $\xi_j=0$;
+    a zero scale is valid when $\xi_j\ge0$ and violating when $\xi_j<0$.
+  </p>
+
+  <h2>Why this is the same certificate</h2>
+
+  <p>
+    If $\gamma_j>0$, then $\beta_j=\gamma_j\v x_j^\top\v r$ has the same sign as the
+    residual correlation. The equality $\tau_j=\alpha$ therefore becomes
+    $\v x_j^\top\v r=\alpha\operatorname{sign}(\beta_j)$. If $\gamma_j=0$, then
+    $\beta_j=0$ and $\tau_j\le\alpha$ becomes
+    $|\v x_j^\top\v r|\le\alpha$. These are exactly the two lasso KKT cases from Part 1.
+  </p>
+
+  <div class="result-note">
+    <strong>Exact recovery.</strong> If $\widehat{\v\gamma}$ minimizes $g$, then
+    $\widehat{\v\beta}=\widehat{\m\Gamma}^2\m X^\top
+    \m G(\widehat{\v\gamma})\v y$ minimizes the original lasso objective, with
+    $\widehat\beta_j=0$ exactly when $\widehat\gamma_j=0$.
+  </div>
+
+  <div class="math-note">
+    <strong>The computational question.</strong> The auxiliary objective is convex, but the
+    inverse inside $\m G(\v\gamma)$ couples every coordinate. Part 3 introduces the general
+    majorize-minimize framework used to replace that difficult objective by a tractable upper
+    bound.
+  </div>
+
+  <div class="pager">
+    <a class="btn ghost" href="mm-lasso-part-1.html">← Part 1: Lasso and Coordinate Descent</a>
+    <a class="btn" href="mm-lasso-part-3.html">Part 3: MM Algorithms →</a>
+  </div>
 </div>
 
 <footer>© 2026 Anant Mathur</footer>
-
 </body>
 </html>
