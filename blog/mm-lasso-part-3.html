@@ -188,20 +188,8 @@
   <h2>What makes a useful majorizer?</h2>
 
   <p>
-    Majorization guarantees descent, but it does not guarantee speed. A useful surrogate must
-    balance three competing aims:
-  </p>
-
-  <div class="concept-row">
-    <div class="concept-step"><span class="num">01</span><strong>Easy to improve</strong>
-      <span>The surrogate should admit a closed-form or inexpensive update.</span></div>
-    <div class="concept-step"><span class="num">02</span><strong>Tight near the iterate</strong>
-      <span>A loose upper bound gives a safe but timid step.</span></div>
-    <div class="concept-step"><span class="num">03</span><strong>Preserve structure</strong>
-      <span>Separability, sparsity, and parallelism should survive the bound.</span></div>
-  </div>
-
-  <p>
+    Majorization guarantees descent, but it does not guarantee speed. The choice of majorizer is
+    therefore both a mathematical and computational decision.
     Common constructions use tangent inequalities for concave terms, quadratic curvature
     bounds for smooth terms, Jensen's inequality for latent-variable objectives, or matrix
     inequalities for coupled inverse problems. The mathematics changes from problem to
