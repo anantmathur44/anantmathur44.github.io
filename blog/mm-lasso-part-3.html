@@ -201,32 +201,6 @@
     algorithms once their implicit upper bounds are written down.
   </div>
 
-  <h2>Exact and generalized MM</h2>
-
-  <p>
-    Exact MM minimizes the surrogate at every iteration. That is sufficient but not necessary.
-    A generalized MM step only needs to improve the surrogate:
-  </p>
-
-  $$
-  h(\v\gamma^{(t+1)},\v\gamma^{(t)})
-  \le h(\v\gamma^{(t)},\v\gamma^{(t)}).
-  $$
-
-  <p>
-    The same two-line argument still gives
-    $g(\v\gamma^{(t+1)})\le g(\v\gamma^{(t)})$. This permits partial inner solves,
-    coordinate updates, or damped steps when the exact surrogate minimum is expensive.
-  </p>
-
-  <div class="math-note">
-    <strong>Descent is not the whole convergence theorem.</strong> Monotone objective values
-    do not by themselves prove that the iterates reach a minimizer. Stationarity requires the
-    surrogate to share the appropriate first-order behaviour of the objective, together with
-    regularity and compactness assumptions. For a convex objective, every stationary point is
-    global; uniqueness is an additional question.
-  </div>
-
   <h2>The auxiliary lasso as an MM problem</h2>
 
   <p>
