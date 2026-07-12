@@ -297,10 +297,9 @@
     baseline allocations.</p>
 
   <p>
-    Consider an ordinary lasso with $p=12$ correlated, standardized predictors and $n=300$
-    observations. Three coefficients generate the response; at
-    $\lambda=0.45\lambda_{\max}$, two remain active in the representative solution. The MM
-    update is identical in every run; only the weight policy changes.
+    The figure compares how quickly several weight policies reduce the optimality gap for the
+    same lasso problem. Each run uses the same MM update, so the only difference is how the
+    weight budget is allocated.
   </p>
 
   <div class="breakout">
