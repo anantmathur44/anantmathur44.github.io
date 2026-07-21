@@ -281,8 +281,8 @@
 
   <p class="chapter-intro">
     The bound in Part 4 leaves one degree of freedom: a unit budget
-    $\v 1^\top\v w=1$ that decides which coefficients receive the strongest update. This part
-    derives the optimal allocation and shows why it improves the MM step.
+    $\v 1^\top\v w=1$ that decides which coefficients receive the strongest update. This final
+    part works out the best possible allocation and shows what it buys.
   </p>
 
   <div class="part-banner">
@@ -293,13 +293,13 @@
   </div>
 
   <h2>A convergence race</h2>
-  <p class="plain">the optimal allocation reaches the solution in fewer iterations than the
-    baseline allocations.</p>
+  <p class="plain">the optimal weights reach the solution in a fraction of the iterations the
+    baselines need.</p>
 
   <p>
-    The figure compares how quickly several weight policies reduce the optimality gap for the
-    same lasso problem. Each run uses the same MM update, so the only difference is how the
-    weight budget is allocated.
+    The figure compares how quickly several weight policies reduce the optimality gap on the
+    same lasso problem. Each run uses the same MM update. The only thing that changes is how
+    the weight budget is allocated.
   </p>
 
   <div class="breakout">
@@ -331,10 +331,11 @@
 
   <p>
     Every point on the simplex defines a valid MM surrogate for the same lasso objective. Changing
-    $\v w$ leaves the objective and current iterate fixed, but redistributes the curvature of the
-    upper bound and therefore changes the proposed next step. All the surrogates touch the orange
-    objective at the current iterate. The blue curve uses the optimal weights: its minimum is the
-    lowest in the family, so it gives the strongest guaranteed one-step improvement.
+    $\v w$ does not touch the objective or the current iterate; it only moves curvature around in
+    the upper bound. That is enough to change the proposed next step. All the surrogates touch the
+    orange objective at the current iterate, but the blue curve, the one built from the optimal
+    weights, has the lowest minimum in the family and hence the strongest guaranteed one-step
+    improvement.
   </p>
 
   <div class="breakout">
@@ -349,9 +350,11 @@
   <div class="sim-readout" id="fam-readout"></div>
   <p class="demo-caption" id="fam-caption">
     Peach curves sample the surrogate family, blue is the optimal choice, and the dashed curve
-    follows the white simplex point. Vertical guides mark the current iterate, the optimal MM step,
-    and the selected surrogate's minimum. The star marks the optimal weight and the open circle the
-    uniform allocation.
+    follows the white simplex point. Every surrogate stays above the orange objective and
+    touches it at the current iterate. Vertical guides mark the current iterate, the optimal
+    MM step, and the selected surrogate's minimum on this slice; the heatmap and bars on the
+    right show each allocation's full guaranteed decrease. The star marks the optimal weight
+    and the open circle the uniform allocation.
   </p>
   </div>
 
@@ -367,8 +370,9 @@
     the next MM step.</p>
 
   <p>
-    Substitute the closed-form update of Part 4 into the surrogate and minimize over the unit
-    simplex:
+    Substitute the closed-form update of Part 4 back into the surrogate. The bound then
+    reduces to a sum of coordinate costs $\phi_j(w_j)$, one per coefficient, and the best
+    allocation minimizes that sum over the unit simplex:
   </p>
 
   $$
@@ -393,7 +397,8 @@
   $$
 
   <p>
-    The cost contributed by coordinate $j$ is the continuously differentiable convex function
+    In this notation, the cost for coordinate $j$ works out to the continuously
+    differentiable convex function
   </p>
 
   $$
@@ -409,9 +414,9 @@
 
   <p>
     Before the knot, one unit of weight improves the bound at the constant marginal rate
-    $-\phi_j'(w_j)=\xi_j^2$. <strong>At $w_j=c_j$, the next update sets coefficient $j$ to
-    zero, so $c_j$ is its deactivation point.</strong> Beyond that point, additional weight no
-    longer changes its active status and has diminishing marginal value,
+    $-\phi_j'(w_j)=\xi_j^2$. At $w_j=c_j$, the next update sets coefficient $j$ to
+    zero; this is the deactivation point. Past it, extra weight cannot change the
+    coefficient's active status, and its marginal value decays as
     $(\widetilde\gamma_j\tau_j)^2/w_j^2$.
   </p>
 
@@ -479,12 +484,11 @@
 
   <p>
     Thus the squared auxiliary KKT gap is the coordinate's <em>initial marginal value</em>: it
-    is the amount by which an infinitesimal unit of weight lowers the surrogate bound. As
-    weight is added, that marginal value stays flat until $c_j$ and then decreases. The
-    optimal-weight procedure repeatedly gives the next increment to the currently largest
-    $-\phi_j'(w_j)$. It stops
-    when $\sum_jw_j=1$; at that point all funded coordinates have the same marginal value
-    $\nu^*$, while every unfunded coordinate starts at or below it.
+    is the amount by which an infinitesimal unit of weight lowers the surrogate bound. That
+    value stays flat until $c_j$, then decreases. The optimal-weight procedure simply hands
+    each increment to whichever $-\phi_j'(w_j)$ is currently largest, and stops when
+    $\sum_jw_j=1$. At that point all funded coordinates share the same marginal value
+    $\nu^*$, and every unfunded coordinate starts at or below it.
   </p>
 
   <h2>The common marginal value</h2>
@@ -507,10 +511,10 @@
     <strong>Background.</strong> The <strong>water-filling algorithm</strong> is best known from
     <a href="https://en.wikipedia.org/wiki/Digital_communications" target="_blank"
        rel="noopener">digital communications</a>, where it allocates a fixed power budget
-    across parallel channels in multicarrier systems. Power is assigned first where it gives
-    the greatest marginal increase in transmission rate. As power is added, these marginal
-    returns decrease until every funded channel has the same marginal return. A channel whose
-    initial marginal return is already below that common level receives no power.
+    across parallel channels in multicarrier systems. Power goes first to the channel where it
+    buys the largest gain in transmission rate. Those returns shrink as power accumulates,
+    until every funded channel offers the same marginal gain; a channel that starts below that
+    common level gets nothing.
   </div>
 
   <p class="plain">Here, channels become eligible coordinates, power becomes the unit budget
@@ -519,17 +523,18 @@
   <p>
     Because each $-\phi_j'(w_j)$ starts at height $\xi_j^2$ and only decreases as $w_j$ grows,
     the KKT conditions above lead to a classic <em>water-filling</em> procedure. Picture one
-    vessel per coordinate whose width at fill height $w_j$ is $-\phi_j'(w_j)$ — base width $\xi_j^2$,
-    narrowing past the knot $c_j$. Pour the unit budget into whichever vessel is currently
-    widest: funded surfaces then always share one common width — the water level $\nu$ — which
-    only descends. When the budget is exhausted the level rests at $\nu^*$: vessels whose base
+    vessel per coordinate whose width at fill height $w_j$ is $-\phi_j'(w_j)$: the base has
+    width $\xi_j^2$, and the vessel narrows past the knot $c_j$. Pour the unit budget into
+    whichever vessel is currently widest. Funded surfaces then always share one common width,
+    the water level $\nu$, and that level only descends. When the budget is exhausted the
+    level rests at $\nu^*$; vessels whose base
     $\xi_j^2$ never rose above the final level stay dry. Termination lands in one of two
-    cases — either $\nu^*$ equals some coordinate's base width $\xi_{(k)}^2$ (that pivot
+    cases. Either $\nu^*$ equals some coordinate's base width $\xi_{(k)}^2$ and that pivot
     coordinate
-    takes the leftover budget), or $\nu^* = (\sum_{j \le k} \widetilde\gamma_j \tau_j)^2$
+    takes the leftover budget, or $\nu^* = (\sum_{j \le k} \widetilde\gamma_j \tau_j)^2$
     sits strictly between two base widths and the funded weights split proportionally to
     $\widetilde\gamma_j \tau_j$. Sorting the $\xi_j^2$ once gives the exact solution in
-    $\c O(p\log p)$ — negligible next to the linear solve in each MM step.
+    $\c O(p\log p)$ time, a negligible cost next to the linear solve in each MM step.
   </p>
 
   <h2 id="explore-water-filling">Explore the optimal-weight procedure</h2>
@@ -590,7 +595,7 @@
   <details class="derivation-details">
   <summary>Show the full allocation derivation</summary>
   <div class="defs">
-    <h3>Setup &amp; notation &nbsp;—&nbsp; \(j=1,\dots,p\) indexes coefficients</h3>
+    <h3>Setup &amp; notation: \(j=1,\dots,p\) indexes coefficients</h3>
     Predictor \(\mathbf x_j\) is centred and scaled to \(\|\mathbf x_j\|_2=1\), and
     \(\tilde\gamma_j\ge0\) is its scale at the current MM iterate.
     Two quantities determine coordinate \(j\)'s update:
@@ -675,7 +680,7 @@
         continuously differentiable. At \(c_j\), coefficient \(j\) becomes inactive; beyond
         it, further weight has diminishing marginal value.</div>
     </div>
-    <h3 id="nustar">\(\nu^*\) — the optimal KKT multiplier</h3>
+    <h3 id="nustar">\(\nu^*\): the optimal KKT multiplier</h3>
     The multiplier \(\nu:=\max_j-\phi_j'(w_j)\) is the greatest marginal value still
     available; funded coordinates sit exactly on it. In the vessel picture this is the water
     level. When the budget runs out,
@@ -687,7 +692,7 @@
       &nbsp;(eligible coordinates sorted by \(\xi_{(1)}^2\ge\xi_{(2)}^2\ge\cdots\))</h3>
     <div class="branchrow">
       <div class="b case1">
-        <span class="tag">Boundary threshold — ν* matches one squared KKT gap</span>
+        <span class="tag">Boundary threshold: ν* matches one squared KKT gap</span>
         \[ \nu^* = \xi_{(k)}^2 \quad\text{for some } k \]
         \[
           \widehat w_{(j)} = \begin{cases}
@@ -705,7 +710,7 @@
           \(\widehat w_{(1)}=1\) and every other weight is zero.</div>
       </div>
       <div class="b case2">
-        <span class="tag">Interior common slope — ν* lies between squared KKT gaps</span>
+        <span class="tag">Interior common slope: ν* lies between squared KKT gaps</span>
         \[ \xi_{(k)}^2 \;&gt;\; \nu^* = \Bigl(\sum_{j \le k}
            \tilde\gamma_{(j)}\tau_{(j)}\Bigr)^{2} \;&gt;\; \xi_{(k+1)}^2 \]
         \[
@@ -769,7 +774,7 @@
           <span id="nuVal">—</span></div>
         <div class="nusub">KKT multiplier (marginal value of budget)</div>
         <div id="wlist"></div>
-        <div class="glab">\(\textstyle\sum_j w_j\) — budget used</div>
+        <div class="glab">\(\textstyle\sum_j w_j\) · budget used</div>
         <canvas id="cvB" width="90" height="150" style="margin-top:4px"></canvas>
       </div>
     </div>
@@ -816,8 +821,8 @@ const REGIME_LABELS = {
   2: "Interior common slope"
 };
 const REGIME_HEADINGS = {
-  1: "Boundary threshold — one flat segment closes the budget",
-  2: "Interior common slope — all funded coordinates are past their knots"
+  1: "Boundary threshold: one flat segment closes the budget",
+  2: "Interior common slope: all funded coordinates are past their knots"
 };
 const EXAMPLE_LABELS = {
   pivot: "Residual assigned at the boundary",
@@ -1089,18 +1094,18 @@ function drawWform(sc) {
   for (let j = 0; j < J; j++) {
     let f_;
     if (sc.skip[j]) {
-      f_ = `\\(\\widehat w_{${j+1}} = 0\\) — zero coefficient, removed up front`;
+      f_ = `\\(\\widehat w_{${j+1}} = 0\\): zero coefficient, removed up front`;
     } else if (sc.w[j] < 1e-9) {
-      f_ = `\\(\\widehat w_{${j+1}} = 0\\) — not funded: \\(\\xi_{${j+1}}^2 = ` +
+      f_ = `\\(\\widehat w_{${j+1}} = 0\\): not funded, \\(\\xi_{${j+1}}^2 = ` +
            `${fmt(sc.xi[j]*sc.xi[j],2)} \\le \\nu^*\\)`;
     } else if (sc.case === 1 && Math.abs(sc.xi[j]*sc.xi[j] - nu) < 1e-6*Math.max(1,nu)) {
       f_ = `\\(\\widehat w_{${j+1}} = 1 - \\sum_{i \\ne ${j+1}} \\widehat w_i = ` +
-           `${fmt(sc.w[j])}\\) — boundary coordinate: receives the residual budget on its ` +
+           `${fmt(sc.w[j])}\\): boundary coordinate, receives the residual budget on its ` +
            `flat marginal segment at \\(\\nu^* = \\xi_{${j+1}}^2\\)`;
     } else {
       f_ = `\\(\\widehat w_{${j+1}} = \\dfrac{\\tilde\\gamma_{${j+1}}\\tau_{${j+1}}}` +
            `{\\sqrt{\\nu^*}} = \\dfrac{${fmt(sc.gb[j],2)}}{${fmt(Math.sqrt(nu),3)}} = ` +
-           `${fmt(sc.w[j])}\\) — funded on its nonlinear part`;
+           `${fmt(sc.w[j])}\\): funded on its nonlinear part`;
     }
     rows += `<div style="margin-bottom:7px"><span style="display:inline-block;width:11px;` +
             `height:11px;border-radius:3px;background:${COLORS[j]};margin-right:7px"></span>` +
@@ -1210,16 +1215,18 @@ window.addEventListener("DOMContentLoaded", () => {
   <h2>Closing the loop</h2>
 
   <p>
-    The lasso KKT conditions identify which coefficients are active and which zero coefficients
-    already satisfy optimality. The auxiliary scales turn those conditions into a convex
-    problem over $\bb{R}_+^p$. The matrix bound supplies a concurrent closed-form MM update,
-    and the optimal-weight procedure selects the member of that surrogate family with the
-    smallest one-step upper bound in $\c O(p\log p)$ time.
+    The pieces of this series now fit together. The lasso KKT conditions sort coefficients
+    into active ones and zeros that already satisfy optimality; the auxiliary scales turn
+    those conditions into a convex problem over $\bb{R}_+^p$. The matrix bound of Part 4 then
+    gives a closed-form MM update for every coordinate at once, and the weight problem solved
+    here picks out the best member of that surrogate family for $\c O(p\log p)$ extra work
+    per iteration.
   </p>
 
   <p>
-    With exact linear solves and a unique auxiliary minimizer, the theory gives global
-    convergence to the lasso KKT point. The full theory, implementation and experiments are in the
+    With exact linear solves and a unique auxiliary minimizer, the iterates converge globally
+    to the lasso KKT point. The full statements and proofs, along with the implementation and
+    experiments, are in the
     <a href="../assets/papers/MM_Algorithms_Group_Lasso.pdf" target="_blank" rel="noopener">paper</a>.
   </p>
 

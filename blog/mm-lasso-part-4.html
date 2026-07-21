@@ -65,23 +65,39 @@
     descent, but the speed of convergence depends strongly on how tightly it follows the
     objective near the current iterate. For $g(\v\gamma)$, the coordinates are coupled inside a
     matrix inverse. A matrix Cauchy-Schwarz inequality gives a tangent upper bound that separates
-    into $p$ scalar problems with closed-form updates. Interestingly, the construction introduces
+    into $p$ scalar problems with closed-form updates. The construction also introduces
     a simplex weight vector $\v w$: each choice of $\v w$ gives a different valid surrogate.
   </p>
 
-  <h2>From a scalar inequality to a matrix bound</h2>
+  <h2>Titu's lemma and its matrix analogue</h2>
 
   <p>
     <a href="https://en.wikipedia.org/wiki/Titu%27s_lemma" target="_blank"
-       rel="noopener">Titu's lemma</a>, also known as Sedrakyan's inequality, is the following
-    form of Cauchy-Schwarz. It holds for real \(\widetilde\sigma_j\) and strictly positive
-    \(\sigma_j\):
+       rel="noopener">Titu's lemma</a>, also known as Sedrakyan's inequality, holds for real
+    \(\widetilde\sigma_j\) and strictly positive \(\sigma_j\):
   </p>
 
   $$
   \frac{(\sum_j\widetilde\sigma_j)^2}{\sum_j\sigma_j}
   \le \sum_j\frac{\widetilde\sigma_j^2}{\sigma_j}.
   $$
+
+  <p>
+    It is Cauchy-Schwarz in disguise. Apply
+    $(\sum_j a_jb_j)^2\le(\sum_j a_j^2)(\sum_j b_j^2)$ with
+    $a_j=\widetilde\sigma_j/\sqrt{\sigma_j}$ and $b_j=\sqrt{\sigma_j}$:
+  </p>
+
+  $$
+  \Bigl(\sum_j\widetilde\sigma_j\Bigr)^2
+  =\Bigl(\sum_j\frac{\widetilde\sigma_j}{\sqrt{\sigma_j}}\cdot\sqrt{\sigma_j}\Bigr)^2
+  \le\Bigl(\sum_j\frac{\widetilde\sigma_j^2}{\sigma_j}\Bigr)
+    \Bigl(\sum_j\sigma_j\Bigr),
+  $$
+
+  <p>
+    then divide both sides by $\sum_j\sigma_j>0$.
+  </p>
 
   <p>
     For the matrix analogue, let $\m V_1,\ldots,\m V_m$ be symmetric positive-semidefinite
