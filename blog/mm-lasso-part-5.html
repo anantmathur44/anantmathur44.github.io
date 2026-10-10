@@ -387,11 +387,10 @@
   <div class="sim-readout" id="fam-readout"></div>
   <p class="demo-caption" id="fam-caption">
     Peach curves sample the surrogate family, blue is the optimal choice, and the dashed curve
-    follows the white simplex point. Every surrogate stays above the orange objective and
-    touches it at the current iterate. Vertical guides mark the current iterate, the optimal
-    MM step, and the selected surrogate's minimum on this slice; the heatmap and bars on the
-    right show each allocation's full guaranteed decrease. The star marks the optimal weight
-    and the open circle the uniform allocation.
+    follows the white simplex point. Vertical guides mark the current iterate, the optimal MM
+    step and the selected surrogate's minimum on this slice. On the right, the heatmap and bars
+    show each allocation's full guaranteed decrease; the star marks $\widehat{\v w}$ and the
+    open circle the uniform allocation.
   </p>
   </div>
 
@@ -458,13 +457,10 @@
   </p>
 
   <div class="math-note">
-    <strong>A direct KKT interpretation.</strong> At zero allocated weight,
-    $-\phi_j'(0)=\xi_j^2$, so an eligible coordinate's squared KKT discrepancy is exactly its
-    initial marginal contribution to improving the surrogate bound. The optimal-weight problem
-    therefore prioritizes the coordinates furthest from KKT balance. In particular, for a zero
-    coefficient that violates $\tau_j\le\alpha$, this priority is
-    $(\tau_j-\alpha)^2$: the larger the violation, the greater the initial value of assigning
-    weight to that coordinate.
+    <strong>A direct KKT interpretation.</strong> At zero weight,
+    $-\phi_j'(0)=\xi_j^2=(\alpha-\tau_j)^2$: an eligible coordinate's squared KKT gap is
+    exactly its initial marginal value. The weight problem therefore funds first the
+    coordinates furthest from satisfying their KKT conditions.
   </div>
 
   <h2 id="allocation-picture">The allocation problem in one picture</h2>
@@ -472,17 +468,10 @@
     weight among them.</p>
 
   <p>
-    This is a general separable resource-allocation problem. Each curve $\phi_j(w_j)$ tells us
-    the surrogate cost remaining after coordinate $j$ receives weight $w_j$. Every curve would
-    prefer more weight, but the coordinates share one budget:
+    This is a classic separable resource-allocation problem. Each curve $\phi_j(w_j)$ is the
+    surrogate cost left after coordinate $j$ receives weight $w_j$. Every curve would prefer
+    more weight, but the coordinates share one unit of budget.
   </p>
-
-  $$
-  \underset{\v w\ge\v0}{\operatorname{minimize}}
-  \quad \sum_{j=1}^p\phi_j(w_j)
-  \qquad\text{subject to}\qquad
-  \sum_{j=1}^p w_j=1.
-  $$
 
   <div class="reference-note">
     <strong>The classical picture.</strong>
@@ -496,44 +485,26 @@
   <div class="breakout">
     <canvas id="phidemo" width="1020" height="500"></canvas>
     <p class="demo-caption">
-      Four actual costs with common $\alpha=5$. Filled circles mark the funded optima
-      $\widehat w_j$; the open circle is an unfunded coordinate. The short dashed tangents at
+      Four of the five coordinates from the running example ($\alpha=5$), the same instance
+      animated in the vessel and KKT-allocation views below. Filled circles mark the funded
+      optima $\widehat w_j$; the open circle is an unfunded coordinate. The short dashed tangents at
       the funded points are parallel because their slopes all equal $-\nu^*$.
     </p>
   </div>
 
   <div class="math-note">
-    <strong>How to read the plot.</strong> Moving right by $dw_j$ spends that much of the unit
-    budget on coordinate $j$ and lowers the objective by approximately
-    $-\phi_j'(w_j)\,dw_j$. Cost values on the vertical axis are not water heights.
-    The allocation geometry lives in <em>marginal-slope space</em>: in the vessel picture,
-    $w_j$ is the fill height and $-\phi_j'(w_j)$ is the vessel width.
+    <strong>How to read the plot.</strong> Moving right by $dw_j$ spends that much of the
+    budget on coordinate $j$ and lowers the objective by about $-\phi_j'(w_j)\,dw_j$. What
+    matters is slope, not height: the allocation is decided by the marginal values
+    $-\phi_j'(w_j)$, which the vessel picture below makes visible.
   </div>
-
-  <p>
-    The connection to the lasso KKT gap is at the left edge of the plot. For every eligible
-    coordinate, before any budget is allocated,
-  </p>
-
-  $$
-  -\phi_j'(0)=\xi_j^2=(\alpha-\tau_j)^2.
-  $$
-
-  <p>
-    Thus the squared auxiliary KKT gap is the coordinate's <em>initial marginal value</em>: it
-    is the rate at which a small amount of weight lowers the surrogate bound. That
-    value stays flat until $c_j$, then decreases. The optimal-weight procedure simply hands
-    each increment to whichever $-\phi_j'(w_j)$ is currently largest, and stops when
-    $\sum_jw_j=1$. At that point all funded coordinates share the same marginal value
-    $\nu^*$, and every unfunded coordinate starts at or below it.
-  </p>
 
   <h2>The common marginal value</h2>
 
   <p>
     The KKT conditions for the simplex problem introduce one multiplier $\nu^*$. Every funded
-    coordinate has the same final marginal value, while an eligible but unfunded coordinate
-    starts below it:
+    coordinate ends with marginal value exactly $\nu^*$, and every eligible but unfunded
+    coordinate starts at or below it:
   </p>
 
   $$
@@ -541,6 +512,12 @@
   \qquad
   \xi_j^2\le\nu^*\quad\text{if }\widehat w_j=0.
   $$
+
+  <p>
+    Each marginal value is flat at $\xi_j^2$ until the knot $c_j$ and only decreases after it,
+    so these conditions can be met greedily: hand each small increment of budget to whichever
+    coordinate currently has the largest $-\phi_j'(w_j)$, and stop when $\sum_jw_j=1$.
+  </p>
 
   <h2>Water-filling computes the optimal weights</h2>
 
@@ -558,17 +535,14 @@
     of MM weights, and transmission-rate gain becomes reduction of the surrogate bound.</p>
 
   <p>
-    Because each $-\phi_j'(w_j)$ starts at height $\xi_j^2$ and only decreases as $w_j$ grows,
-    the KKT conditions above lead to a classic <em>water-filling</em> procedure. Picture one
-    vessel per coordinate whose width at fill height $w_j$ is $-\phi_j'(w_j)$: the base has
-    width $\xi_j^2$, and the vessel narrows past the knot $c_j$. Pour the unit budget into
-    whichever vessel is currently widest. Funded surfaces then always share one common width,
-    the water level $\nu$, and that level only descends. When the budget is exhausted the
-    level rests at $\nu^*$; vessels whose base
-    $\xi_j^2$ never rose above the final level stay dry. The procedure stops in one of two
-    ways. Either $\nu^*$ equals some coordinate's base width $\xi_{(k)}^2$ and that pivot
-    coordinate
-    takes the leftover budget, or $\nu^* = (\sum_{j \le k} \widetilde\gamma_j \tau_j)^2$
+    That greedy rule is <em>water-filling</em>. Picture one vessel per coordinate whose width
+    at fill height $w_j$ is $-\phi_j'(w_j)$: the base has width $\xi_j^2$, and the vessel
+    narrows past the knot $c_j$. Pour the budget into whichever vessel is currently widest.
+    Funded surfaces always share one common width, the water level $\nu$, which only
+    descends; when the budget runs out it rests at $\nu^*$, and vessels whose base never
+    exceeded that level stay dry. The procedure stops in one of two ways. Either $\nu^*$
+    equals some coordinate's base width $\xi_{(k)}^2$ and that pivot coordinate takes the
+    leftover budget, or $\nu^* = (\sum_{j \le k} \widetilde\gamma_j \tau_j)^2$
     sits strictly between two base widths and the funded weights split proportionally to
     $\widetilde\gamma_j \tau_j$. Sorting the $\xi_j^2$ once gives the exact solution in
     $\c O(p\log p)$ time, a negligible cost next to the linear solve in each MM step.
@@ -577,10 +551,7 @@
   <h2 id="explore-water-filling">Explore the optimal-weight procedure</h2>
 
   <p>
-    Each eligible coordinate is now a vessel. Its <em>base width</em> is the squared auxiliary
-    KKT gap $\xi_j^2$, its fill height is the allocated weight $w_j$, and its width at height
-    $w_j$ is the current marginal value $-\phi_j'(w_j)$. The budget always enters the vessel
-    with the widest available surface.
+    Here is that procedure on the running example, one vessel per eligible coordinate.
   </p>
 
   <div class="breakout">
@@ -598,37 +569,27 @@
       <span id="wf-status" class="explore-status"></span>
     </div>
     <p class="demo-caption">
-      The colored fill rises as the unit budget is allocated. A horizontal white bar marks
-      $c_j$, the point where coefficient $j$ becomes inactive; above it the vessel narrows
-      because additional weight has diminishing marginal value. An empty
-      vessel is not excluded from the model: its base is simply narrower than the current
-      surface width $\nu$, so it has not started receiving budget. Widths are drawn on a
-      square-root scale so that all five vessels remain visible; the labels give the exact
-      squared KKT gaps $\xi_j^2$.
+      The colored fill rises as the budget is poured. A white bar marks the knot $c_j$, where
+      coefficient $j$ becomes inactive and the vessel starts to narrow. An empty vessel is
+      still eligible: its base is narrower than the current level $\nu$, so it has not yet
+      received budget. Widths use a square-root scale so all five vessels stay visible; the
+      labels give the exact $\xi_j^2$.
     </p>
   </div>
 
   <h2 id="kkt-allocation-animation">Follow the KKT allocation</h2>
 
   <p>
-    The vessel picture has already supplied the intuition. The animation below keeps only the
-    two views needed to follow the algorithm: the marginal curves show which coordinate should
-    receive the next increment of budget, while the cost curves show the resulting decrease in
-    the separable objective. At each step the algorithm increases a coordinate with the largest
-    available value of $-\phi_j'(w_j)$. It stops when $\sum_j w_j=1$ and the KKT conditions hold.
-    The controls compare the two ways that this stopping point can occur.
+    The last animation follows the same allocation in two views: panel (a) shows the marginal
+    values that decide where the next increment goes, and panel (b) shows the costs $\phi_j$
+    falling as weight arrives. The case buttons compare the two ways the procedure can stop.
+    The collapsed derivation collects every formula from this section in one place.
   </p>
 
 </div>
 
 <div id="wf-full" class="tex2jax_ignore">
 <div class="wrap">
-  <div class="sub">
-    How the scalar-lasso MM algorithm distributes one unit of update budget across
-    coefficients. The animation assigns the next increment to the eligible coordinate with
-    the greatest marginal improvement to the surrogate bound.
-  </div>
-
   <details class="derivation-details">
   <summary>Show the full allocation derivation</summary>
   <div class="defs">
@@ -652,12 +613,9 @@
       \qquad\quad
       \tau_j \le \alpha \;\;\text{ for every zero coefficient } (\widehat\gamma_j = 0).
     \]
-    Write \(\xi_j:=\alpha-\tau_j\). For an active coefficient, \(\xi_j^2\) is its
-    initial marginal value. A zero coefficient with \(\xi_j&lt;0\) violates its KKT condition
-    and remains eligible. A zero coefficient with \(\xi_j\ge0\) is already correct and is
-    removed before allocation. Hence, among eligible coordinates, a larger \(\xi_j^2\) means
-    a larger KKT discrepancy and a greater initial benefit from assigning weight there. For a
-    violating zero coefficient, \(\xi_j^2=(\tau_j-\alpha)^2\).
+    Write \(\xi_j:=\alpha-\tau_j\). A zero coefficient with \(\xi_j\ge0\) already satisfies
+    its condition and is removed before allocation. Every other coordinate is eligible, and its
+    initial marginal value \(\xi_j^2\) measures how far it is from its KKT condition.
 
     <h3>The weight problem and the deactivation threshold \(c_j\)</h3>
     \[
@@ -700,19 +658,19 @@
     <div class="exfig">
       <div class="exwrap">
         <canvas id="cvEx" width="680" height="300"></canvas>
-        <div class="exlab" style="left:130px; top:46px; color:#e8a04d">
+        <div class="exlab" style="left:150px; top:40px; color:#e8a04d">
           \(\text{linear part: slope } -\xi_j^2\)</div>
-        <div class="exlab" style="left:350px; top:150px; color:#8fb8ff">
+        <div class="exlab" style="left:350px; top:118px; color:#8fb8ff">
           \(\text{nonlinear part: } \dfrac{(\tilde\gamma_j\tau_j)^2}{w_j}
             + 2\tilde\gamma_j\tau_j^2\)</div>
-        <div class="exlab" style="left:248px; top:212px; color:#e3ddd3">
-          \(\text{knot } c_j = 0.3\)</div>
+        <div class="exlab" style="left:294px; top:212px; color:#e3ddd3">
+          \(\text{knot } c_j = 0.375\)</div>
         <div class="exlab x">\(w_j\)</div>
         <div class="exlab y">\(\phi_j(w_j)\)</div>
       </div>
-      <div class="cap">An example \(\phi_j\) with \(\tilde\gamma_j=0.4,\ \tau_j=3,\
-        \alpha=7\): raw gap \(\xi_j=4\), knot at
-        \(c_j = \tilde\gamma_j\tau_j/\xi_j = 0.3\). The linear part (constant slope
+      <div class="cap">Coordinate 3 of the running example: \(\tilde\gamma_j=0.25,\
+        \tau_j=3,\ \alpha=5\), so \(\xi_j=2\) and the knot is at
+        \(c_j = \tilde\gamma_j\tau_j/\xi_j = 0.375\). The linear part (constant slope
         \(-\xi_j^2\)) meets the nonlinear part smoothly at the knot; \(\phi_j\) is
         continuously differentiable. At \(c_j\), coefficient \(j\) becomes inactive; beyond
         it, further weight has diminishing marginal value.</div>
@@ -911,7 +869,7 @@ function mpj(sc, j, w) {      // -p_j'(w)
 function drawExample() {
   const cv = document.getElementById("cvEx"), ctx = hidpiCanvas(cv, true).ctx;
   const W = 680, H = 300, mL = 50, mR = 16, mT = 18, mB = 36;
-  const g = 0.4, t = 3, a = 7, xi = a - t, gb = g*t, c = gb/xi;   // c = 0.3
+  const g = 0.25, t = 3, a = 5, xi = a - t, gb = g*t, c = gb/xi;   // coordinate 3 of split3: c = 0.375
   const P = w => (w >= c) ? gb*gb/w + 2*g*t*t : 2*g*a*t - w*xi*xi;
   const wmin = 0.02, wmax = 1.0;
   let ymin = P(wmax), ymax = P(wmin);
@@ -928,7 +886,7 @@ function drawExample() {
     ctx.fillText(x.toFixed(2), X(x), H-mB+16);
   }
   ctx.textAlign = "right";
-  for (let v = 8; v <= ymax; v += 2) {
+  for (let v = Math.ceil(ymin); v <= ymax; v += 1) {
     ctx.strokeStyle = "#2b2620";
     ctx.beginPath(); ctx.moveTo(mL, Y(v)); ctx.lineTo(W-mR, Y(v)); ctx.stroke();
     ctx.fillText(v.toFixed(0), mL-7, Y(v)+4);
