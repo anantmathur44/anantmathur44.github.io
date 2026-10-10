@@ -24,6 +24,20 @@
     };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script>
+    // Scale a canvas backing store to the device pixel ratio while keeping the
+    // drawing code in logical (attribute) pixels. fixCss pins the CSS size for
+    // canvases that have no stylesheet width.
+    window.hidpiCanvas = function (cv, fixCss) {
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      const W = cv.width, H = cv.height;
+      if (fixCss) { cv.style.width = W + "px"; cv.style.height = H + "px"; }
+      if (dpr !== 1) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+      const ctx = cv.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, W, H, dpr };
+    };
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -93,6 +107,12 @@
     .demo-controls button.fam-active { background: var(--accent); color: #2a160d; }
     #fam-reset { width: 40px; height: 36px; padding: 0; display: inline-grid; place-items: center;
                  font-size: 1.05rem; }
+    .fam-presets { display: inline-flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+    .fam-presets .preset-label { color: var(--text-dim); font-size: 0.8rem; margin-right: 0.15rem; }
+    .demo-controls button.fam-preset { font-size: 0.78rem; font-weight: 500; padding: 0.28rem 0.6rem;
+      border-color: var(--border); color: var(--text-dim); }
+    .demo-controls button.fam-preset:hover { border-color: var(--accent); color: var(--accent);
+      background: transparent; }
     #racechart { border: 1px solid var(--border); border-radius: 8px; background: var(--card);
                  width: 100%; display: block; margin-top: 1rem; }
     .sim-readout { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.7rem; }
@@ -123,13 +143,12 @@
   position: relative; left: 50%; transform: translateX(-50%);
   overflow-x: auto;
   color: #e3ddd3;
-  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: inherit;
 }
 #wf-full .wrap { padding: 6px 4px 20px; }
-#wf-full { --fg:#e3ddd3; --muted:#a49a8c; --line:#3a332a; --accent:#7dabf8; }
+#wf-full { --fg:#e3ddd3; --muted:#a49a8c; --line:#3a332a; --wf-blue:#7dabf8; }
 #wf-full { scroll-behavior: smooth; }
-#wf-full { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-         color: var(--fg); margin: 0; background: transparent; }
+#wf-full { color: var(--fg); margin: 0; background: transparent; }
 #wf-full a { color: var(--accent); text-decoration: none; }
 #wf-full a:hover { text-decoration: underline; }
 #wf-full .wrap { max-width: 1080px; margin: 0 auto; padding: 22px 26px 60px; }
@@ -160,7 +179,7 @@
 #wf-full .exlab { position: absolute; font-size: 13.5px; white-space: nowrap; }
 #wf-full .exlab.x { left: 50%; bottom: -2px; transform: translateX(-50%); color:#a49a8c; }
 #wf-full .exlab.y { left: -14px; top: 46%; transform: rotate(-90deg); color:#a49a8c; }
-#wf-full .remark { background: #211d18; border-left: 3px solid var(--accent);
+#wf-full .remark { background: #211d18; border-left: 3px solid var(--wf-blue);
             padding: 8px 14px; border-radius: 0 8px 8px 0; margin-top: 12px;
             font-size: 13.5px; }
 #wf-full .casebar { display:flex; gap:18px; flex-wrap:wrap; margin-top:18px;
@@ -174,11 +193,12 @@
 #wf-full .casegroup.cg1 { border-top: 3px solid #4fc596; }
 #wf-full .casegroup.cg2 { border-top: 3px solid #b795f5; }
 #wf-full .casegroup .btns { display:flex; gap:8px; flex-wrap:wrap; }
-#wf-full .casegroup button { font: inherit; font-size: 12.8px; padding: 7px 12px;
-      border-radius: 8px; border: 1px solid var(--line); background:#262119;
-      color: var(--fg); cursor:pointer; }
-#wf-full .casegroup button.active { background: var(--accent); color:#fff;
-      border-color: var(--accent); }
+#wf-full .casegroup button { font: inherit; font-size: 12.8px; font-weight: 500; padding: 7px 12px;
+      border-radius: 8px; border: 1px solid var(--line); background: transparent;
+      color: var(--text-dim); cursor:pointer; }
+#wf-full .casegroup button:hover { border-color: var(--accent); color: var(--accent); }
+#wf-full .casegroup button.active { background: var(--accent); color:#2a160d;
+      border-color: var(--accent); font-weight: 600; }
 #wf-full .card { background: #262119; border: 1px solid var(--line); border-radius: 8px;
           padding: 12px 16px; box-shadow: 0 1px 2px rgba(20,30,60,.05); }
 #wf-full .card h2 { font-size: 13.5px; margin: 0 0 6px; font-weight: 600; }
@@ -191,7 +211,6 @@
            white-space: nowrap; pointer-events: none; }
 #wf-full .axlab.y { left: -56px; top: 140px; width: 140px; text-align: center;
              transform: rotate(-90deg); }
-#wf-full .axlab.x { right: 0px; bottom: 4px; }
 #wf-full .nulab { position: absolute; font-size: 13px; color: #8fb8ff;
            white-space: nowrap; pointer-events: none; font-weight: 600;
            font-variant-numeric: tabular-nums; }
@@ -215,20 +234,22 @@
           margin-bottom: 6px; font-variant-numeric: tabular-nums; }
 #wf-full .wrow .chip { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto;
                 position: relative; top: 1px; }
-#wf-full .wrow b { margin-left: auto; }
-#wf-full .wrow .st { font-size: 11px; color: var(--muted); }
+#wf-full .wrow b { margin-left: auto; white-space: nowrap; }
+#wf-full .wrow .st { font-size: 11px; color: var(--muted); line-height: 1.35; display: inline-block; }
 #wf-full .controls { display:flex; align-items:center; gap:12px; margin-top:14px;
               flex-wrap:wrap; position: sticky; top: 0; z-index: 20;
               background: rgba(26,23,19,0.92); padding: 10px 4px;
               border-bottom: 1px solid var(--line); backdrop-filter: blur(3px); }
-#wf-full .controls button { font: inherit; font-size: 13.5px; padding: 6px 14px;
-      border-radius: 7px; border: 1px solid var(--line); background:#262119;
-      color: var(--fg); cursor:pointer; min-width: 96px; }
-#wf-full .controls button.primary { background: var(--accent); border-color: var(--accent);
-      color:#fff; }
-#wf-full select { font: inherit; font-size: 13px; padding: 4px 6px; border-radius: 6px;
-           border: 1px solid var(--line); }
-#wf-full .status { font-size: 13.5px; }
+#wf-full .controls select { margin-left: 0.4rem; }
+#wf-full .controls button { font: inherit; font-size: 0.88rem; font-weight: 600; padding: 0.4rem 1rem;
+      border-radius: 8px; border: 1px solid var(--accent); background: transparent;
+      color: var(--accent); cursor:pointer; min-width: 96px; }
+#wf-full .controls button:hover { background: var(--accent); color: #2a160d; }
+#wf-full .controls label { color: var(--text-dim); font-size: 0.88rem; }
+#wf-full select { font: inherit; font-size: 0.88rem; padding: 0.28rem 0.45rem; border-radius: 6px;
+           border: 1px solid var(--line); color: var(--text); background: var(--card); }
+#wf-full .status { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem;
+           margin-left: auto; }
 #wf-full .below { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap;
            align-items: stretch; }
 #wf-full .desc { flex: 1 1 460px; font-size: 13.8px; line-height: 1.7; }
@@ -280,13 +301,13 @@
   </div>
 
   <p class="chapter-intro">
-    The bound in Part 4 leaves one degree of freedom: a unit budget
-    $\v 1^\top\v w=1$ that decides which coefficients receive the strongest update. This final
+    The bound in Part 4 leaves one design choice: how to split a unit budget
+    $\v 1^\top\v w=1$, which decides which coefficients receive the strongest update. This final
     part works out the best possible allocation and shows what it buys.
   </p>
 
   <div class="part-banner">
-    <div class="kicker">Part A</div>
+    <div class="kicker">Section A</div>
     <div class="name">Why the allocation matters</div>
     <div class="sub-line">Start with the computational consequence, then inspect the geometry
     behind it.</div>
@@ -303,11 +324,19 @@
   </p>
 
   <div class="breakout">
-    <canvas id="racechart" width="1020" height="420"></canvas>
+    <canvas id="racechart" width="1020" height="420" role="img"
+      aria-label="Optimality gap against iteration for four weight policies"></canvas>
+    <div class="demo-controls">
+      <button id="race-play" title="Play or pause the race">▶ Play</button>
+      <span id="race-status" class="explore-status"></span>
+    </div>
     <p class="demo-caption">
-      Optimality gap $g(\v\gamma^{(t)})-g^*$ on one representative instance. Across 20
-      replications, median iterations to a $10^{-6}$ gap were: optimal weights <b>7.5</b>,
-      round-robin <b>26.5</b>, uniform <b>30</b>, and random <b>31.5</b>.
+      Optimality gap $g(\v\gamma^{(t)})-g^*$ on one representative instance. The dots on
+      the dashed line mark the iteration at which each policy first reaches the $10^{-6}$
+      target. The inset bars grow with the race and stop at each policy's median iteration
+      count to that target over 20 replications: optimal weights <b>7.5</b>, round-robin
+      <b>26.5</b>, uniform <b>30</b>, random <b>31.5</b>. On this particular instance uniform and
+      random do not reach the target within 60 iterations.
     </p>
   </div>
 
@@ -345,6 +374,14 @@
   <div class="demo-controls">
     <button id="fam-play" title="Play the weight path" aria-label="Play weight path">▶ Play</button>
     <button id="fam-reset" title="Reset selected weight" aria-label="Reset selected weight">↻</button>
+    <span class="fam-presets" role="group" aria-label="Jump the selected weight to a preset">
+      <span class="preset-label">jump to</span>
+      <button class="fam-preset" data-w="uniform" title="Equal weights">uniform</button>
+      <button class="fam-preset" data-w="optimal" title="Optimal weights">optimal ŵ</button>
+      <button class="fam-preset" data-w="0" title="All weight on coordinate 1">w₁ = 1</button>
+      <button class="fam-preset" data-w="1" title="All weight on coordinate 2">w₂ = 1</button>
+      <button class="fam-preset" data-w="2" title="All weight on coordinate 3">w₃ = 1</button>
+    </span>
     <span id="fam-status" class="explore-status"></span>
   </div>
   <div class="sim-readout" id="fam-readout"></div>
@@ -359,7 +396,7 @@
   </div>
 
   <div class="part-banner">
-    <div class="kicker">Part B</div>
+    <div class="kicker">Section B</div>
     <div class="name">Computing the optimal weights</div>
     <div class="sub-line">Derive the separable weight problem, then compute its minimizer
     with a water-filling procedure.</div>
@@ -468,7 +505,7 @@
   <div class="math-note">
     <strong>How to read the plot.</strong> Moving right by $dw_j$ spends that much of the unit
     budget on coordinate $j$ and lowers the objective by approximately
-    $-\phi_j'(w_j)\,dw_j$. The vertical cost values themselves do not equal water heights.
+    $-\phi_j'(w_j)\,dw_j$. Cost values on the vertical axis are not water heights.
     The allocation geometry lives in <em>marginal-slope space</em>: in the vessel picture,
     $w_j$ is the fill height and $-\phi_j'(w_j)$ is the vessel width.
   </div>
@@ -484,7 +521,7 @@
 
   <p>
     Thus the squared auxiliary KKT gap is the coordinate's <em>initial marginal value</em>: it
-    is the amount by which an infinitesimal unit of weight lowers the surrogate bound. That
+    is the rate at which a small amount of weight lowers the surrogate bound. That
     value stays flat until $c_j$, then decreases. The optimal-weight procedure simply hands
     each increment to whichever $-\phi_j'(w_j)$ is currently largest, and stops when
     $\sum_jw_j=1$. At that point all funded coordinates share the same marginal value
@@ -528,8 +565,8 @@
     whichever vessel is currently widest. Funded surfaces then always share one common width,
     the water level $\nu$, and that level only descends. When the budget is exhausted the
     level rests at $\nu^*$; vessels whose base
-    $\xi_j^2$ never rose above the final level stay dry. Termination lands in one of two
-    cases. Either $\nu^*$ equals some coordinate's base width $\xi_{(k)}^2$ and that pivot
+    $\xi_j^2$ never rose above the final level stay dry. The procedure stops in one of two
+    ways. Either $\nu^*$ equals some coordinate's base width $\xi_{(k)}^2$ and that pivot
     coordinate
     takes the leftover budget, or $\nu^* = (\sum_{j \le k} \widetilde\gamma_j \tau_j)^2$
     sits strictly between two base widths and the funded weights split proportionally to
@@ -596,7 +633,7 @@
   <summary>Show the full allocation derivation</summary>
   <div class="defs">
     <h3>Setup &amp; notation: \(j=1,\dots,p\) indexes coefficients</h3>
-    Predictor \(\mathbf x_j\) is centred and scaled to \(\|\mathbf x_j\|_2=1\), and
+    Predictor \(\mathbf x_j\) is centered and scaled to \(\|\mathbf x_j\|_2=1\), and
     \(\tilde\gamma_j\ge0\) is its scale at the current MM iterate.
     Two quantities determine coordinate \(j\)'s update:
     \[
@@ -609,7 +646,7 @@
     \]
 
     <h3>KKT conditions of the auxiliary problem</h3>
-    At the global minimiser \(\widehat{\boldsymbol\gamma}\),
+    At the global minimizer \(\widehat{\boldsymbol\gamma}\),
     \[
       \tau_j = \alpha \;\;\text{ for every active coefficient } (\widehat\gamma_j > 0),
       \qquad\quad
@@ -622,7 +659,7 @@
     a larger KKT discrepancy and a greater initial benefit from assigning weight there. For a
     violating zero coefficient, \(\xi_j^2=(\tau_j-\alpha)^2\).
 
-    <h3>The weight problem &nbsp;and&nbsp; the deactivation threshold \(c_j\)</h3>
+    <h3>The weight problem and the deactivation threshold \(c_j\)</h3>
     \[
       \widehat{\boldsymbol w} \;=\; \mathop{\mathrm{argmin}}\limits_{\;\boldsymbol w
         \,\ge\, 0,\; w_1 + \cdots + w_p \,=\, 1}\;\; \sum_{j=1}^{p} \phi_j(w_j),
@@ -748,7 +785,6 @@
         <div class="cwrap">
           <canvas id="cvM" width="700" height="300"></canvas>
           <div class="axlab y">\(-\phi_j'(w_j)\) (√ scale)</div>
-          <div class="axlab x">\(w_j\)</div>
           <div class="nulab" id="nulabM" style="left:570px; top:0px">
             <span class="ksym">\(\nu\)</span> = <span id="nuValM">—</span></div>
           <div class="subcap"><b>(a) Marginal values determine the next allocation.</b>
@@ -761,7 +797,6 @@
         <div class="cwrap">
           <canvas id="cvP" width="700" height="300"></canvas>
           <div class="axlab y">\(\phi_j(w_j)\)</div>
-          <div class="axlab x">\(w_j\)</div>
           <div class="subcap"><b>(b) The separable objective decreases.</b> Coordinate
             \(j\)'s contribution \(\phi_j(w_j)\) to the bound. All funded coordinates descend
             with the <b>same slope</b> \(-\nu\) at the solution (parallel white tangent strokes);
@@ -834,9 +869,11 @@ const COLORS = ["#7dabf8", "#f87171", "#34d399", "#fbbf24", "#b795f5", "#22d3ee"
 
 let cur = 0, frameIdx = 0, playing = false, lastT = 0, autoTimer = 0;
 
-const cvM = document.getElementById("cvM"), ctxM = cvM.getContext("2d");
-const cvP = document.getElementById("cvP"), ctxP = cvP.getContext("2d");
-const cvB = document.getElementById("cvB"), ctxB = cvB.getContext("2d");
+const cvM = document.getElementById("cvM"), ctxM = hidpiCanvas(cvM, true).ctx;
+const cvP = document.getElementById("cvP"), ctxP = hidpiCanvas(cvP, true).ctx;
+const cvB = document.getElementById("cvB"), ctxB = hidpiCanvas(cvB, true).ctx;
+const MW = 700, MH = 300, BW = 90, BH = 150;   // logical canvas sizes
+const XLAB = "allocated weight  w\u2c7c";
 
 function fmt(x, d=3) {
   if (x === null || x === undefined || !isFinite(x)) return "—";
@@ -872,8 +909,8 @@ function mpj(sc, j, w) {      // -p_j'(w)
 
 /* ---------- static example p_j figure (labels are KaTeX overlays) ---------- */
 function drawExample() {
-  const cv = document.getElementById("cvEx"), ctx = cv.getContext("2d");
-  const W = cv.width, H = cv.height, mL = 50, mR = 16, mT = 18, mB = 36;
+  const cv = document.getElementById("cvEx"), ctx = hidpiCanvas(cv, true).ctx;
+  const W = 680, H = 300, mL = 50, mR = 16, mT = 18, mB = 36;
   const g = 0.4, t = 3, a = 7, xi = a - t, gb = g*t, c = gb/xi;   // c = 0.3
   const P = w => (w >= c) ? gb*gb/w + 2*g*t*t : 2*g*a*t - w*xi*xi;
   const wmin = 0.02, wmax = 1.0;
@@ -884,7 +921,7 @@ function drawExample() {
 
   ctx.clearRect(0,0,W,H);
   // grid + axes
-  ctx.fillStyle = "#a49a8c"; ctx.font = "11.5px sans-serif"; ctx.textAlign = "center";
+  ctx.fillStyle = "#a49a8c"; ctx.font = "11.5px Inter, sans-serif"; ctx.textAlign = "center";
   for (let x = 0; x <= 1.001; x += 0.25) {
     ctx.strokeStyle = "#2b2620"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(X(x), mT); ctx.lineTo(X(x), H-mB); ctx.stroke();
@@ -925,7 +962,7 @@ function axes(ctx, W, H, mL, mR, mT, mB, xlab, ylab) {
   ctx.strokeStyle = "#57503f"; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(mL,mT); ctx.lineTo(mL,H-mB); ctx.lineTo(W-mR,H-mB);
   ctx.stroke();
-  ctx.fillStyle = "#a49a8c"; ctx.font = "11px sans-serif"; ctx.textAlign = "center";
+  ctx.fillStyle = "#a49a8c"; ctx.font = "11px Inter, sans-serif"; ctx.textAlign = "center";
   ctx.fillText(xlab, (mL+W-mR)/2, H-5);
   ctx.save(); ctx.translate(13,(mT+H-mB)/2); ctx.rotate(-Math.PI/2);
   ctx.fillText(ylab, 0, 0); ctx.restore();
@@ -933,7 +970,7 @@ function axes(ctx, W, H, mL, mR, mT, mB, xlab, ylab) {
 
 /* ---------- (a) marginal values ---------- */
 function drawM(sc, w, level) {
-  const W = cvM.width, H = cvM.height, mL = 52, mR = 12, mT = 14, mB = 30;
+  const W = MW, H = MH, mL = 52, mR = 12, mT = 14, mB = 42;
   ctxM.clearRect(0,0,W,H);
   const J = sc.tau.length;
   const xis = sc.xi.map(x => x*x);
@@ -942,8 +979,8 @@ function drawM(sc, w, level) {
   const X = x => mL + x*(W - mL - mR);
   const Y = v => mT + (1 - S(v))*(H - mT - mB);
 
-  axes(ctxM, W, H, mL, mR, mT, mB, "", "");
-  ctxM.fillStyle = "#a49a8c"; ctxM.font = "11px sans-serif"; ctxM.textAlign = "center";
+  axes(ctxM, W, H, mL, mR, mT, mB, XLAB, "");
+  ctxM.fillStyle = "#a49a8c"; ctxM.font = "11px Inter, sans-serif"; ctxM.textAlign = "center";
   for (let x = 0; x <= 1.001; x += 0.25) ctxM.fillText(x.toFixed(2), X(x), H-mB+15);
 
   ctxM.textAlign = "right";
@@ -983,7 +1020,7 @@ function drawM(sc, w, level) {
 
 /* ---------- (b) coordinate costs ---------- */
 function drawP(sc, w, level) {
-  const W = cvP.width, H = cvP.height, mL = 52, mR = 12, mT = 12, mB = 30;
+  const W = MW, H = MH, mL = 52, mR = 12, mT = 12, mB = 42;
   ctxP.clearRect(0,0,W,H);
   const J = sc.tau.length, wmin = 0.015, wmax = 1.0;
   let ymin = Infinity, ymax = -Infinity;
@@ -999,7 +1036,7 @@ function drawP(sc, w, level) {
   const X = x => mL + x*(W - mL - mR);
   const Y = v => mT + (ymax - v)/(ymax - ymin)*(H - mT - mB);
 
-  axes(ctxP, W, H, mL, mR, mT, mB, "", "");
+  axes(ctxP, W, H, mL, mR, mT, mB, XLAB, "");
   ctxP.fillStyle = "#a49a8c"; ctxP.textAlign = "center";
   for (let x = 0; x <= 1.001; x += 0.25) {
     ctxP.fillText(x.toFixed(2), X(x), H-mB+15);
@@ -1053,7 +1090,7 @@ function drawSide(sc, w, level, budget) {
   document.getElementById("nuValM").textContent = nuTxt;
   // Move the nu label in panel (a) along with the multiplier line.
   if (level !== null) {
-    const H = cvM.height, mT = 14, mB = 30;
+    const H = MH, mT = 14, mB = 42;
     const xis = sc.xi.map(x => x*x);
     const vmax = Math.max(...xis.map((v,j) => sc.skip[j] ? 0 : v), 1e-12) * 1.06;
     const yl = mT + (1 - Math.sqrt(Math.min(level, vmax)/vmax))*(H - mT - mB);
@@ -1074,7 +1111,7 @@ function drawSide(sc, w, level, budget) {
   }
   document.getElementById("wlist").innerHTML = html;
 
-  const W = cvB.width, H = cvB.height, mT2 = 24, mB2 = 26;
+  const W = BW, H = BH, mT2 = 24, mB2 = 26;
   ctxB.clearRect(0,0,W,H);
   const gx = 22, gw = 28, gy0 = mT2, gh = H-mT2-mB2;
   ctxB.strokeStyle = "#57503f"; ctxB.lineWidth = 1.2;
@@ -1082,7 +1119,7 @@ function drawSide(sc, w, level, budget) {
   ctxB.fillStyle = "#7dabf8aa";
   const bh = Math.max(gh*Math.min(budget,1)-1, 0);
   ctxB.fillRect(gx+1, gy0 + gh - bh, gw-2, bh);
-  ctxB.fillStyle = "#a49a8c"; ctxB.font = "11px sans-serif"; ctxB.textAlign = "center";
+  ctxB.fillStyle = "#a49a8c"; ctxB.font = "11px Inter, sans-serif"; ctxB.textAlign = "center";
   ctxB.fillText(fmt(budget,2) + " / 1", gx+gw/2, gy0+gh+16);
 }
 
@@ -1151,7 +1188,12 @@ function tick(t) {
   if (playing) requestAnimationFrame(tick);
 }
 
+let kktAutoObserver = null;
+function disarmKktAutoplay() {
+  if (kktAutoObserver) { kktAutoObserver.disconnect(); kktAutoObserver = null; }
+}
 function start(i, typeset) {
+  disarmKktAutoplay();
   clearTimeout(autoTimer);
   cur = i; frameIdx = 0; playing = true; lastT = 0;
   btnRefs.forEach((b, j) => b.classList.toggle("active", j === i));
@@ -1184,6 +1226,7 @@ SC.forEach((sc, i) => {
 });
 
 document.getElementById("btnPlay").onclick = () => {
+  disarmKktAutoplay();
   clearTimeout(autoTimer);
   const sc = SC[cur];
   if (playing) { playing = false; }
@@ -1195,16 +1238,33 @@ document.getElementById("btnPlay").onclick = () => {
 };
 document.getElementById("btnReplay").onclick = () => start(cur, false);
 
+function showFirstFrame() {
+  cur = 0; frameIdx = 0; playing = false;
+  btnRefs.forEach((b, j) => b.classList.toggle("active", j === 0));
+  setPlayBtn();
+  render(true);
+}
+function armAutoplay() {
+  const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reducedMotion) { frameIdx = SC[0].frames.length - 1; render(false); return; }
+  kktAutoObserver = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) start(0, false);
+  }, { threshold: 0.3 });
+  kktAutoObserver.observe(cvM);
+}
 window.addEventListener("DOMContentLoaded", () => {
   drawExample();
+  let booted = false;
+  const boot = () => {
+    if (booted) return;
+    booted = true;
+    if (window.renderMathInElement) tex(document.body);
+    showFirstFrame(); armAutoplay();
+  };
   const wait = setInterval(() => {
-    if (window.renderMathInElement) {
-      clearInterval(wait);
-      tex(document.body);
-      start(0, true);
-    }
+    if (window.renderMathInElement) { clearInterval(wait); boot(); }
   }, 60);
-  setTimeout(() => { if (!window.renderMathInElement) start(0, true); }, 2500);
+  setTimeout(() => { clearInterval(wait); boot(); }, 2500);
 });
 
 })();
@@ -1243,7 +1303,7 @@ window.addEventListener("DOMContentLoaded", () => {
 (function () {
   const cv = document.getElementById('phidemo');
   if (!cv) return;
-  const ctx = cv.getContext('2d');
+  const { ctx, W, H } = hidpiCanvas(cv);
   const css = getComputedStyle(document.documentElement);
   const C = {
     dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
@@ -1254,18 +1314,18 @@ window.addEventListener("DOMContentLoaded", () => {
   const alpha = 5;
   const nu = 2.82466;
   const rows = [
-    { gamma: 0.60, tau: 0.50, w: 0.17857, color: '#e8825e' },
-    { gamma: 0.35, tau: 1.80, w: 0.37500, color: '#7dabf8' },
-    { gamma: 0.25, tau: 3.00, w: 0.44643, color: '#4fc596' },
-    { gamma: 0.10, tau: 4.10, w: 0.00000, color: '#b795f5' }
+    { gamma: 0.60, tau: 0.50, w: 0.17857, color: '#7dabf8' },
+    { gamma: 0.35, tau: 1.80, w: 0.37500, color: '#f87171' },
+    { gamma: 0.25, tau: 3.00, w: 0.44643, color: '#34d399' },
+    { gamma: 0.10, tau: 4.10, w: 0.00000, color: '#fbbf24' }
   ].map((row, index) => {
     const xi = alpha - row.tau;
     return { ...row, index, xi, xi2: xi * xi, knot: row.gamma * row.tau / xi };
   });
 
   const M = { L: 72, R: 252, T: 42, B: 52 };
-  const plotW = cv.width - M.L - M.R;
-  const plotH = cv.height - M.T - M.B;
+  const plotW = W - M.L - M.R;
+  const plotH = H - M.T - M.B;
   const yMin = 0, yMax = 8.2;
   const X = w => M.L + w * plotW;
   const Y = value => M.T + (yMax - value) / (yMax - yMin) * plotH;
@@ -1278,7 +1338,7 @@ window.addEventListener("DOMContentLoaded", () => {
     return 2 * row.gamma * alpha * row.tau - w * row.xi2;
   }
 
-  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.clearRect(0, 0, W, H);
   ctx.font = '12px Inter, sans-serif';
 
   for (let value = 0; value <= 8; value += 2) {
@@ -1336,12 +1396,12 @@ window.addEventListener("DOMContentLoaded", () => {
   ctx.fillText('dashed tangents: common slope −ν* = −2.825', M.L + 8, M.T + 37);
 
   ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('weight allocated to coordinate j,  wⱼ', M.L + plotW / 2, cv.height - 8);
+  ctx.fillText('weight allocated to coordinate j,  wⱼ', M.L + plotW / 2, H - 8);
   ctx.save(); ctx.translate(17, M.T + plotH / 2); ctx.rotate(-Math.PI / 2);
   ctx.fillText('actual cost  φⱼ(wⱼ)', 0, 0); ctx.restore();
 
   const subscripts = ['₁', '₂', '₃', '₄'];
-  const legendX = cv.width - M.R + 24;
+  const legendX = W - M.R + 24;
   ctx.textAlign = 'left';
   rows.forEach((row, index) => {
     const y = M.T + 22 + index * 82;
@@ -1361,7 +1421,7 @@ window.addEventListener("DOMContentLoaded", () => {
 (function () {
   const cv = document.getElementById('wfexplore');
   if (!cv) return;
-  const ctx = cv.getContext('2d');
+  const { ctx, W, H } = hidpiCanvas(cv);
   const playBtn = document.getElementById('wf-play');
   const restartBtn = document.getElementById('wf-restart');
   const speedSelect = document.getElementById('wf-speed');
@@ -1402,8 +1462,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const M = { L: 76, R: 28, T: 82, B: 96 };
-  const plotW = cv.width - M.L - M.R;
-  const plotH = cv.height - M.T - M.B;
+  const plotW = W - M.L - M.R;
+  const plotH = H - M.T - M.B;
   const gap = plotW / xi2.length;
   const vmax = Math.max(...xi2);
   const halfMax = gap * 0.42;
@@ -1471,17 +1531,17 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function draw(frame) {
-    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.clearRect(0, 0, W, H);
     ctx.strokeStyle = '#57503f'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(M.L - 12, M.T - 5); ctx.lineTo(M.L - 12, M.T + plotH);
-    ctx.lineTo(cv.width - M.R, M.T + plotH); ctx.stroke();
+    ctx.lineTo(W - M.R, M.T + plotH); ctx.stroke();
 
     ctx.fillStyle = '#a49a8c'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'right';
     for (let height = 0; height <= 1.001; height += 0.25) {
       const y = Y(height);
       ctx.fillText(height.toFixed(2), M.L - 18, y + 4);
       ctx.strokeStyle = 'rgba(58,51,42,0.72)';
-      ctx.beginPath(); ctx.moveTo(M.L - 12, y); ctx.lineTo(cv.width - M.R, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(M.L - 12, y); ctx.lineTo(W - M.R, y); ctx.stroke();
     }
 
     ctx.save(); ctx.translate(18, M.T + plotH / 2); ctx.rotate(-Math.PI / 2);
@@ -1498,7 +1558,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillStyle = '#a49a8c'; ctx.font = '11.5px Inter, sans-serif';
     ctx.fillText('surface width = marginal value −φⱼ′(wⱼ)', M.L + 250, 39);
 
-    const barX = M.L, barY = cv.height - 25, barW = plotW;
+    const barX = M.L, barY = H - 25, barW = plotW;
     ctx.strokeStyle = '#57503f'; ctx.lineWidth = 1.2; ctx.strokeRect(barX, barY, barW, 10);
     ctx.fillStyle = '#7dabf8aa'; ctx.fillRect(barX + 1, barY + 1, (barW - 2) * frame.budget, 8);
     ctx.fillStyle = '#a49a8c'; ctx.font = '11.5px Inter, sans-serif'; ctx.textAlign = 'right';
@@ -1537,8 +1597,10 @@ window.addEventListener("DOMContentLoaded", () => {
   restartBtn.onclick = startFromBeginning;
 
   draw(frames[0]); setButton();
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reducedMotion) { frameIndex = frames.length - 1; draw(frames[frameIndex]); }
   const observer = new IntersectionObserver(entries => {
-    if (entries.some(entry => entry.isIntersecting) && !started) startFromBeginning();
+    if (entries.some(entry => entry.isIntersecting) && !started && !reducedMotion) startFromBeginning();
   }, { threshold: 0.35 });
   observer.observe(cv);
 })();
@@ -1979,6 +2041,16 @@ window.addEventListener("DOMContentLoaded", () => {
   resetBtn.onclick = () => {
     stopTour(); probe = initialProbe.slice(); draw();
   };
+  document.querySelectorAll('.fam-preset').forEach(button => {
+    button.onclick = () => {
+      stopTour();
+      const key = button.dataset.w;
+      if (key === 'uniform') probe = uniform.slice();
+      else if (key === 'optimal') probe = wOpt.slice();
+      else probe = [0, 1, 2].map(j => (j === Number(key) ? 1 : 0));
+      draw();
+    };
+  });
 
   refreshModel(); draw(); setTourButton();
 })();
@@ -1988,79 +2060,170 @@ window.addEventListener("DOMContentLoaded", () => {
 (async function () {
   const cv = document.getElementById('racechart');
   if (!cv) return;
-  const ctx = cv.getContext('2d');
-  const response = await fetch("../assets/data/lasso_weight_results.json");
-  const RACE = (await response.json()).traces;
+  const { ctx, W, H } = hidpiCanvas(cv);
+  const playBtn = document.getElementById('race-play');
+  const status = document.getElementById('race-status');
+  let RACE;
+  try {
+    const response = await fetch("../assets/data/lasso_weight_results.json");
+    RACE = (await response.json()).traces;
+  } catch (error) { return; }
   const SERIES = [
-    ['waterfill',  'optimal weights',         '#e8825e'],
-    ['roundrobin', 'round-robin',             '#fbbf24'],
-    ['uniform',    'uniform 1/p',             '#7dabf8'],
-    ['random',     'random (Dirichlet)',      '#b795f5']
+    ['waterfill',  'optimal weights',    '#e8825e', 7.5],
+    ['roundrobin', 'round-robin',        '#fbbf24', 26.5],
+    ['uniform',    'uniform 1/p',        '#7dabf8', 30],
+    ['random',     'random (Dirichlet)', '#b795f5', 31.5]
   ];
-  const T = 60, LO = 1e-13, HI = 2;
+  const T = 60, LO = 1e-13, HI = 2, TOL = 1e-6, DURATION = 5200;
   const mL = 62, mR = 16, mT = 18, mB = 42;
-  const X = t => mL + t / T * (cv.width - mL - mR);
-  const Y = v => {
-    const lv = Math.log10(Math.max(v, LO));
-    return mT + (Math.log10(HI) - lv) / (Math.log10(HI) - Math.log10(LO)) * (cv.height - mT - mB);
-  };
+  const X = t => mL + t / T * (W - mL - mR);
+  const lg = v => Math.log10(Math.max(v, LO));
+  const Y = v => mT + (Math.log10(HI) - lg(v)) / (Math.log10(HI) - Math.log10(LO)) * (H - mT - mB);
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  // grid + ticks
-  ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'right';
-  for (let e = 0; e >= -12; e -= 3) {
-    const y = Y(Math.pow(10, e));
-    ctx.strokeStyle = 'rgba(58,51,42,0.9)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(mL, y); ctx.lineTo(cv.width - mR, y); ctx.stroke();
-    ctx.fillStyle = '#a49a8c';
-    ctx.fillText(e === 0 ? '1' : '10⁻' + (-e < 10 ? '' : '') + String(-e).split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]).join(''), mL - 8, y + 4);
+  // first iteration at which each trace reaches the tolerance on this instance
+  const hitTol = {};
+  for (const [key] of SERIES) {
+    const v = RACE[key]; hitTol[key] = null;
+    for (let t = 0; t < v.length; t++) { if (v[t] <= TOL) { hitTol[key] = t; break; } }
   }
-  const toleranceY = Y(1e-6);
-  ctx.strokeStyle = 'rgba(79,197,150,0.8)'; ctx.setLineDash([6,5]); ctx.lineWidth = 1.4;
-  ctx.beginPath(); ctx.moveTo(mL, toleranceY); ctx.lineTo(cv.width - mR, toleranceY); ctx.stroke();
-  ctx.setLineDash([]); ctx.fillStyle = '#4fc596'; ctx.textAlign = 'left';
-  ctx.fillText('target 10⁻⁶', mL + 7, toleranceY - 6);
-  ctx.textAlign = 'center';
-  for (let t = 0; t <= T; t += 15) {
-    ctx.fillText(String(t), X(t), cv.height - mB + 18);
-  }
-  ctx.fillText('iteration', (mL + cv.width - mR) / 2, cv.height - 6);
-  ctx.save();
-  ctx.translate(14, (mT + cv.height - mB) / 2); ctx.rotate(-Math.PI / 2);
-  ctx.fillText('optimality gap g(γ⁽ᵗ⁾) − g*', 0, 0);
-  ctx.restore();
-  // axis frame
-  ctx.strokeStyle = '#57503f';
-  ctx.beginPath(); ctx.moveTo(mL, mT); ctx.lineTo(mL, cv.height - mB);
-  ctx.lineTo(cv.width - mR, cv.height - mB); ctx.stroke();
 
-  // series
-  for (const [key, label, color] of SERIES) {
-    const v = RACE[key];
-    ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
-    ctx.beginPath();
-    let started = false;
-    for (let t = 0; t <= Math.min(T, v.length - 1); t++) {
-      if (v[t] < LO) break;
-      if (!started) { ctx.moveTo(X(t), Y(v[t])); started = true; }
-      else ctx.lineTo(X(t), Y(v[t]));
+  function drawAxes() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'right';
+    for (let e = 0; e >= -12; e -= 3) {
+      const y = Y(Math.pow(10, e));
+      ctx.strokeStyle = 'rgba(58,51,42,0.9)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(mL, y); ctx.lineTo(W - mR, y); ctx.stroke();
+      ctx.fillStyle = '#a49a8c';
+      ctx.fillText(e === 0 ? '1' : '10⁻' + String(-e).split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]).join(''), mL - 8, y + 4);
     }
-    ctx.stroke();
+    const toleranceY = Y(TOL);
+    ctx.strokeStyle = 'rgba(79,197,150,0.8)'; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(mL, toleranceY); ctx.lineTo(W - mR, toleranceY); ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle = '#4fc596'; ctx.textAlign = 'left';
+    ctx.fillText('target 10⁻⁶', mL + 7, toleranceY - 6);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#a49a8c';
+    for (let t = 0; t <= T; t += 15) ctx.fillText(String(t), X(t), H - mB + 18);
+    ctx.fillText('iteration', (mL + W - mR) / 2, H - 6);
+    ctx.save(); ctx.translate(14, (mT + H - mB) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('optimality gap g(γ⁽ᵗ⁾) − g*', 0, 0); ctx.restore();
+    ctx.strokeStyle = '#57503f';
+    ctx.beginPath(); ctx.moveTo(mL, mT); ctx.lineTo(mL, H - mB); ctx.lineTo(W - mR, H - mB); ctx.stroke();
   }
-  // legend
-  ctx.fillStyle = 'rgba(38,33,25,0.92)';
-  ctx.strokeStyle = 'rgba(58,51,42,1)';
-  ctx.beginPath(); ctx.roundRect(cv.width - 262, mT + 12 - 14, 246, SERIES.length * 20 + 10, 8);
-  ctx.fill(); ctx.stroke();
-  let ly = mT + 12;
-  ctx.font = '12.5px Inter, sans-serif'; ctx.textAlign = 'left';
-  for (const [key, label, color] of SERIES) {
-    ctx.strokeStyle = color; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(cv.width - 250, ly - 4); ctx.lineTo(cv.width - 222, ly - 4); ctx.stroke();
-    ctx.fillStyle = '#e3ddd3';
-    ctx.fillText(label, cv.width - 214, ly);
-    ly += 20;
+
+  // trace value at a fractional iteration (log-linear interpolation)
+  function valueAt(v, t) {
+    const i = Math.floor(t), f = t - i;
+    if (i >= v.length - 1) return v[v.length - 1];
+    const a = lg(v[i]), b = lg(v[i + 1]);
+    return Math.pow(10, a + (b - a) * f);
   }
+
+  function drawSeries(tNow) {
+    for (const [key, label, color] of SERIES) {
+      const v = RACE[key];
+      const tEnd = Math.min(tNow, T, v.length - 1);
+      ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      let started = false, cut = false, headX = null, headY = null;
+      for (let t = 0; t <= Math.floor(tEnd); t++) {
+        if (v[t] < LO) { cut = true; break; }
+        if (!started) { ctx.moveTo(X(t), Y(v[t])); started = true; } else ctx.lineTo(X(t), Y(v[t]));
+        headX = X(t); headY = Y(v[t]);
+      }
+      if (!cut && tEnd > Math.floor(tEnd)) {
+        const value = valueAt(v, tEnd);
+        if (value >= LO) { ctx.lineTo(X(tEnd), Y(value)); headX = X(tEnd); headY = Y(value); }
+        else cut = true;
+      }
+      ctx.stroke();
+      if (tNow < T && !cut && headX !== null) {
+        ctx.fillStyle = color; ctx.beginPath(); ctx.arc(headX, headY, 4.5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#1a1713'; ctx.lineWidth = 1.2; ctx.stroke();
+      }
+      const hit = hitTol[key];
+      if (hit !== null && hit <= tNow) {
+        ctx.fillStyle = color; ctx.beginPath(); ctx.arc(X(hit), Y(TOL), 3.8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#1a1713'; ctx.lineWidth = 1; ctx.stroke();
+      }
+    }
+  }
+
+  function drawLegend() {
+    ctx.fillStyle = 'rgba(38,33,25,0.92)'; ctx.strokeStyle = 'rgba(58,51,42,1)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(W - 262, mT - 2, 246, SERIES.length * 20 + 10, 8);
+    ctx.fill(); ctx.stroke();
+    let ly = mT + 12;
+    ctx.font = '12.5px Inter, sans-serif'; ctx.textAlign = 'left';
+    for (const [key, label, color] of SERIES) {
+      ctx.strokeStyle = color; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(W - 250, ly - 4); ctx.lineTo(W - 222, ly - 4); ctx.stroke();
+      ctx.fillStyle = '#e3ddd3'; ctx.fillText(label, W - 214, ly);
+      ly += 20;
+    }
+  }
+
+  // inset: median iterations to the tolerance over the 20 replications; bars grow with the race
+  function drawMedianInset(tNow) {
+    const x0 = X(21), y0 = Y(1e-8) + 38, w = X(44) - x0, rowH = 18;
+    const labelW = 112, valW = 30, barMax = w - labelW - valW, scale = barMax / 32;
+    ctx.fillStyle = 'rgba(38,33,25,0.92)'; ctx.strokeStyle = 'rgba(58,51,42,1)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(x0 - 10, y0 - 22, w + 20, rowH * SERIES.length + 34, 8);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#a49a8c'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('median iterations to 10⁻⁶ over 20 replications', x0, y0 - 7);
+    SERIES.forEach(([key, label, color, median], i) => {
+      const y = y0 + 6 + i * rowH;
+      ctx.fillStyle = '#e3ddd3'; ctx.textAlign = 'right'; ctx.font = '11px Inter, sans-serif';
+      ctx.fillText(label, x0 + labelW - 8, y + 10);
+      const length = Math.min(median, tNow) * scale;
+      ctx.globalAlpha = 0.85; ctx.fillStyle = color;
+      ctx.fillRect(x0 + labelW, y + 2, length, rowH - 7); ctx.globalAlpha = 1;
+      if (tNow >= median) {
+        ctx.textAlign = 'left'; ctx.fillStyle = '#e3ddd3';
+        ctx.fillText(String(median), x0 + labelW + length + 6, y + 10);
+      }
+    });
+  }
+
+  function drawFrame(t) {
+    drawAxes(); drawSeries(t); drawMedianInset(t); drawLegend();
+    if (status) status.textContent = 'iteration ' + Math.floor(t) + ' of ' + T;
+  }
+
+  let raf = 0, startStamp = 0, elapsedBase = 0, tNow = 0, running = false;
+  function setButton() {
+    if (!playBtn) return;
+    playBtn.textContent = running ? '❚❚ Pause' : (tNow >= T ? '↻ Replay' : '▶ Play');
+  }
+  function frame(now) {
+    const elapsed = Math.max(0, elapsedBase + (now - startStamp));
+    tNow = Math.min(T, elapsed / DURATION * T);
+    drawFrame(tNow);
+    if (tNow < T) raf = requestAnimationFrame(frame);
+    else { running = false; raf = 0; elapsedBase = DURATION; setButton(); }
+  }
+  function play() {
+    if (running) return;
+    if (tNow >= T) elapsedBase = 0;
+    startStamp = performance.now(); running = true; setButton();
+    raf = requestAnimationFrame(frame);
+  }
+  function pause() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0; elapsedBase += performance.now() - startStamp; running = false; setButton();
+  }
+  let observer = null;
+  function stopAutoplay() { if (observer) { observer.disconnect(); observer = null; } }
+  if (playBtn) playBtn.onclick = () => { stopAutoplay(); running ? pause() : play(); };
+
+  if (reduced) { tNow = T; elapsedBase = DURATION; drawFrame(T); setButton(); return; }
+  drawFrame(0); setButton();
+  observer = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) { stopAutoplay(); play(); }
+  }, { threshold: 0.4 });
+  observer.observe(cv);
 })();
 </script>
 

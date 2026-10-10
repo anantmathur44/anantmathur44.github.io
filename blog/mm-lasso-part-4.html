@@ -33,6 +33,17 @@
     .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
     .series-nav a.here { color: var(--accent); border-color: var(--accent); }
     .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
+    .gate-demo-scroll { overflow-x: auto; margin-top: 1.2rem; overscroll-behavior-inline: contain; }
+    #gate-demo { width: 100%; display: block; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--card); }
+    .gate-controls { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.75rem;
+      flex-wrap: wrap; }
+    .gate-slider { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-dim);
+      font-family: var(--mono); font-size: 0.82rem; }
+    .gate-slider input { accent-color: var(--accent); width: 220px; }
+    .gate-status { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem; }
+    .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.65rem; }
+    @media (max-width: 640px) { #gate-demo { width: 900px; max-width: none; } }
   </style>
 </head>
 <body>
@@ -123,8 +134,8 @@
   <h2 id="separable-bound">Splitting the identity</h2>
 
   <p>
-    Let $\v w\ge\v0$ satisfy $\v1^\top\v w=1$. Because each standardized predictor has
-    $\|\v x_j\|_2=1$, the matrix $\m I-\v x_j\v x_j^\top$ is a projection. Therefore
+    Let $\v w\ge\v0$ satisfy $\v1^\top\v w=1$. Then $\m I=\sum_j w_j\m I$, and adding and
+    subtracting $w_j\v x_j\v x_j^\top$ splits the inverse of $\m G$ into $2p$ terms:
   </p>
 
   $$
@@ -134,7 +145,10 @@
   $$
 
   <p>
-    Apply the matrix inequality at the current iterate $\widetilde{\v\gamma}$. With
+    Because each standardized predictor has $\|\v x_j\|_2=1$, every $\m I-\v x_j\v x_j^\top$
+    is a projection and hence positive semidefinite, so the matrix inequality applies with these
+    $2p$ matrices as the $\m V$'s; terms whose coefficient is zero are simply dropped.
+    Apply it at the current iterate $\widetilde{\v\gamma}$. With
     $\widetilde\tau_j:=|\v x_j^\top\m G(\widetilde{\v\gamma})\v y|$ and
     $\widetilde r:=\|\m G(\widetilde{\v\gamma})\v y\|_2$, the resulting surrogate is
   </p>
@@ -152,8 +166,8 @@
     <strong>Key point: the weights choose the surrogate.</strong>
     The vector $\v w$ is not a model parameter. It is an MM design choice constrained to the
     simplex $\v w\ge\v0$ and $\v1^\top\v w=1$. Every such $\v w$ gives a valid tangent,
-    separable majorizer $h_{\v w}$, but it distributes the update flexibility differently
-    across coordinates and therefore produces a different concurrent MM step. Part 5 asks the
+    separable majorizer $h_{\v w}$, but it decides differently which coordinates may take
+    large steps, and therefore produces a different concurrent MM step. Part 5 asks the
     natural next question: <a href="mm-lasso-part-5.html">which weights give the best
     one-step bound?</a>
   </div>
@@ -187,11 +201,53 @@
     scarce resource that lets a coefficient enter or leave the active set.
   </p>
 
+  <h3>Watch the weight open the gate</h3>
+
+  <p>
+    The scalar update makes this concrete. With $\alpha=1$, the plot below shows
+    $\gamma_j^{(t+1)}$ as a function of the weight $w_j$ for two coordinates that see the same
+    residual signal $\tau_j$: one currently zero, $\gamma_j^{(t)}=0$, and one currently active
+    at $\gamma_j^{(t)}=0.4$. Expanding the soft-threshold,
+  </p>
+
+  $$
+  \gamma_j^{(t+1)}
+  =\frac{1}{\alpha}\Bigl[\gamma_j^{(t)}\tau_j+w_j(\tau_j-\alpha)\Bigr]_+ .
+  $$
+
+  <p>
+    The bracket is affine in $w_j$ with slope $\tau_j-\alpha=-\xi_j$, where $\xi_j$ is the
+    signed KKT gap of Part 2. Slide $\tau_j$ across the threshold: below it, weight can only shrink an active
+    coordinate, and enough weight switches it off; above it, any positive weight activates the
+    zero coordinate, and more weight moves both further.
+  </p>
+
+  <div class="gate-demo-scroll">
+    <canvas id="gate-demo" width="1000" height="420" role="img"
+      aria-label="Next auxiliary scale as a function of the MM weight"></canvas>
+  </div>
+  <div class="gate-controls">
+    <label class="gate-slider" title="Residual signal relative to the threshold">
+      τⱼ / α = <span id="gate-tau-val">0.70</span>
+      <input type="range" id="gate-tau" min="0.2" max="2" step="0.05" value="0.7"
+        aria-label="Residual signal relative to the threshold">
+    </label>
+    <span class="gate-status" id="gate-status" aria-live="polite"></span>
+  </div>
+  <p class="demo-caption">
+    Blue: a coordinate that is currently zero. Green: a coordinate currently active at
+    $\gamma_j^{(t)}=0.4$. The dashed horizontal marks the active coordinate's current value. At $w_j=0$ both lines
+    start at the multiplicative update $\gamma_j^{(t)}\tau_j/\alpha$, so the zero coordinate is
+    stuck there. When $\tau_j<\alpha$ the green line reaches zero at
+    $w_j=\gamma_j^{(t)}\tau_j/(\alpha-\tau_j)$, the open circle, which Part 5 names the
+    deactivation threshold $c_j$.
+  </p>
+
   <div class="result-note">
     <strong>What is proved.</strong> With exact linear solves and a unique auxiliary minimizer,
     the MM sequence converges globally to the lasso KKT point. The fast implementation uses a
-    small number of warm-started conjugate-gradient steps, so that inexact solve is a numerical
-    approximation to the theorem's map.
+    small number of warm-started conjugate-gradient steps; the theory covers the exact-solve
+    map, and the CG version approximates it.
   </div>
 
   <h2>The question left for Part 5</h2>
@@ -209,5 +265,134 @@
 </div>
 
 <footer>© 2026 Anant Mathur</footer>
+
+<script>
+(function () {
+  const cv = document.getElementById('gate-demo');
+  if (!cv) return;
+  const W = cv.width, H = cv.height;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  if (dpr !== 1) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const css = getComputedStyle(document.documentElement);
+  const C = {
+    bg: css.getPropertyValue('--card').trim() || '#262119',
+    grid: css.getPropertyValue('--border').trim() || '#3a332a',
+    text: css.getPropertyValue('--text').trim() || '#e3ddd3',
+    dim: css.getPropertyValue('--text-dim').trim() || '#a49a8c',
+    heading: css.getPropertyValue('--heading').trim() || '#f6f2ec',
+    accent: css.getPropertyValue('--accent').trim() || '#e8825e',
+    active: '#4fc596', zero: '#7dabf8'
+  };
+
+  const ALPHA = 1, GAMMA_ACTIVE = 0.4;
+  let tau = 0.7;
+  const next = (gamma, w) => Math.max(gamma * tau + w * (tau - ALPHA), 0) / ALPHA;
+
+  const P = { L: 70, R: 640, T: 70, B: 350 };
+  let YMAX = 2.0;
+  const px = w => P.L + w * (P.R - P.L);
+  const py = v => P.B - v / YMAX * (P.B - P.T);
+
+  function line(x1, y1, x2, y2, color, width, dash) {
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width || 1; ctx.setLineDash(dash || []);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore();
+  }
+  function dot(x, y, color, r, open) {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    if (open) { ctx.fillStyle = C.bg; ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke(); }
+    else { ctx.fillStyle = color; ctx.fill(); }
+  }
+  function curve(gamma, color) {
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 2.8; ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const w = i / 200, x = px(w), y = py(Math.min(next(gamma, w), YMAX));
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H); ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+    const above = tau > ALPHA + 1e-9, at = Math.abs(tau - ALPHA) < 1e-9;
+    const cKnot = tau < ALPHA ? GAMMA_ACTIVE * tau / (ALPHA - tau) : Infinity;
+    // fit the vertical range to the curves so low signals do not leave the plot empty
+    YMAX = Math.max(0.6, 1.15 * Math.max(next(GAMMA_ACTIVE, 1), next(0, 1), next(GAMMA_ACTIVE, 0)));
+    const yStep = YMAX > 1.5 ? 0.5 : YMAX > 0.8 ? 0.25 : 0.1;
+    const yTicks = []; for (let v = 0; v <= YMAX + 1e-9; v += yStep) yTicks.push(v);
+
+    ctx.textAlign = 'left'; ctx.fillStyle = C.heading; ctx.font = '600 17px Inter, sans-serif';
+    ctx.fillText('Next scale γ⁽ᵗ⁺¹⁾ as the weight w grows', P.L, 31);
+    ctx.fillStyle = C.dim; ctx.font = '13px Inter, sans-serif';
+    ctx.fillText('γ⁽ᵗ⁺¹⁾ = [γ⁽ᵗ⁾τ + w(τ − α)]₊ / α,   α = 1,   τ = ' + tau.toFixed(2), P.L, 52);
+
+    ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = C.dim;
+    for (const w of [0, 0.25, 0.5, 0.75, 1]) { const x = px(w); line(x, P.T, x, P.B, C.grid, 1);
+      ctx.textAlign = 'center'; ctx.fillText(w.toFixed(2), x, P.B + 19); }
+    for (const v of yTicks) { const y = py(v); line(P.L, y, P.R, y, C.grid, 1);
+      ctx.textAlign = 'right'; ctx.fillText(v.toFixed(2), P.L - 8, y + 4); }
+    line(P.L, P.B, P.R, P.B, C.dim, 1.2); line(P.L, P.T, P.L, P.B, C.dim, 1.2);
+    ctx.fillStyle = C.text; ctx.font = '13px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('weight wⱼ', (P.L + P.R) / 2, P.B + 40);
+    ctx.save(); ctx.translate(P.L - 44, (P.T + P.B) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('γⱼ⁽ᵗ⁺¹⁾', 0, 0); ctx.restore();
+
+    // current values
+    line(px(0), py(GAMMA_ACTIVE), px(1), py(GAMMA_ACTIVE), C.active, 1, [4, 5]);
+    ctx.textAlign = 'left'; ctx.font = '11.5px Inter, sans-serif'; ctx.fillStyle = C.active;
+    ctx.fillText('current γ⁽ᵗ⁾ = 0.4', P.L + 6, py(GAMMA_ACTIVE) - 5);
+
+    curve(0, C.zero); curve(GAMMA_ACTIVE, C.active);
+
+    // w = 0: the multiplicative update
+    dot(px(0), py(next(0, 0)), C.zero, 5.5, false);
+    dot(px(0), py(next(GAMMA_ACTIVE, 0)), C.active, 5.5, false);
+    // deactivation threshold for the active coordinate
+    if (isFinite(cKnot) && cKnot <= 1) {
+      dot(px(cKnot), py(0), C.active, 6, true);
+      line(px(cKnot), P.T, px(cKnot), P.B, C.active, 1, [6, 5]);
+      const flip = px(cKnot) > (P.L + P.R) / 2;
+      ctx.textAlign = flip ? 'right' : 'left'; ctx.fillStyle = C.active; ctx.font = '600 12px Inter, sans-serif';
+      ctx.fillText('switches off at w = ' + cKnot.toFixed(2), px(cKnot) + (flip ? -8 : 8), P.T + 16);
+    }
+
+    // legend / explanation column
+    const X = 690;
+    ctx.textAlign = 'left'; ctx.font = '600 13px Inter, sans-serif';
+    ctx.fillStyle = C.zero; ctx.fillText('● zero coordinate, γ⁽ᵗ⁾ = 0', X, P.T + 4);
+    ctx.fillStyle = C.text; ctx.font = '12px Inter, sans-serif';
+    const zeroLines = above
+      ? ['activates as soon as w > 0,', 'γ⁽ᵗ⁺¹⁾ = w(τ − α)/α']
+      : ['stays at zero for every w:', 'its condition τ ≤ α already holds'];
+    zeroLines.forEach((t, i) => ctx.fillText(t, X, P.T + 26 + 17 * i));
+
+    ctx.fillStyle = C.active; ctx.font = '600 13px Inter, sans-serif';
+    ctx.fillText('● active coordinate, γ⁽ᵗ⁾ = 0.4', X, P.T + 90);
+    ctx.fillStyle = C.text; ctx.font = '12px Inter, sans-serif';
+    const activeLines = above
+      ? ['grows with w; the gap τ − α', 'pulls it further from zero']
+      : at
+        ? ['sits at its KKT point τ = α:', 'no weight can move it']
+        : ['shrinks with w and switches off', 'once w ≥ γ⁽ᵗ⁾τ/(α − τ) = ' + (cKnot <= 1 ? cKnot.toFixed(2) : cKnot.toFixed(2) + ' > 1')];
+    activeLines.forEach((t, i) => ctx.fillText(t, X, P.T + 112 + 17 * i));
+
+    ctx.fillStyle = C.dim; ctx.font = '12px Inter, sans-serif';
+    ['w = 0 gives the multiplicative rule', 'γ⁽ᵗ⁺¹⁾ = γ⁽ᵗ⁾τ/α for both: the zero', 'coordinate cannot move.']
+      .forEach((t, i) => ctx.fillText(t, X, P.T + 180 + 17 * i));
+
+    const status = document.getElementById('gate-status');
+    status.textContent = 'bracket slope τ − α = ' + (tau - ALPHA).toFixed(2);
+  }
+
+  const slider = document.getElementById('gate-tau');
+  slider.oninput = function () {
+    tau = Number(this.value);
+    document.getElementById('gate-tau-val').textContent = tau.toFixed(2);
+    draw();
+  };
+  draw();
+})();
+</script>
 </body>
 </html>

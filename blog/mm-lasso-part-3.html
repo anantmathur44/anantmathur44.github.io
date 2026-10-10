@@ -36,7 +36,7 @@
     .mm-demo-scroll { overflow-x: auto; margin-top: 1rem; overscroll-behavior-inline: contain; }
     #mmdemo { border: 1px solid var(--border); border-radius: 8px; background: var(--card);
               width: 100%; display: block; }
-    .demo-controls { display: flex; gap: 0.6rem; margin-top: 0.7rem; flex-wrap: wrap; }
+    .demo-controls { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.7rem; flex-wrap: wrap; }
     .demo-controls button {
       min-width: 76px; font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer;
       padding: 0.4rem 1rem; border-radius: 8px;
@@ -45,6 +45,13 @@
     .demo-controls button:hover { background: var(--accent); color: #2a160d; }
     #btn-reset { min-width: 40px; width: 40px; height: 36px; padding: 0;
       display: inline-grid; place-items: center; font-size: 1.05rem; }
+    .demo-controls label { color: var(--text-dim); font-size: 0.85rem; display: inline-flex;
+      align-items: center; gap: 0.4rem; }
+    .demo-controls select { font: inherit; font-size: 0.85rem; color: var(--text);
+      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.28rem 0.45rem; }
+    .demo-status { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem;
+      margin-left: auto; }
     .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.6rem; }
     @media (max-width: 640px) { #mmdemo { width: 640px; max-width: none; } }
   </style>
@@ -119,9 +126,9 @@
     <div class="concept-step"><span class="num">01</span><strong>Touch</strong>
       <span>The surrogate agrees with the objective at the current iterate.</span></div>
     <div class="concept-step"><span class="num">02</span><strong>Stay above</strong>
-      <span>Its minimum is a computable upper bound on the next objective value.</span></div>
+      <span>Everywhere else the surrogate lies on or above the objective.</span></div>
     <div class="concept-step"><span class="num">03</span><strong>Minimize</strong>
-      <span>Each step descends without a line search or hand-tuned step size.</span></div>
+      <span>Minimizing the surrogate can only lower the objective: no line search or step size to tune.</span></div>
   </div>
 
   <h2 id="mm-animation">Watch MM work</h2>
@@ -157,9 +164,30 @@
   $$
 
   <p>
-    Starting farther away at $x^{(0)}=0.2$ gives a longer visible sequence:
+    Starting at $x^{(0)}=0.2$ gives a sequence long enough to watch:
     $0.2000\to0.3987\to0.7869\to1.4950\to2.4921\to3.0969\to\cdots\to\pi$.
-    The animation settles numerically at the displayed global minimum after seven MM updates.
+    With $L=1$ the iterates reach $\pi$ to display precision after seven MM updates.
+  </p>
+
+  <p>
+    The curvature constant $1$ is the smallest value that works, but any $L\ge1$ also gives a
+    valid majorizer,
+  </p>
+
+  $$
+  h_L(x,x^{(t)})
+  =\cos x^{(t)}-\sin x^{(t)}(x-x^{(t)})
+   +\frac{L}{2}(x-x^{(t)})^2,
+  \qquad
+  x^{(t+1)}=x^{(t)}+\frac{\sin x^{(t)}}{L}.
+  $$
+
+  <p>
+    The curvature selector under the animation switches between $L=1$, $2$ and $4$. Every
+    choice descends monotonically, but a looser bound hugs the objective less closely, so
+    each step is shorter and many more iterations are needed to reach $\pi$. Validity is
+    cheap; tightness is what buys speed. That is exactly the tension Parts 4 and 5 resolve
+    for the lasso.
   </p>
 
   <div class="reference-note">
@@ -170,19 +198,27 @@
   </div>
 
   <div class="mm-demo-scroll">
-    <canvas id="mmdemo" width="720" height="420"></canvas>
+    <canvas id="mmdemo" width="720" height="420" role="img"
+      aria-label="MM iterations on cos x with a quadratic surrogate"></canvas>
   </div>
   <div class="demo-controls">
     <button id="btn-step" title="Advance one MM iteration">Step</button>
     <button id="btn-play" title="Play the MM iterations" aria-label="Play MM iterations">▶ Play</button>
     <button id="btn-reset" title="Return to the initial iterate" aria-label="Reset MM iterations">↻</button>
+    <label title="Curvature constant of the quadratic majorizer">curvature L
+      <select id="mm-curv" aria-label="Curvature constant">
+        <option value="1" selected>1 (tightest)</option>
+        <option value="2">2</option>
+        <option value="4">4 (loose)</option>
+      </select>
+    </label>
+    <span class="demo-status" id="mm-status" aria-live="polite"></span>
   </div>
   <p class="demo-caption">
-    Orange is the objective and the dashed peach curve is the current surrogate. The white dot
-    marks $x^{(t)}$; the peach vertical guide and dot mark the surrogate minimum selected for the
-    next step. Past iterates remain on the objective so the monotone descent is visible. Dashed
-    vertical guides retain every iterate location, with the current iterate drawn more strongly.
-    The guide at $\widehat x=\pi$ marks the true minimum.
+    Orange is the objective; the dashed peach curve is the surrogate at the current iterate
+    $x^{(t)}$ (white dot), and the peach guide marks its minimum, the next iterate. Earlier
+    iterates stay on the objective so the monotone descent is visible. The guide at
+    $\widehat x=\pi$ marks the true minimum.
   </p>
 
   <h2>What makes a useful majorizer?</h2>
@@ -196,7 +232,7 @@
   </p>
 
   <div class="result-note">
-    <strong>MM is an algorithmic architecture.</strong> EM, iteratively reweighted methods,
+    <strong>MM is a design principle.</strong> EM, iteratively reweighted methods,
     proximal-gradient updates, and many coordinate-separable schemes can all be read as MM
     algorithms once their implicit upper bounds are written down.
   </div>
@@ -217,8 +253,8 @@
   $$
 
   <p>
-    The inverse couples all $p$ scales, so the obvious objective is not separable. The MM design
-    problem is therefore precise: find an upper bound that touches this inverse term at the
+    The inverse couples all $p$ scales, so $g$ is not separable. The design problem is now
+    concrete: find an upper bound that touches this inverse term at the
     current iterate, separates across $\gamma_j$, and remains tight enough to make a useful
     concurrent step.
   </p>
@@ -240,7 +276,13 @@
 <script>
 (function () {
   const cv = document.getElementById('mmdemo');
+  const W = cv.width, H = cv.height;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  if (dpr !== 1) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TWEEN = reducedMotion ? 0 : 340;
   const css = getComputedStyle(document.documentElement);
   const C = {
     g: css.getPropertyValue('--accent').trim() || '#e8825e',
@@ -251,16 +293,18 @@
   };
 
   const XHAT = Math.PI;
+  let L = 1;                       // curvature constant of the majorizer
   const g = x => Math.cos(x);
   const surrogate = xt => x =>
-    Math.cos(xt) - Math.sin(xt) * (x - xt) + 0.5 * (x - xt) ** 2;
-  const mmStep = xt => xt + Math.sin(xt);
+    Math.cos(xt) - Math.sin(xt) * (x - xt) + 0.5 * L * (x - xt) ** 2;
+  const mmStep = xt => xt + Math.sin(xt) / L;
+  const playInterval = () => (L === 1 ? 650 : L === 2 ? 520 : 400);
 
   const X0 = 0.2, XMIN = 0, XMAX = 2 * Math.PI, YMIN = -1.25, YMAX = 5.1;
-  let xt = X0, iter = 0, timer = null, trail = [X0];
+  let xt = X0, iter = 0, timer = null, trail = [X0], anim = null;
 
-  function sx(x) { return (x - XMIN) / (XMAX - XMIN) * (cv.width - 60) + 45; }
-  function sy(y) { return cv.height - 35 - (y - YMIN) / (YMAX - YMIN) * (cv.height - 60); }
+  function sx(x) { return (x - XMIN) / (XMAX - XMIN) * (W - 60) + 45; }
+  function sy(y) { return H - 35 - (y - YMIN) / (YMAX - YMIN) * (H - 60); }
 
   function drawCurve(f, color, width, dash) {
     ctx.beginPath();
@@ -305,11 +349,12 @@
     ctx.restore();
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, cv.width, cv.height);
+  function draw(xDisplay) {
+    if (xDisplay === undefined) xDisplay = xt;
+    ctx.clearRect(0, 0, W, H);
     ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(45, sy(YMIN)); ctx.lineTo(cv.width - 15, sy(YMIN));
+    ctx.moveTo(45, sy(YMIN)); ctx.lineTo(W - 15, sy(YMIN));
     ctx.moveTo(45, sy(YMIN)); ctx.lineTo(45, 15);
     ctx.stroke();
 
@@ -336,11 +381,11 @@
 
     drawIterateGuides();
 
-    const h = surrogate(xt);
+    const h = surrogate(xDisplay);
     drawCurve(h, C.h, 1.6, [6, 5]);
     drawCurve(g, C.g, 2.4);
 
-    const xNext = mmStep(xt);
+    const xNext = mmStep(xDisplay);
     drawSelectedMinimumGuide(xNext);
 
     for (let i = 0; i < trail.length - 1; i++) {
@@ -355,14 +400,29 @@
     ctx.strokeStyle = C.g; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.arc(sx(XHAT), sy(g(XHAT)), 5, 0, 7); ctx.stroke();
     ctx.fillStyle = C.text;
-    ctx.beginPath(); ctx.arc(sx(xt), sy(g(xt)), 5.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx(xDisplay), sy(g(xDisplay)), 5.5, 0, 7); ctx.fill();
 
     ctx.font = '13px Inter, sans-serif'; ctx.textAlign = 'left';
-    ctx.fillStyle = C.g; ctx.fillText('g(x) = cos x', cv.width - 265, 32);
-    ctx.fillStyle = C.h; ctx.fillText('h(x, xᵗ)  quadratic majorizer', cv.width - 265, 52);
+    ctx.fillStyle = C.g; ctx.fillText('g(x) = cos x', W - 265, 32);
+    ctx.fillStyle = C.h; ctx.fillText('h(x, xᵗ)  quadratic majorizer, L = ' + L, W - 265, 52);
     ctx.fillStyle = C.dim;
     ctx.fillText('iteration ' + iter + '    xᵗ = ' + xt.toFixed(4) +
                  '    gap to π: ' + Math.abs(xt - XHAT).toFixed(4), 55, 30);
+    const statusEl = document.getElementById('mm-status');
+    if (statusEl) {
+      statusEl.textContent = Math.abs(xt - XHAT) < 1e-6
+        ? 'converged in ' + iter + ' iterations (L = ' + L + ')'
+        : 'iteration ' + iter + ' · L = ' + L;
+    }
+  }
+
+  // ease the surrogate and the current iterate from the old x to the new one
+  function tween(now) {
+    if (!anim) return;
+    const raw = Math.min(1, Math.max(0, (now - anim.start) / TWEEN));
+    const eased = raw * raw * (3 - 2 * raw);
+    draw(anim.from + (anim.to - anim.from) * eased);
+    if (raw < 1) requestAnimationFrame(tween); else { anim = null; draw(); }
   }
 
   function setPlayButton(playing) {
@@ -376,23 +436,31 @@
     setPlayButton(false);
   }
   function step() {
-    if (Math.abs(xt - XHAT) < 1e-8) { if (timer) stop(); return; }
+    if (Math.abs(xt - XHAT) < 1e-6) { if (timer) stop(); return; }
+    const from = xt;
     xt = mmStep(xt); iter += 1; trail.push(xt);
-    if (trail.length > 60) trail.shift();
-    draw();
+    if (trail.length > 80) trail.shift();
+    if (TWEEN > 0) {
+      anim = { from, to: xt, start: performance.now() };
+      draw(from); requestAnimationFrame(tween);
+    } else draw();
     if (Math.abs(xt - XHAT) < 1e-6 && timer) stop();
+  }
+  function reset() {
+    stop(); anim = null; xt = X0; iter = 0; trail = [X0]; draw();
   }
 
   document.getElementById('btn-step').onclick = () => { if (timer) stop(); step(); };
   document.getElementById('btn-play').onclick = function () {
     if (timer) stop();
     else {
-      if (Math.abs(xt - XHAT) < 1e-6) { xt = X0; iter = 0; trail = [X0]; draw(); }
-      timer = setInterval(step, 650); setPlayButton(true);
+      if (Math.abs(xt - XHAT) < 1e-6) { anim = null; xt = X0; iter = 0; trail = [X0]; draw(); }
+      timer = setInterval(step, playInterval()); setPlayButton(true);
     }
   };
-  document.getElementById('btn-reset').onclick = () => {
-    stop(); xt = X0; iter = 0; trail = [X0]; draw();
+  document.getElementById('btn-reset').onclick = reset;
+  document.getElementById('mm-curv').onchange = function () {
+    L = Number(this.value); reset();
   };
 
   draw();

@@ -48,6 +48,9 @@
       font-size: 0.88rem; font-weight: 600; cursor: pointer; }
     .cd-controls button:hover { background: var(--accent); color: #2a160d; }
     .cd-status { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem; }
+    .cd-slider { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--text-dim);
+      font-family: var(--mono); font-size: 0.8rem; margin-left: 0.4rem; }
+    .cd-slider input { accent-color: var(--accent); width: 120px; }
     .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.65rem; }
     @media (max-width: 640px) {
       .kkt-grid { grid-template-columns: 1fr; }
@@ -91,17 +94,17 @@
   </p>
 
   <div class="reference-note">
-    <strong>Series.</strong> This series develops the scalar-predictor specialization of the MM
-    framework introduced in our source paper with Sarat Moka and Zdravko Botev. Throughout, we
-    work with the ordinary lasso: one standardized predictor per coefficient.
+    <strong>Series.</strong> This series develops the ordinary-lasso special case of the MM framework
+    from our group-lasso paper with Sarat Moka and Zdravko Botev: every group is a single
+    standardized predictor.
     <a href="../assets/papers/MM_Algorithms_Group_Lasso.pdf" target="_blank" rel="noopener">[PDF]</a>
   </div>
 
   <h2>The model</h2>
 
   <p>
-    Let $\v y \in \bb{R}^n$ be a centred response and
-    $\m X = [\v x_1,\ldots,\v x_p] \in \bb{R}^{n\times p}$ a centred design matrix.
+    Let $\v y \in \bb{R}^n$ be a centered response and
+    $\m X = [\v x_1,\ldots,\v x_p] \in \bb{R}^{n\times p}$ a centered design matrix.
     Following the standard lasso setup, scale every column so that
     $\|\v x_j\|_2=1$. The linear model is
   </p>
@@ -112,9 +115,9 @@
   $$
 
   <p>
-    The least-squares estimate uses every predictor. The lasso of
+    Least squares keeps every predictor. The lasso of
     <a href="https://doi.org/10.1111/j.2517-6161.1996.tb02080.x" target="_blank" rel="noopener">Tibshirani (1996)</a>
-    adds an $\ell_1$ penalty:
+    adds an $\ell_1$ penalty that sets some coefficients exactly to zero:
   </p>
 
   $$
@@ -155,8 +158,8 @@
   <h2>The lasso KKT conditions</h2>
 
   <p>
-    For the full lasso with correlated predictors, $\v x_j^\top\v y$ does not tell the whole
-    story. Whether coefficient $j$ should be zero depends on the residual left by all the other coefficients.
+    With several correlated predictors, the raw correlation $\v x_j^\top\v y$ no longer decides
+    whether $\beta_j$ is zero. What matters is the residual left by all the other coefficients.
     Let $\v r(\v\beta):=\v y-\m X\v\beta$. Since the absolute value is not differentiable at
     zero, its coordinate-wise subgradient is
   </p>
@@ -170,7 +173,7 @@
   $$
 
   <p>
-    Setting the subgradient of the convex lasso objective to zero gives the necessary and
+    The objective is convex, so requiring $0$ to lie in its subdifferential gives a necessary and
     sufficient optimality certificate
   </p>
 
@@ -224,7 +227,8 @@
   <h3>For the lasso, the one-dimensional solution is explicit</h3>
 
   <p>
-    Return now to the standardized lasso and write $\alpha=n\lambda$. When coordinate $j$ is
+    Return now to the standardized lasso. Multiplying $f$ by $n$ does not change its minimizer
+    and turns the penalty into $\alpha\|\v\beta\|_1$. When coordinate $j$ is
     selected, all other coefficients are fixed. Their contribution is removed from the response
     to form the partial residual
   </p>
@@ -280,6 +284,11 @@
     <button id="cd-step" title="Minimize the highlighted coordinate">Step</button>
     <button id="cd-play" title="Play or pause cyclic coordinate descent">Play</button>
     <button id="cd-reset" title="Return to the initial coefficients">Reset</button>
+    <label class="cd-slider" title="Correlation between the two predictors">
+      ρ = <span id="cd-rho-val">0.65</span>
+      <input type="range" id="cd-rho" min="0" max="0.9" step="0.05" value="0.65"
+        aria-label="Predictor correlation">
+    </label>
     <span class="cd-status" id="cd-status"></span>
   </div>
   <p class="demo-caption">
@@ -287,7 +296,10 @@
     a time; orange segments update $\beta_1$ and green segments update $\beta_2$. Right: the
     corresponding scalar objective is shown with the other coefficient fixed. The open point
     is the exact soft-thresholded minimizer used for the next update. The status line reports the
-    largest remaining lasso KKT discrepancy.
+    largest remaining lasso KKT discrepancy. The slider sets the correlation $\rho$ between the
+    two predictors while holding the solution $\widehat{\v\beta}$ fixed: as $\rho$ rises the
+    contours stretch into a narrow diagonal valley, and the same minimizer takes many more
+    zig-zags to reach.
   </p>
 
   <h2>Why look beyond coordinate descent?</h2>
@@ -315,7 +327,13 @@
 <script>
 (function () {
   const cv = document.getElementById('cd-demo');
+  const W = cv.width, H = cv.height;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  if (dpr !== 1) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TWEEN = reducedMotion ? 0 : 300;
   const css = getComputedStyle(document.documentElement);
   const C = {
     bg: css.getPropertyValue('--card').trim() || '#262119',
@@ -328,19 +346,25 @@
     contour: '#7dabf8'
   };
 
-  const RHO = 0.65, ALPHA = 0.7, CORR = [2.3, 1.9];
-  const DET = 1 - RHO * RHO;
-  const BETA_HAT = [
-    (CORR[0] - ALPHA - RHO * (CORR[1] - ALPHA)) / DET,
-    (CORR[1] - ALPHA - RHO * (CORR[0] - ALPHA)) / DET
-  ];
+  // The lasso solution is held fixed at BETA_STAR for every correlation: the
+  // correlations x_j'y are chosen from the KKT conditions so that only the shape
+  // of the valley changes when the slider moves.
+  let RHO = 0.65;
+  const ALPHA = 0.7, BETA_STAR = [1.42, 0.28];
+  let CORR = [0, 0];
+  function setCorrelation(rho) {
+    RHO = rho;
+    CORR = [BETA_STAR[0] + rho * BETA_STAR[1] + ALPHA, BETA_STAR[1] + rho * BETA_STAR[0] + ALPHA];
+  }
+  setCorrelation(RHO);
   const BETA0 = [-0.6, 1.4];
-  const TOL = 1e-3;
+  const TOL = 1e-4;
+  let BETA_HAT = [0, 0];
 
   const P = {L: 58, R: 558, T: 72, B: 478};
   const Q = {L: 635, R: 970, T: 142, B: 478};
   const B1MIN = -0.9, B1MAX = 2.05, B2MIN = -0.2, B2MAX = 1.65;
-  const UMIN = -1, UMAX = 2.2, QMIN = -0.5, QMAX = 3;
+  const UMIN = -1, UMAX = 2.2, QMIN = -1.25, QMAX = 3;
 
   let beta = BETA0.slice(), trail = [{beta: BETA0.slice(), coordinate: null}];
   let steps = 0, timer = null;
@@ -357,6 +381,14 @@
       ? Math.abs(residualCorrelation - ALPHA * Math.sign(value))
       : Math.max(Math.abs(residualCorrelation) - ALPHA, 0);
   }));
+  // The lasso solution for the current correlation, found by running coordinate
+  // descent to convergence (the closed form only holds when both coefficients are active).
+  function solve() {
+    const b = BETA0.slice();
+    for (let k = 0; k < 20000 && kktGap(b) > 1e-12; k++) b[k % 2] = coordinateTarget(b, k % 2);
+    BETA_HAT = b;
+  }
+  solve();
 
   const px = value => P.L + (value - B1MIN) / (B1MAX - B1MIN) * (P.R - P.L);
   const py = value => P.B - (value - B2MIN) / (B2MAX - B2MIN) * (P.B - P.T);
@@ -436,9 +468,10 @@
     ctx.fillText('β₂', 0, 0); ctx.restore();
   }
 
-  function drawPath(activeCoordinate) {
+  function drawPath(activeCoordinate, display, moving) {
     for (let i = 1; i < trail.length; i++) {
-      const previous = trail[i - 1].beta, current = trail[i].beta;
+      const previous = trail[i - 1].beta;
+      const current = (moving && i === trail.length - 1) ? display : trail[i].beta;
       line(px(previous[0]), py(previous[1]), px(current[0]), py(current[1]),
         trail[i].coordinate === 0 ? C.beta1 : C.beta2, 3.2);
     }
@@ -448,12 +481,14 @@
     }
     ctx.globalAlpha = 1;
 
-    const target = beta.slice(); target[activeCoordinate] = coordinateTarget(beta, activeCoordinate);
-    line(px(beta[0]), py(beta[1]), px(target[0]), py(target[1]),
-      activeCoordinate === 0 ? C.beta1 : C.beta2, 1.6, [7, 5]);
+    if (!moving) {
+      const target = beta.slice(); target[activeCoordinate] = coordinateTarget(beta, activeCoordinate);
+      line(px(beta[0]), py(beta[1]), px(target[0]), py(target[1]),
+        activeCoordinate === 0 ? C.beta1 : C.beta2, 1.6, [7, 5]);
+    }
 
     ctx.fillStyle = C.text; ctx.beginPath();
-    ctx.arc(px(beta[0]), py(beta[1]), 6, 0, Math.PI * 2); ctx.fill();
+    ctx.arc(px(display[0]), py(display[1]), 6, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = C.contour; ctx.lineWidth = 2.2; ctx.beginPath();
     const ox = px(BETA_HAT[0]), oy = py(BETA_HAT[1]);
     for (let k = 0; k < 5; k++) {
@@ -470,7 +505,7 @@
     ctx.fillStyle = C.beta2; ctx.fillText('green: update β₂', P.L + 145, P.T + 16);
   }
 
-  function drawSubproblem(j, converged) {
+  function drawSubproblem(j, converged, display) {
     const color = j === 0 ? C.beta1 : C.beta2;
     const z = coordinateScore(beta, j), target = coordinateTarget(beta, j);
     ctx.fillStyle = C.heading; ctx.font = '600 17px Inter, sans-serif'; ctx.textAlign = 'left';
@@ -487,7 +522,7 @@
       const x = qx(value); line(x, Q.T, x, Q.B, C.grid, 1);
       ctx.textAlign = 'center'; ctx.fillStyle = C.dim; ctx.fillText(String(value), x, Q.B + 20);
     }
-    for (const value of [0, 1, 2, 3]) {
+    for (const value of [-1, 0, 1, 2, 3]) {
       const y = qy(value); line(Q.L, y, Q.R, y, C.grid, 1);
       ctx.textAlign = 'right'; ctx.fillStyle = C.dim; ctx.fillText(String(value), Q.L - 8, y + 4);
     }
@@ -506,16 +541,22 @@
     ctx.stroke();
 
     ctx.fillStyle = C.text; ctx.beginPath();
-    ctx.arc(qx(beta[j]), qy(scalarObjective(beta[j], z)), 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.arc(qx(display[j]), qy(scalarObjective(display[j], z)), 5.5, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
     ctx.arc(qx(target), qy(scalarObjective(target, z)), 6.5, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, cv.width, cv.height); ctx.fillStyle = C.bg; ctx.fillRect(0, 0, cv.width, cv.height);
+  let anim = null;
+  function draw(display, movingCoordinate) {
+    const moving = display !== undefined;
+    if (!moving) display = beta;
+    ctx.clearRect(0, 0, W, H); ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
     const gap = kktGap(beta), converged = gap < TOL, activeCoordinate = steps % 2;
-    drawAxes(); drawContours(); drawPath(activeCoordinate); drawSubproblem(activeCoordinate, converged);
+    // While a move is animating, keep showing the subproblem that produced it.
+    const panelCoordinate = moving ? movingCoordinate : activeCoordinate;
+    drawAxes(); drawContours(); drawPath(activeCoordinate, display, moving);
+    drawSubproblem(panelCoordinate, converged && !moving, display);
     document.getElementById('cd-status').textContent = converged
       ? 'converged · β=(' + beta.map(x => x.toFixed(3)).join(', ') + ') · KKT gap=' + gap.toExponential(1)
       : 'step ' + steps + ' · next β' + (activeCoordinate + 1) + ' · β=(' +
@@ -525,15 +566,28 @@
   function stop() {
     clearInterval(timer); timer = null; document.getElementById('cd-play').textContent = 'Play';
   }
+  function tween(now) {
+    if (!anim) return;
+    const raw = Math.min(1, Math.max(0, (now - anim.start) / TWEEN));
+    const eased = raw * raw * (3 - 2 * raw);
+    const display = anim.from.slice();
+    display[anim.j] = anim.from[anim.j] + (anim.to[anim.j] - anim.from[anim.j]) * eased;
+    draw(display, anim.j);
+    if (raw < 1) requestAnimationFrame(tween); else { anim = null; draw(); }
+  }
   function step() {
     if (kktGap(beta) < TOL) { stop(); return; }
-    const j = steps % 2;
+    const j = steps % 2, from = beta.slice();
     beta[j] = coordinateTarget(beta, j); steps += 1;
-    trail.push({beta: beta.slice(), coordinate: j}); draw();
+    trail.push({beta: beta.slice(), coordinate: j});
+    if (TWEEN > 0) {
+      anim = { from, to: beta.slice(), j, start: performance.now() };
+      draw(from, j); requestAnimationFrame(tween);
+    } else draw();
     if (kktGap(beta) < TOL) stop();
   }
   function reset() {
-    stop(); beta = BETA0.slice(); trail = [{beta: BETA0.slice(), coordinate: null}]; steps = 0; draw();
+    stop(); anim = null; beta = BETA0.slice(); trail = [{beta: BETA0.slice(), coordinate: null}]; steps = 0; draw();
   }
 
   document.getElementById('cd-step').onclick = () => { if (timer) stop(); step(); };
@@ -543,6 +597,12 @@
     timer = setInterval(step, 420); this.textContent = 'Pause';
   };
   document.getElementById('cd-reset').onclick = reset;
+  const rhoInput = document.getElementById('cd-rho');
+  rhoInput.oninput = function () {
+    setCorrelation(Number(this.value));
+    document.getElementById('cd-rho-val').textContent = RHO.toFixed(2);
+    solve(); reset();
+  };
 
   draw();
 })();
