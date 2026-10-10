@@ -130,6 +130,8 @@
     }
     @media (max-width: 640px) {
       .breakout { overflow-x: auto; overscroll-behavior-inline: contain; }
+      .breakout::before, #wf-full::before { content: "Swipe sideways to see the whole figure →"; display: block; position: sticky;
+        left: 0; color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.35rem; }
       #racechart, #phidemo { width: 680px; max-width: none; }
       .fam-visual { width: 680px; height: auto; }
       #fam-plot { width: 680px; height: auto; }
@@ -209,7 +211,7 @@
 #wf-full .cwrap { position: relative; display: inline-block; }
 #wf-full .axlab { position: absolute; font-size: 13px; color: #a49a8c;
            white-space: nowrap; pointer-events: none; }
-#wf-full .axlab.y { left: -56px; top: 140px; width: 140px; text-align: center;
+#wf-full .axlab.y { left: -64px; top: 140px; width: 140px; text-align: center;
              transform: rotate(-90deg); }
 #wf-full .nulab { position: absolute; font-size: 13px; color: #8fb8ff;
            white-space: nowrap; pointer-events: none; font-weight: 600;
@@ -373,7 +375,7 @@
   </div>
   <div class="demo-controls">
     <button id="fam-play" title="Play the weight path" aria-label="Play weight path">▶ Play</button>
-    <button id="fam-reset" title="Reset selected weight" aria-label="Reset selected weight">↻</button>
+    <button id="fam-reset" title="Reset selected weight" aria-label="Reset selected weight">↻ Reset</button>
     <span class="fam-presets" role="group" aria-label="Jump the selected weight to a preset">
       <span class="preset-label">jump to</span>
       <button class="fam-preset" data-w="uniform" title="Equal weights">uniform</button>
@@ -557,8 +559,8 @@
   <div class="breakout">
     <canvas id="wfexplore" width="1020" height="520"></canvas>
     <div class="demo-controls">
-      <button id="wf-play" title="Pause or play the optimal-weight allocation">Play</button>
-      <button id="wf-restart" title="Restart the allocation from zero">Restart</button>
+      <button id="wf-play" title="Pause or play the optimal-weight allocation">▶ Play</button>
+      <button id="wf-restart" title="Restart the allocation from zero">↻ Restart</button>
       <label>speed
         <select id="wf-speed">
           <option value="0.5">0.5×</option>
@@ -1003,7 +1005,7 @@ function drawP(sc, w, level) {
   }
   ctxP.textAlign = "right";
   ctxP.fillText(fmt(ymax,0), mL-5, mT+9);
-  ctxP.fillText(fmt(ymin,0), mL-5, H-mB);
+  ctxP.fillText(fmt(Math.abs(ymin) < 0.5 ? 0 : ymin, 0), mL-5, H-mB);   // avoid a "-0" tick
 
   for (let j = 0; j < J; j++) {
     ctxP.strokeStyle = COLORS[j];
@@ -1529,7 +1531,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   let frameIndex = 0, playing = false, started = false, lastTime = 0;
-  function setButton() { playBtn.textContent = playing ? 'Pause' : 'Play'; }
+  function setButton() { playBtn.textContent = playing ? '❚❚ Pause' : '▶ Play'; }
   function startFromBeginning() {
     frameIndex = 0; playing = true; started = true; lastTime = 0; setButton(); draw(frames[0]);
     requestAnimationFrame(tick);

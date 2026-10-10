@@ -38,6 +38,10 @@
     .kkt-case.zero { border-top-color: #7dabf8; }
     .kkt-case h3 { margin: 0 0 0.35rem; font-size: 1rem; }
     .kkt-case p { color: var(--text-dim); font-size: 0.9rem; }
+    .breakout {
+      width: min(1000px, 100vw - 28px);
+      position: relative; left: 50%; transform: translateX(-50%);
+    }
     .cd-demo-scroll { overflow-x: auto; margin-top: 1.2rem; overscroll-behavior-inline: contain; }
     #cd-demo { width: 100%; display: block; border: 1px solid var(--border); border-radius: 8px;
       background: var(--card); }
@@ -47,7 +51,8 @@
       border-radius: 8px; background: transparent; color: var(--accent); font: inherit;
       font-size: 0.88rem; font-weight: 600; cursor: pointer; }
     .cd-controls button:hover { background: var(--accent); color: #2a160d; }
-    .cd-status { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem; }
+    .cd-status { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem;
+      margin-left: auto; }
     .cd-slider { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--text-dim);
       font-family: var(--mono); font-size: 0.8rem; margin-left: 0.4rem; }
     .cd-slider input { accent-color: var(--accent); width: 120px; }
@@ -55,6 +60,8 @@
     @media (max-width: 640px) {
       .kkt-grid { grid-template-columns: 1fr; }
       #cd-demo { width: 900px; max-width: none; }
+      .cd-demo-scroll::before { content: "Swipe sideways to see the whole figure →"; display: block; position: sticky;
+        left: 0; color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.35rem; }
     }
   </style>
 </head>
@@ -276,14 +283,15 @@
     minimizes one scalar subproblem exactly while the other coefficient stays fixed.
   </p>
 
+  <div class="breakout">
   <div class="cd-demo-scroll">
     <canvas id="cd-demo" width="1000" height="540"
       aria-label="Coordinate descent path and one-dimensional lasso subproblem"></canvas>
   </div>
   <div class="cd-controls">
     <button id="cd-step" title="Minimize the highlighted coordinate">Step</button>
-    <button id="cd-play" title="Play or pause cyclic coordinate descent">Play</button>
-    <button id="cd-reset" title="Return to the initial coefficients">Reset</button>
+    <button id="cd-play" title="Play or pause cyclic coordinate descent">▶ Play</button>
+    <button id="cd-reset" title="Return to the initial coefficients">↻ Reset</button>
     <label class="cd-slider" title="Correlation between the two predictors">
       ρ = <span id="cd-rho-val">0.65</span>
       <input type="range" id="cd-rho" min="0" max="0.9" step="0.05" value="0.65"
@@ -301,6 +309,7 @@
     contours stretch into a narrow diagonal valley, and the same minimizer takes many more
     zig-zags to reach.
   </p>
+  </div>
 
   <h2>Why look beyond coordinate descent?</h2>
 
@@ -564,7 +573,7 @@
   }
 
   function stop() {
-    clearInterval(timer); timer = null; document.getElementById('cd-play').textContent = 'Play';
+    clearInterval(timer); timer = null; document.getElementById('cd-play').textContent = '▶ Play';
   }
   function tween(now) {
     if (!anim) return;
@@ -594,7 +603,7 @@
   document.getElementById('cd-play').onclick = function () {
     if (timer) { stop(); return; }
     if (kktGap(beta) < TOL) reset();
-    timer = setInterval(step, 420); this.textContent = 'Pause';
+    timer = setInterval(step, 420); this.textContent = '❚❚ Pause';
   };
   document.getElementById('cd-reset').onclick = reset;
   const rhoInput = document.getElementById('cd-rho');

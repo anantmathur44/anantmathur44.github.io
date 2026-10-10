@@ -38,6 +38,10 @@
     .kkt-case.zero { border-top-color: #7dabf8; }
     .kkt-case h3 { margin: 0 0 0.35rem; font-size: 1rem; }
     .kkt-case p { color: var(--text-dim); font-size: 0.9rem; }
+    .breakout {
+      width: min(1000px, 100vw - 28px);
+      position: relative; left: 50%; transform: translateX(-50%);
+    }
     .aux-demo-scroll { overflow-x: auto; margin-top: 1.2rem; overscroll-behavior-inline: contain; }
     #aux-demo { width: 100%; display: block; border: 1px solid var(--border); border-radius: 8px;
       background: var(--card); }
@@ -52,6 +56,8 @@
     @media (max-width: 640px) {
       .kkt-grid { grid-template-columns: 1fr; }
       #aux-demo { width: 900px; max-width: none; }
+      .aux-demo-scroll::before { content: "Swipe sideways to see the whole figure →"; display: block; position: sticky;
+        left: 0; color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.35rem; }
     }
   </style>
 </head>
@@ -218,6 +224,7 @@
     Move the correlation $c$ across the threshold to watch the scale leave the boundary.
   </p>
 
+  <div class="breakout">
   <div class="aux-demo-scroll">
     <canvas id="aux-demo" width="1000" height="430" role="img"
       aria-label="Auxiliary objective and residual correlation for one predictor"></canvas>
@@ -238,6 +245,7 @@
     it never reaches the threshold, the minimizer sits on the boundary $\gamma=0$, and the
     coefficient is zero (blue).
   </p>
+  </div>
 
   <h2>Why this is the same certificate</h2>
 

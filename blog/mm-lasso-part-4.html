@@ -33,6 +33,10 @@
     .series-nav a:hover { color: var(--heading); text-decoration: none; border-color: var(--text-dim); }
     .series-nav a.here { color: var(--accent); border-color: var(--accent); }
     .pager { display: flex; justify-content: space-between; margin-top: 3rem; gap: 1rem; }
+    .breakout {
+      width: min(1000px, 100vw - 28px);
+      position: relative; left: 50%; transform: translateX(-50%);
+    }
     .gate-demo-scroll { overflow-x: auto; margin-top: 1.2rem; overscroll-behavior-inline: contain; }
     #gate-demo { width: 100%; display: block; border: 1px solid var(--border); border-radius: 8px;
       background: var(--card); }
@@ -43,7 +47,11 @@
     .gate-slider input { accent-color: var(--accent); width: 220px; }
     .gate-status { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem; }
     .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.65rem; }
-    @media (max-width: 640px) { #gate-demo { width: 900px; max-width: none; } }
+    @media (max-width: 640px) {
+      #gate-demo { width: 900px; max-width: none; }
+      .gate-demo-scroll::before { content: "Swipe sideways to see the whole figure →"; display: block; position: sticky;
+        left: 0; color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.35rem; }
+    }
   </style>
 </head>
 <body>
@@ -222,6 +230,7 @@
     zero coordinate, and more weight moves both further.
   </p>
 
+  <div class="breakout">
   <div class="gate-demo-scroll">
     <canvas id="gate-demo" width="1000" height="420" role="img"
       aria-label="Next auxiliary scale as a function of the MM weight"></canvas>
@@ -242,6 +251,7 @@
     $w_j=\gamma_j^{(t)}\tau_j/(\alpha-\tau_j)$, the open circle, which Part 5 names the
     deactivation threshold $c_j$.
   </p>
+  </div>
 
   <div class="result-note">
     <strong>What is proved.</strong> With exact linear solves and a unique auxiliary minimizer,

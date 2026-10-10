@@ -53,7 +53,11 @@
     .demo-status { color: var(--text-dim); font-family: var(--mono); font-size: 0.78rem;
       margin-left: auto; }
     .demo-caption { color: var(--text-dim); font-size: 0.86rem; margin-top: 0.6rem; }
-    @media (max-width: 640px) { #mmdemo { width: 640px; max-width: none; } }
+    @media (max-width: 640px) {
+      #mmdemo { width: 640px; max-width: none; }
+      .mm-demo-scroll::before { content: "Swipe sideways to see the whole figure →"; display: block; position: sticky;
+        left: 0; color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.35rem; }
+    }
   </style>
 </head>
 <body>
@@ -204,7 +208,7 @@
   <div class="demo-controls">
     <button id="btn-step" title="Advance one MM iteration">Step</button>
     <button id="btn-play" title="Play the MM iterations" aria-label="Play MM iterations">▶ Play</button>
-    <button id="btn-reset" title="Return to the initial iterate" aria-label="Reset MM iterations">↻</button>
+    <button id="btn-reset" title="Return to the initial iterate" aria-label="Reset MM iterations">↻ Reset</button>
     <label title="Curvature constant of the quadratic majorizer">curvature L
       <select id="mm-curv" aria-label="Curvature constant">
         <option value="1" selected>1 (tightest)</option>
